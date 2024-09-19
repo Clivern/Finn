@@ -1,40 +1,6 @@
 <template>
   <div class="min-h-screen bg-theme-bg">
-    <!-- Navigation -->
-    <nav class="bg-white border-b border-theme-border">
-      <div class="w-full px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-14">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 flex items-center">
-              <img src="/logo.png" alt="Met Logo" class="h-8 w-auto">
-            </div>
-            <div class="hidden md:ml-8 md:flex md:space-x-1">
-              <router-link
-                to="/dashboard"
-                class="text-theme-textLight hover:bg-theme-hover hover:text-theme-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
-              >
-                Dashboard
-              </router-link>
-              <router-link
-                to="/users"
-                class="bg-theme-hover text-theme-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium"
-              >
-                Users
-              </router-link>
-              <router-link
-                to="/settings"
-                class="text-theme-textLight hover:bg-theme-hover hover:text-theme-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
-              >
-                Settings
-              </router-link>
-            </div>
-          </div>
-          <div class="flex items-center">
-            <UserAvatarDropdown />
-          </div>
-        </div>
-      </div>
-    </nav>
+    <AppNav />
 
     <!-- Main Content -->
     <main class="w-full py-8 px-4 sm:px-6 lg:px-8">
@@ -432,7 +398,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { userAPI } from '@/api'
-import UserAvatarDropdown from '@/components/UserAvatarDropdown.vue'
+import AppNav from '@/components/AppNav.vue'
 
 const authStore = useAuthStore()
 

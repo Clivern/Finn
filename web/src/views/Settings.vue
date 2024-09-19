@@ -1,48 +1,80 @@
 <template>
   <div class="min-h-screen bg-theme-bg">
-    <!-- Navigation -->
-    <nav class="bg-white border-b border-theme-border">
-      <div class="w-full px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-14">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 flex items-center">
-              <img src="/logo.png" alt="Met Logo" class="h-8 w-auto">
-            </div>
-            <div class="hidden md:ml-8 md:flex md:space-x-1">
-              <router-link
-                to="/dashboard"
-                class="text-theme-textLight hover:bg-theme-hover hover:text-theme-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
-              >
-                Dashboard
-              </router-link>
-              <router-link
-                to="/users"
-                class="text-theme-textLight hover:bg-theme-hover hover:text-theme-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
-              >
-                Users
-              </router-link>
-              <router-link
-                to="/settings"
-                class="bg-theme-hover text-theme-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium"
-              >
-                Settings
-              </router-link>
-            </div>
-          </div>
-          <div class="flex items-center">
-            <UserAvatarDropdown />
-          </div>
-        </div>
-      </div>
-    </nav>
+    <AppNav />
 
     <!-- Settings content -->
     <div class="w-full px-4 sm:px-6 lg:px-8 py-8">
       <main>
-        <div class="mb-6">
+        <div class="mb-8">
           <h1 class="text-2xl font-semibold text-theme-text">Settings</h1>
-          <p class="text-sm text-theme-textLight mt-1">Manage platform configuration</p>
+          <p class="text-sm text-theme-textLight mt-1">System-wide settings and platform configuration</p>
         </div>
+
+        <!-- Settings dashboard: quick access to admin areas -->
+        <section class="mb-10" aria-label="System settings">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <router-link
+              to="/workspaces"
+              class="flex items-center gap-4 rounded-xl border border-theme-border bg-white p-5 shadow-sm hover:border-primary-400 hover:bg-theme-hover transition-colors group"
+            >
+              <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100 text-theme-text group-hover:bg-primary-200">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </span>
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-theme-text">Workspaces</p>
+                <p class="text-xs text-theme-textLight truncate">Manage workspaces</p>
+              </div>
+              <svg class="h-4 w-4 text-theme-textLight flex-shrink-0 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </router-link>
+            <router-link
+              to="/users"
+              class="flex items-center gap-4 rounded-xl border border-theme-border bg-white p-5 shadow-sm hover:border-primary-400 hover:bg-theme-hover transition-colors group"
+            >
+              <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100 text-theme-text group-hover:bg-primary-200">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              </span>
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-theme-text">Users</p>
+                <p class="text-xs text-theme-textLight truncate">User accounts and roles</p>
+              </div>
+              <svg class="h-4 w-4 text-theme-textLight flex-shrink-0 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </router-link>
+            <router-link
+              to="/integrations"
+              class="flex items-center gap-4 rounded-xl border border-theme-border bg-white p-5 shadow-sm hover:border-primary-400 hover:bg-theme-hover transition-colors group"
+            >
+              <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100 text-theme-text group-hover:bg-primary-200">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+                </svg>
+              </span>
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-theme-text">Integrations</p>
+                <p class="text-xs text-theme-textLight truncate">External services and APIs</p>
+              </div>
+              <svg class="h-4 w-4 text-theme-textLight flex-shrink-0 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </router-link>
+            <router-link
+              to="/runners"
+              class="flex items-center gap-4 rounded-xl border border-theme-border bg-white p-5 shadow-sm hover:border-primary-400 hover:bg-theme-hover transition-colors group"
+            >
+              <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100 text-theme-text group-hover:bg-primary-200">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </span>
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-theme-text">Runners</p>
+                <p class="text-xs text-theme-textLight truncate">Execution runners</p>
+              </div>
+              <svg class="h-4 w-4 text-theme-textLight flex-shrink-0 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </router-link>
+          </div>
+        </section>
 
         <!-- Success / Error -->
         <div v-if="successMessage" class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
@@ -229,7 +261,7 @@
 import { ref, reactive, onMounted, watch, nextTick } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { settingsAPI } from '@/api'
-import UserAvatarDropdown from '@/components/UserAvatarDropdown.vue'
+import AppNav from '@/components/AppNav.vue'
 
 const authStore = useAuthStore()
 

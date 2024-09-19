@@ -6,18 +6,22 @@ import Setup from '@/views/Setup.vue'
 import Settings from '@/views/Settings.vue'
 import Users from '@/views/Users.vue'
 import SelectWorkspace from '@/views/SelectWorkspace.vue'
+import Placeholder from '@/views/Placeholder.vue'
+import NotFound from '@/views/NotFound.vue'
+import ServerError from '@/views/ServerError.vue'
 
 const routes = [
-  {
-    path: '/setup',
-    name: 'Setup',
-    component: Setup,
-    meta: { requiresGuest: true }
-  },
+  { path: '/', redirect: '/login' },
   {
     path: '/login',
     name: 'Login',
     component: Login,
+    meta: { requiresGuest: true }
+  },
+  {
+    path: '/setup',
+    name: 'Setup',
+    component: Setup,
     meta: { requiresGuest: true }
   },
   {
@@ -45,8 +49,64 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/task-templates',
+    name: 'TaskTemplates',
+    component: Placeholder,
+    meta: { requiresAuth: true, title: 'Task Templates', description: 'Manage task templates' }
+  },
+  {
+    path: '/inventory',
+    name: 'Inventory',
+    component: Placeholder,
+    meta: { requiresAuth: true, title: 'Inventory', description: 'Manage inventory' }
+  },
+  {
+    path: '/environment',
+    name: 'Environment',
+    component: Placeholder,
+    meta: { requiresAuth: true, title: 'Environment', description: 'Environment configuration' }
+  },
+  {
+    path: '/repositories',
+    name: 'Repositories',
+    component: Placeholder,
+    meta: { requiresAuth: true, title: 'Repositories', description: 'Manage repositories' }
+  },
+  {
+    path: '/tf-backends',
+    name: 'TFBackends',
+    component: Placeholder,
+    meta: { requiresAuth: true, title: 'TF Backends', description: 'Terraform backends' }
+  },
+  {
+    path: '/runners',
+    name: 'Runners',
+    component: Placeholder,
+    meta: { requiresAuth: true, title: 'Runners', description: 'Manage runners' }
+  },
+  {
+    path: '/integrations',
+    name: 'Integrations',
+    component: Placeholder,
+    meta: { requiresAuth: true, title: 'Integrations', description: 'Manage integrations' }
+  },
+  {
+    path: '/404',
+    name: 'NotFound',
+    component: NotFound,
+    meta: { title: 'Page not found' }
+  },
+  {
+    path: '/500',
+    name: 'ServerError',
+    component: ServerError,
+    meta: { title: 'Server error' }
+  },
+  {
     path: '/:pathMatch(.*)*',
-    redirect: '/login'
+    name: 'NotFoundCatchAll',
+    component: NotFound,
+    meta: { title: 'Page not found' }
   }
 ]
 

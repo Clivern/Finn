@@ -47,6 +47,16 @@
             {{ authStore.currentUser?.email ?? '' }}
           </p>
         </div>
+        <div class="py-1" v-if="isAdmin">
+          <router-link
+            to="/settings"
+            class="block px-4 py-2 text-sm text-theme-text hover:bg-theme-hover"
+            role="menuitem"
+            @click="open = false"
+          >
+            Settings
+          </router-link>
+        </div>
         <div class="py-1">
           <router-link
             to="/settings"
@@ -108,6 +118,8 @@ const userInitials = computed(() => {
   }
   return name.slice(0, 2).toUpperCase()
 })
+
+const isAdmin = computed(() => authStore.currentUser?.role === 'admin')
 
 function handleLogout() {
   open.value = false
