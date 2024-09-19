@@ -119,16 +119,12 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
 
-  // Wait for auth initialization to complete before making decisions
-  // This prevents redirects during the initial auth check on page refresh
+  // Wait for auth initialization to complete
   while (authStore.isInitializing) {
     await new Promise(resolve => setTimeout(resolve, 50))
   }
 
   const isAuthenticated = authStore.isAuthenticated
-
-  // Check if setup is completed (you can implement this check via API)
-  // For now, we'll allow access to setup page if not authenticated
 
   if (to.meta.requiresAuth && !isAuthenticated) {
     next('/login')

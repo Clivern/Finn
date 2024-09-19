@@ -41,7 +41,7 @@
       >
         <div class="border-b border-theme-border px-4 py-3">
           <p class="text-sm font-semibold text-theme-text truncate">
-            {{ displayName }}
+            {{ authStore.currentUser?.name ?? '' }}
           </p>
           <p class="text-sm text-theme-textLight truncate">
             {{ authStore.currentUser?.email ?? '' }}
@@ -97,27 +97,6 @@ const router = useRouter()
 const authStore = useAuthStore()
 const dropdownRef = ref(null)
 const open = ref(false)
-
-const displayName = computed(() => {
-  const u = authStore.currentUser
-  if (!u) return ''
-  if (u.name) return u.name
-  if (u.email) {
-    const local = u.email.split('@')[0]
-    return local.charAt(0).toUpperCase() + local.slice(1).replace(/[._]/g, ' ')
-  }
-  return 'User'
-})
-
-const userInitials = computed(() => {
-  const name = displayName.value
-  if (!name) return '?'
-  const parts = name.trim().split(/\s+/)
-  if (parts.length >= 2) {
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase().slice(0, 2)
-  }
-  return name.slice(0, 2).toUpperCase()
-})
 
 const isAdmin = computed(() => authStore.currentUser?.role === 'admin')
 
