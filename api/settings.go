@@ -16,16 +16,17 @@ import (
 
 // UpdateSettingsRequest represents the payload for updating application settings.
 type UpdateSettingsRequest struct {
-	PlatformName    string `json:"platformName" validate:"required,max=100" label:"Platform Name"`
-	PlatformURL     string `json:"platformUrl" validate:"required,url,max=255" label:"Platform URL"`
-	PlatformEmail   string `json:"platformEmail" validate:"required,email,max=255" label:"Platform Email"`
-	SMTPServer      string `json:"smtpServer" validate:"omitempty,max=255" label:"SMTP Server"`
-	SMTPPort        int    `json:"smtpPort" validate:"omitempty,gte=1,lte=65535" label:"SMTP Port"`
-	SMTPFromEmail   string `json:"smtpFromEmail" validate:"omitempty,email,max=255" label:"SMTP From Email"`
-	SMTPUsername    string `json:"smtpUsername" validate:"omitempty,max=255" label:"SMTP Username"`
-	SMTPPassword    string `json:"smtpPassword" validate:"omitempty,max=255" label:"SMTP Password"`
-	SMTPUseTLS      bool   `json:"smtpUseTLS" label:"SMTP Use TLS"`
-	MaintenanceMode bool   `json:"maintenanceMode" label:"Maintenance Mode"`
+	PlatformName        string `json:"platformName" validate:"required,max=100" label:"Platform Name"`
+	PlatformURL         string `json:"platformUrl" validate:"required,url,max=255" label:"Platform URL"`
+	PlatformEmail       string `json:"platformEmail" validate:"required,email,max=255" label:"Platform Email"`
+	PlatformDescription string `json:"platformDescription" validate:"omitempty,max=500" label:"Platform Description"`
+	SMTPServer          string `json:"smtpServer" validate:"omitempty,max=255" label:"SMTP Server"`
+	SMTPPort            int    `json:"smtpPort" validate:"omitempty,gte=1,lte=65535" label:"SMTP Port"`
+	SMTPFromEmail       string `json:"smtpFromEmail" validate:"omitempty,email,max=255" label:"SMTP From Email"`
+	SMTPUsername        string `json:"smtpUsername" validate:"omitempty,max=255" label:"SMTP Username"`
+	SMTPPassword        string `json:"smtpPassword" validate:"omitempty,max=255" label:"SMTP Password"`
+	SMTPUseTLS          bool   `json:"smtpUseTLS" label:"SMTP Use TLS"`
+	MaintenanceMode     bool   `json:"maintenanceMode" label:"Maintenance Mode"`
 }
 
 // UpdateSettingsAction handles application settings update requests
@@ -41,16 +42,17 @@ func UpdateSettingsAction(w http.ResponseWriter, r *http.Request) {
 	settingsModule := module.NewSettings(db.NewOptionRepository(db.GetDB()))
 
 	err := settingsModule.Update(&module.UpdateSettingsOptions{
-		PlatformName:    req.PlatformName,
-		PlatformURL:     req.PlatformURL,
-		PlatformEmail:   req.PlatformEmail,
-		SMTPServer:      req.SMTPServer,
-		SMTPPort:        req.SMTPPort,
-		SMTPFromEmail:   req.SMTPFromEmail,
-		SMTPUsername:    req.SMTPUsername,
-		SMTPPassword:    req.SMTPPassword,
-		SMTPUseTLS:      req.SMTPUseTLS,
-		MaintenanceMode: req.MaintenanceMode,
+		PlatformName:        req.PlatformName,
+		PlatformURL:         req.PlatformURL,
+		PlatformEmail:       req.PlatformEmail,
+		PlatformDescription: req.PlatformDescription,
+		SMTPServer:          req.SMTPServer,
+		SMTPPort:            req.SMTPPort,
+		SMTPFromEmail:       req.SMTPFromEmail,
+		SMTPUsername:        req.SMTPUsername,
+		SMTPPassword:        req.SMTPPassword,
+		SMTPUseTLS:          req.SMTPUseTLS,
+		MaintenanceMode:     req.MaintenanceMode,
 	})
 
 	if err != nil {

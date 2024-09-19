@@ -48,7 +48,7 @@
       <!-- Page Header -->
       <div class="mb-8">
         <h1 class="text-3xl font-semibold text-theme-text">Settings</h1>
-        <p class="text-sm text-theme-textLight mt-2">Manage gateway settings and preferences</p>
+        <p class="text-sm text-theme-textLight mt-2">Manage platform settings and preferences</p>
       </div>
 
       <!-- Success/Error Messages -->
@@ -67,12 +67,12 @@
           <div class="border-b border-theme-border mb-4"></div>
           <div class="space-y-4">
             <div>
-              <label for="gatewayName" class="block text-sm font-medium text-theme-text mb-2">
-                Gateway Name
+              <label for="platformName" class="block text-sm font-medium text-theme-text mb-2">
+                Platform Name
               </label>
               <input
-                id="gatewayName"
-                v-model="form.gatewayName"
+                id="platformName"
+                v-model="form.platformName"
                 type="text"
                 required
                 class="input-field max-w-md"
@@ -81,12 +81,12 @@
               >
             </div>
             <div>
-              <label for="gatewayEmail" class="block text-sm font-medium text-theme-text mb-2">
-                Gateway Email
+              <label for="platformEmail" class="block text-sm font-medium text-theme-text mb-2">
+                Platform Email
               </label>
               <input
-                id="gatewayEmail"
-                v-model="form.gatewayEmail"
+                id="platformEmail"
+                v-model="form.platformEmail"
                 type="email"
                 required
                 class="input-field max-w-md"
@@ -95,31 +95,18 @@
               >
             </div>
             <div>
-              <label for="gatewayURL" class="block text-sm font-medium text-theme-text mb-2">
-                Gateway URL
+              <label for="platformURL" class="block text-sm font-medium text-theme-text mb-2">
+                Platform URL
               </label>
               <input
-                id="gatewayURL"
-                v-model="form.gatewayURL"
+                id="platformURL"
+                v-model="form.platformURL"
                 type="url"
                 required
                 class="input-field max-w-md"
                 placeholder="http://met.example.com"
                 :disabled="loading"
               >
-            </div>
-            <div>
-              <label for="gatewayDescription" class="block text-sm font-medium text-theme-text mb-2">
-                Gateway Description
-              </label>
-              <textarea
-                id="gatewayDescription"
-                v-model="form.gatewayDescription"
-                rows="4"
-                class="input-field max-w-md"
-                placeholder="Enter a description for your gateway"
-                :disabled="loading"
-              ></textarea>
             </div>
           </div>
         </div>
@@ -270,10 +257,9 @@ const successMessage = ref(null)
 const errorMessage = ref(null)
 
 const form = reactive({
-  gatewayURL: '',
-  gatewayEmail: '',
-  gatewayName: '',
-  gatewayDescription: '',
+  platformURL: '',
+  platformEmail: '',
+  platformName: '',
   maintenanceMode: false,
   smtpServer: '',
   smtpPort: '',
@@ -298,10 +284,9 @@ const loadSettings = async () => {
 
     if (settings) {
       // Map API response (snake_case) to form fields
-      form.gatewayURL = settings.gateway_url || ''
-      form.gatewayEmail = settings.gateway_email || ''
-      form.gatewayName = settings.gateway_name || ''
-      form.gatewayDescription = settings.gateway_description || ''
+      form.platformURL = settings.platform_url || ''
+      form.platformEmail = settings.platform_email || ''
+      form.platformName = settings.platform_name || ''
       form.maintenanceMode = settings.maintenance_mode === '1'
       form.smtpServer = settings.smtp_server || ''
       form.smtpPort = settings.smtp_port || ''
@@ -339,10 +324,9 @@ const handleSave = async () => {
   try {
     // Map form fields to API request format (camelCase)
     const payload = {
-      gatewayName: form.gatewayName,
-      gatewayUrl: form.gatewayURL,
-      gatewayEmail: form.gatewayEmail,
-      gatewayDescription: form.gatewayDescription,
+      platformName: form.platformName,
+      platformUrl: form.platformURL,
+      platformEmail: form.platformEmail,
       maintenanceMode: form.maintenanceMode,
       smtpUseTLS: form.smtpUseTLS
     }
@@ -366,11 +350,6 @@ const handleSave = async () => {
     console.error('Failed to save settings:', err)
     if (err.response?.data?.errorMessage) {
       errorMessage.value = err.response.data.errorMessage
-    } else if (err.response?.data?.errors) {
-      // Handle validation errors
-      const errors = err.response.data.errors
-      const errorList = Object.values(errors).flat().join(', ')
-      errorMessage.value = `Validation errors: ${errorList}`
     } else {
       errorMessage.value = 'Failed to save settings. Please try again.'
     }

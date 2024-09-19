@@ -49,7 +49,7 @@
             <p class="text-xs text-theme-textLight mt-1.5">The public URL where this platform will be accessible</p>
           </div>
 
-          <!-- Gateway Email Field -->
+          <!-- Platform Email Field -->
           <div>
             <label for="platform-email" class="block text-sm font-medium text-theme-text mb-2">
               Platform Email

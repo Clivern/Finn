@@ -24,31 +24,33 @@ func NewSettings(optionRepository *db.OptionRepository) *Settings {
 
 // UpdateSettingsOptions contains the settings fields that can be updated.
 type UpdateSettingsOptions struct {
-	PlatformName    string
-	PlatformURL     string
-	PlatformEmail   string
-	SMTPServer      string
-	SMTPPort        int
-	SMTPFromEmail   string
-	SMTPUsername    string
-	SMTPPassword    string
-	SMTPUseTLS      bool
-	MaintenanceMode bool
+	PlatformName        string
+	PlatformURL         string
+	PlatformEmail       string
+	PlatformDescription string
+	SMTPServer          string
+	SMTPPort            int
+	SMTPFromEmail       string
+	SMTPUsername        string
+	SMTPPassword        string
+	SMTPUseTLS          bool
+	MaintenanceMode     bool
 }
 
 // Update persists the provided settings to the options repository.
 func (s *Settings) Update(options *UpdateSettingsOptions) error {
 	updates := map[string]string{
-		"platform_name":    strings.TrimSpace(options.PlatformName),
-		"platform_url":     strings.TrimSpace(options.PlatformURL),
-		"platform_email":   strings.TrimSpace(options.PlatformEmail),
-		"smtp_server":      strings.TrimSpace(options.SMTPServer),
-		"smtp_port":        strconv.Itoa(options.SMTPPort),
-		"smtp_from_email":  strings.TrimSpace(options.SMTPFromEmail),
-		"smtp_username":    strings.TrimSpace(options.SMTPUsername),
-		"smtp_password":    options.SMTPPassword,
-		"smtp_use_tls":     boolToOption(options.SMTPUseTLS),
-		"maintenance_mode": boolToOption(options.MaintenanceMode),
+		"platform_name":        strings.TrimSpace(options.PlatformName),
+		"platform_url":         strings.TrimSpace(options.PlatformURL),
+		"platform_email":       strings.TrimSpace(options.PlatformEmail),
+		"platform_description": strings.TrimSpace(options.PlatformDescription),
+		"smtp_server":          strings.TrimSpace(options.SMTPServer),
+		"smtp_port":            strconv.Itoa(options.SMTPPort),
+		"smtp_from_email":      strings.TrimSpace(options.SMTPFromEmail),
+		"smtp_username":        strings.TrimSpace(options.SMTPUsername),
+		"smtp_password":        options.SMTPPassword,
+		"smtp_use_tls":         boolToOption(options.SMTPUseTLS),
+		"maintenance_mode":     boolToOption(options.MaintenanceMode),
 	}
 
 	for key, value := range updates {
@@ -73,6 +75,7 @@ func (s *Settings) GetSettings() (map[string]string, error) {
 		"platform_name",
 		"platform_url",
 		"platform_email",
+		"platform_description",
 		"smtp_server",
 		"smtp_port",
 		"smtp_from_email",
@@ -88,7 +91,11 @@ func (s *Settings) GetSettings() (map[string]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		settings[key] = option.Value
+		if option != nil {
+			settings[key] = option.Value
+		} else {
+			settings[key] = ""
+		}
 	}
 
 	return settings, nil

@@ -84,6 +84,11 @@ func (s *Setup) Install(options *SetupOptions) error {
 		return err
 	}
 
+	err = s.OptionRepository.Create("platform_description", "")
+	if err != nil {
+		return err
+	}
+
 	err = s.OptionRepository.Create("maintenance_mode", "0")
 	if err != nil {
 		return err
