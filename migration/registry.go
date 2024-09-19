@@ -66,9 +66,9 @@ func GetAll() []Migration {
 		},
 		{
 			Version:     "20250101000009",
-			Description: "Create projects table",
-			Up:          createProjectsTable,
-			Down:        dropProjectsTable,
+			Description: "Create workspaces table",
+			Up:          createWorkspacesTable,
+			Down:        dropWorkspacesTable,
 		},
 		{
 			Version:     "20250101000010",
@@ -78,27 +78,27 @@ func GetAll() []Migration {
 		},
 		{
 			Version:     "20250101000011",
-			Description: "Create projects_meta table",
-			Up:          createProjectsMetaTable,
-			Down:        dropProjectsMetaTable,
+			Description: "Create workspaces_meta table",
+			Up:          createWorkspacesMetaTable,
+			Down:        dropWorkspacesMetaTable,
 		},
 		{
 			Version:     "20250101000012",
-			Description: "Create project_users table",
-			Up:          createProjectUsersTable,
-			Down:        dropProjectUsersTable,
+			Description: "Create workspace_users table",
+			Up:          createWorkspaceUsersTable,
+			Down:        dropWorkspaceUsersTable,
 		},
 		{
 			Version:     "20250101000013",
-			Description: "Create project_ssh_keys table",
-			Up:          createProjectSSHKeysTable,
-			Down:        dropProjectSSHKeysTable,
+			Description: "Create workspace_ssh_keys table",
+			Up:          createWorkspaceSSHKeysTable,
+			Down:        dropWorkspaceSSHKeysTable,
 		},
 		{
 			Version:     "20250101000014",
-			Description: "Create project_repositories table",
-			Up:          createProjectRepositoriesTable,
-			Down:        dropProjectRepositoriesTable,
+			Description: "Create workspace_repositories table",
+			Up:          createWorkspaceRepositoriesTable,
+			Down:        dropWorkspaceRepositoriesTable,
 		},
 		{
 			Version:     "20250101000015",
@@ -114,21 +114,21 @@ func GetAll() []Migration {
 		},
 		{
 			Version:     "20250101000017",
-			Description: "Create project_inventories table",
-			Up:          createProjectInventoriesTable,
-			Down:        dropProjectInventoriesTable,
+			Description: "Create workspace_inventories table",
+			Up:          createWorkspaceInventoriesTable,
+			Down:        dropWorkspaceInventoriesTable,
 		},
 		{
 			Version:     "20250101000018",
-			Description: "Create project_environments table",
-			Up:          createProjectEnvironmentsTable,
-			Down:        dropProjectEnvironmentsTable,
+			Description: "Create workspace_environments table",
+			Up:          createWorkspaceEnvironmentsTable,
+			Down:        dropWorkspaceEnvironmentsTable,
 		},
 		{
 			Version:     "20250101000019",
-			Description: "Create project_tf_backends table",
-			Up:          createProjectTFBackendsTable,
-			Down:        dropProjectTFBackendsTable,
+			Description: "Create workspace_tf_backends table",
+			Up:          createWorkspaceTFBackendsTable,
+			Down:        dropWorkspaceTFBackendsTable,
 		},
 	}
 }
@@ -357,7 +357,7 @@ func dropUserAPIKeysTable(db *sql.DB) error {
 	return err
 }
 
-// createUserInvitesTable creates the user_invites table (invite users by email to a project)
+// createUserInvitesTable creates the user_invites table (invite users by email to a workspace)
 func createUserInvitesTable(db *sql.DB) error {
 	driver := detectDriver(db)
 	var query string
@@ -408,15 +408,15 @@ func dropUserInvitesTable(db *sql.DB) error {
 	return err
 }
 
-// createProjectsTable creates the projects table
-func createProjectsTable(db *sql.DB) error {
+// createWorkspacesTable creates the workspaces table
+func createWorkspacesTable(db *sql.DB) error {
 	driver := detectDriver(db)
 	var query string
 
 	switch driver {
 	case "sqlite":
 		query = `
-		CREATE TABLE projects (
+		CREATE TABLE workspaces (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			name VARCHAR(255) NOT NULL,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -424,7 +424,7 @@ func createProjectsTable(db *sql.DB) error {
 		)`
 	case "postgres":
 		query = `
-		CREATE TABLE projects (
+		CREATE TABLE workspaces (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			name VARCHAR(255) NOT NULL,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -438,42 +438,42 @@ func createProjectsTable(db *sql.DB) error {
 	return err
 }
 
-func dropProjectsTable(db *sql.DB) error {
-	_, err := db.Exec("DROP TABLE IF EXISTS projects")
+func dropWorkspacesTable(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE IF EXISTS workspaces")
 	return err
 }
 
-// createProjectsMetaTable creates the projects_meta table (key-value per project)
-func createProjectsMetaTable(db *sql.DB) error {
+// createWorkspacesMetaTable creates the workspaces_meta table (key-value per workspace)
+func createWorkspacesMetaTable(db *sql.DB) error {
 	driver := detectDriver(db)
 	var query string
 
 	switch driver {
 	case "sqlite":
 		query = `
-		CREATE TABLE projects_meta (
+		CREATE TABLE workspaces_meta (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			project_id INTEGER NOT NULL,
+			workspace_id INTEGER NOT NULL,
 			key VARCHAR(255) NOT NULL,
 			value TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
-			UNIQUE(project_id, key)
+			FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+			UNIQUE(workspace_id, key)
 		)`
 	case "postgres":
 		query = `
-		CREATE TABLE projects_meta (
+		CREATE TABLE workspaces_meta (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+			workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
 			key VARCHAR(255) NOT NULL,
 			value TEXT,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			UNIQUE (project_id, key)
+			UNIQUE (workspace_id, key)
 		);
-		CREATE INDEX idx_projects_meta_project_id ON projects_meta(project_id);
-		CREATE INDEX idx_projects_meta_key ON projects_meta(key)`
+		CREATE INDEX idx_workspaces_meta_workspace_id ON workspaces_meta(workspace_id);
+		CREATE INDEX idx_workspaces_meta_key ON workspaces_meta(key)`
 	default:
 		return fmt.Errorf("unsupported database driver: %s", driver)
 	}
@@ -482,43 +482,43 @@ func createProjectsMetaTable(db *sql.DB) error {
 	return err
 }
 
-func dropProjectsMetaTable(db *sql.DB) error {
-	_, err := db.Exec("DROP TABLE IF EXISTS projects_meta")
+func dropWorkspacesMetaTable(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE IF EXISTS workspaces_meta")
 	return err
 }
 
-// createProjectUsersTable creates the project_users table (user-project membership and role)
-func createProjectUsersTable(db *sql.DB) error {
+// createWorkspaceUsersTable creates the workspace_users table (user-workspace membership and role)
+func createWorkspaceUsersTable(db *sql.DB) error {
 	driver := detectDriver(db)
 	var query string
 
 	switch driver {
 	case "sqlite":
 		query = `
-		CREATE TABLE project_users (
+		CREATE TABLE workspace_users (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			project_id INTEGER NOT NULL,
+			workspace_id INTEGER NOT NULL,
 			user_id INTEGER NOT NULL,
 			role VARCHAR(50) NOT NULL DEFAULT 'guest',
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+			FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
 			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-			UNIQUE(project_id, user_id)
+			UNIQUE(workspace_id, user_id)
 		)`
 	case "postgres":
 		query = `
-		CREATE TABLE project_users (
+		CREATE TABLE workspace_users (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+			workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
 			user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 			role VARCHAR(50) NOT NULL DEFAULT 'guest',
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			UNIQUE (project_id, user_id)
+			UNIQUE (workspace_id, user_id)
 		);
-		CREATE INDEX idx_project_users_project_id ON project_users(project_id);
-		CREATE INDEX idx_project_users_user_id ON project_users(user_id)`
+		CREATE INDEX idx_workspace_users_workspace_id ON workspace_users(workspace_id);
+		CREATE INDEX idx_workspace_users_user_id ON workspace_users(user_id)`
 	default:
 		return fmt.Errorf("unsupported database driver: %s", driver)
 	}
@@ -527,41 +527,41 @@ func createProjectUsersTable(db *sql.DB) error {
 	return err
 }
 
-func dropProjectUsersTable(db *sql.DB) error {
-	_, err := db.Exec("DROP TABLE IF EXISTS project_users")
+func dropWorkspaceUsersTable(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE IF EXISTS workspace_users")
 	return err
 }
 
-// createProjectSSHKeysTable creates the project_ssh_keys table (SSH keys attached to projects)
-func createProjectSSHKeysTable(db *sql.DB) error {
+// createWorkspaceSSHKeysTable creates the workspace_ssh_keys table (SSH keys attached to workspaces)
+func createWorkspaceSSHKeysTable(db *sql.DB) error {
 	driver := detectDriver(db)
 	var query string
 
 	switch driver {
 	case "sqlite":
 		query = `
-		CREATE TABLE project_ssh_keys (
+		CREATE TABLE workspace_ssh_keys (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			project_id INTEGER NOT NULL,
+			workspace_id INTEGER NOT NULL,
 			name VARCHAR(255) NOT NULL,
 			private_key TEXT,
 			public_key TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+			FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
 		)`
 	case "postgres":
 		query = `
-		CREATE TABLE project_ssh_keys (
+		CREATE TABLE workspace_ssh_keys (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+			workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
 			name VARCHAR(255) NOT NULL,
 			private_key TEXT,
 			public_key TEXT,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
-		CREATE INDEX idx_project_ssh_keys_project_id ON project_ssh_keys(project_id)`
+		CREATE INDEX idx_workspace_ssh_keys_workspace_id ON workspace_ssh_keys(workspace_id)`
 	default:
 		return fmt.Errorf("unsupported database driver: %s", driver)
 	}
@@ -570,45 +570,45 @@ func createProjectSSHKeysTable(db *sql.DB) error {
 	return err
 }
 
-func dropProjectSSHKeysTable(db *sql.DB) error {
-	_, err := db.Exec("DROP TABLE IF EXISTS project_ssh_keys")
+func dropWorkspaceSSHKeysTable(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE IF EXISTS workspace_ssh_keys")
 	return err
 }
 
-// createProjectRepositoriesTable creates the project_repositories table (repos attached to projects; optional ssh_key_id)
-func createProjectRepositoriesTable(db *sql.DB) error {
+// createWorkspaceRepositoriesTable creates the workspace_repositories table (repos attached to workspaces; optional ssh_key_id)
+func createWorkspaceRepositoriesTable(db *sql.DB) error {
 	driver := detectDriver(db)
 	var query string
 
 	switch driver {
 	case "sqlite":
 		query = `
-		CREATE TABLE project_repositories (
+		CREATE TABLE workspace_repositories (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			project_id INTEGER NOT NULL,
+			workspace_id INTEGER NOT NULL,
 			name VARCHAR(255) NOT NULL,
 			git_url VARCHAR(500) NOT NULL,
 			git_branch VARCHAR(255) DEFAULT 'main',
 			ssh_key_id INTEGER NULL,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
-			FOREIGN KEY (ssh_key_id) REFERENCES project_ssh_keys(id) ON DELETE SET NULL
+			FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+			FOREIGN KEY (ssh_key_id) REFERENCES workspace_ssh_keys(id) ON DELETE SET NULL
 		)`
 	case "postgres":
 		query = `
-		CREATE TABLE project_repositories (
+		CREATE TABLE workspace_repositories (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+			workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
 			name VARCHAR(255) NOT NULL,
 			git_url VARCHAR(500) NOT NULL,
 			git_branch VARCHAR(255) DEFAULT 'main',
-			ssh_key_id UUID NULL REFERENCES project_ssh_keys(id) ON DELETE SET NULL,
+			ssh_key_id UUID NULL REFERENCES workspace_ssh_keys(id) ON DELETE SET NULL,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
-		CREATE INDEX idx_project_repositories_project_id ON project_repositories(project_id);
-		CREATE INDEX idx_project_repositories_ssh_key_id ON project_repositories(ssh_key_id)`
+		CREATE INDEX idx_workspace_repositories_workspace_id ON workspace_repositories(workspace_id);
+		CREATE INDEX idx_workspace_repositories_ssh_key_id ON workspace_repositories(ssh_key_id)`
 	default:
 		return fmt.Errorf("unsupported database driver: %s", driver)
 	}
@@ -617,12 +617,12 @@ func createProjectRepositoriesTable(db *sql.DB) error {
 	return err
 }
 
-func dropProjectRepositoriesTable(db *sql.DB) error {
-	_, err := db.Exec("DROP TABLE IF EXISTS project_repositories")
+func dropWorkspaceRepositoriesTable(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE IF EXISTS workspace_repositories")
 	return err
 }
 
-// createIntegrationsTable creates the integrations table (webhooks/CI triggers per project)
+// createIntegrationsTable creates the integrations table (webhooks/CI triggers per workspace)
 func createIntegrationsTable(db *sql.DB) error {
 	driver := detectDriver(db)
 	var query string
@@ -706,17 +706,17 @@ func dropRunnersTable(db *sql.DB) error {
 	return err
 }
 
-// createProjectInventoriesTable creates the project_inventories table (Ansible/Terraform/Tofu inventory per project)
-func createProjectInventoriesTable(db *sql.DB) error {
+// createWorkspaceInventoriesTable creates the workspace_inventories table (Ansible/Terraform/Tofu inventory per workspace)
+func createWorkspaceInventoriesTable(db *sql.DB) error {
 	driver := detectDriver(db)
 	var query string
 
 	switch driver {
 	case "sqlite":
 		query = `
-		CREATE TABLE project_inventories (
+		CREATE TABLE workspace_inventories (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			project_id INTEGER NOT NULL,
+			workspace_id INTEGER NOT NULL,
 			name VARCHAR(255) NOT NULL,
 			inventory TEXT,
 			type VARCHAR(50) NOT NULL DEFAULT 'static',
@@ -726,28 +726,28 @@ func createProjectInventoriesTable(db *sql.DB) error {
 			runner_tag VARCHAR(255),
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
-			FOREIGN KEY (ssh_key_id) REFERENCES project_ssh_keys(id) ON DELETE SET NULL,
-			FOREIGN KEY (become_key_id) REFERENCES project_ssh_keys(id) ON DELETE SET NULL,
-			FOREIGN KEY (repository_id) REFERENCES project_repositories(id) ON DELETE SET NULL
+			FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+			FOREIGN KEY (ssh_key_id) REFERENCES workspace_ssh_keys(id) ON DELETE SET NULL,
+			FOREIGN KEY (become_key_id) REFERENCES workspace_ssh_keys(id) ON DELETE SET NULL,
+			FOREIGN KEY (repository_id) REFERENCES workspace_repositories(id) ON DELETE SET NULL
 		)`
 	case "postgres":
 		query = `
-		CREATE TABLE project_inventories (
+		CREATE TABLE workspace_inventories (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+			workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
 			name VARCHAR(255) NOT NULL,
 			inventory TEXT,
 			type VARCHAR(50) NOT NULL DEFAULT 'static',
-			ssh_key_id UUID NULL REFERENCES project_ssh_keys(id) ON DELETE SET NULL,
-			become_key_id UUID NULL REFERENCES project_ssh_keys(id) ON DELETE SET NULL,
-			repository_id UUID NULL REFERENCES project_repositories(id) ON DELETE SET NULL,
+			ssh_key_id UUID NULL REFERENCES workspace_ssh_keys(id) ON DELETE SET NULL,
+			become_key_id UUID NULL REFERENCES workspace_ssh_keys(id) ON DELETE SET NULL,
+			repository_id UUID NULL REFERENCES workspace_repositories(id) ON DELETE SET NULL,
 			runner_tag VARCHAR(255),
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
-		CREATE INDEX idx_project_inventories_project_id ON project_inventories(project_id);
-		CREATE INDEX idx_project_inventories_type ON project_inventories(type)`
+		CREATE INDEX idx_workspace_inventories_workspace_id ON workspace_inventories(workspace_id);
+		CREATE INDEX idx_workspace_inventories_type ON workspace_inventories(type)`
 	default:
 		return fmt.Errorf("unsupported database driver: %s", driver)
 	}
@@ -756,22 +756,22 @@ func createProjectInventoriesTable(db *sql.DB) error {
 	return err
 }
 
-func dropProjectInventoriesTable(db *sql.DB) error {
-	_, err := db.Exec("DROP TABLE IF EXISTS project_inventories")
+func dropWorkspaceInventoriesTable(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE IF EXISTS workspace_inventories")
 	return err
 }
 
-// createProjectEnvironmentsTable creates the project_environments table (extra vars / env for Ansible per project)
-func createProjectEnvironmentsTable(db *sql.DB) error {
+// createWorkspaceEnvironmentsTable creates the workspace_environments table (extra vars / env for Ansible per workspace)
+func createWorkspaceEnvironmentsTable(db *sql.DB) error {
 	driver := detectDriver(db)
 	var query string
 
 	switch driver {
 	case "sqlite":
 		query = `
-		CREATE TABLE project_environments (
+		CREATE TABLE workspace_environments (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			project_id INTEGER NOT NULL,
+			workspace_id INTEGER NOT NULL,
 			name VARCHAR(255) NOT NULL,
 			password TEXT,
 			json TEXT,
@@ -779,13 +779,13 @@ func createProjectEnvironmentsTable(db *sql.DB) error {
 			secret_storage_key_prefix VARCHAR(255),
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+			FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
 		)`
 	case "postgres":
 		query = `
-		CREATE TABLE project_environments (
+		CREATE TABLE workspace_environments (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+			workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
 			name VARCHAR(255) NOT NULL,
 			password TEXT,
 			json TEXT,
@@ -794,8 +794,8 @@ func createProjectEnvironmentsTable(db *sql.DB) error {
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
-		CREATE INDEX idx_project_environments_project_id ON project_environments(project_id);
-		CREATE INDEX idx_project_environments_name ON project_environments(name)`
+		CREATE INDEX idx_workspace_environments_workspace_id ON workspace_environments(workspace_id);
+		CREATE INDEX idx_workspace_environments_name ON workspace_environments(name)`
 	default:
 		return fmt.Errorf("unsupported database driver: %s", driver)
 	}
@@ -804,42 +804,42 @@ func createProjectEnvironmentsTable(db *sql.DB) error {
 	return err
 }
 
-func dropProjectEnvironmentsTable(db *sql.DB) error {
-	_, err := db.Exec("DROP TABLE IF EXISTS project_environments")
+func dropWorkspaceEnvironmentsTable(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE IF EXISTS workspace_environments")
 	return err
 }
 
-// createProjectTFBackendsTable creates the project_tf_backends table (Terraform/OpenTofu backend config per project)
-func createProjectTFBackendsTable(db *sql.DB) error {
+// createWorkspaceTFBackendsTable creates the workspace_tf_backends table (Terraform/OpenTofu backend config per workspace)
+func createWorkspaceTFBackendsTable(db *sql.DB) error {
 	driver := detectDriver(db)
 	var query string
 
 	switch driver {
 	case "sqlite":
 		query = `
-		CREATE TABLE project_tf_backends (
+		CREATE TABLE workspace_tf_backends (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			project_id INTEGER NOT NULL,
+			workspace_id INTEGER NOT NULL,
 			name VARCHAR(255) NOT NULL,
 			type VARCHAR(50) NOT NULL DEFAULT 'local',
 			config TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+			FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
 		)`
 	case "postgres":
 		query = `
-		CREATE TABLE project_tf_backends (
+		CREATE TABLE workspace_tf_backends (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+			workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
 			name VARCHAR(255) NOT NULL,
 			type VARCHAR(50) NOT NULL DEFAULT 'local',
 			config TEXT,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
-		CREATE INDEX idx_project_tf_backends_project_id ON project_tf_backends(project_id);
-		CREATE INDEX idx_project_tf_backends_type ON project_tf_backends(type)`
+		CREATE INDEX idx_workspace_tf_backends_workspace_id ON workspace_tf_backends(workspace_id);
+		CREATE INDEX idx_workspace_tf_backends_type ON workspace_tf_backends(type)`
 	default:
 		return fmt.Errorf("unsupported database driver: %s", driver)
 	}
@@ -848,7 +848,7 @@ func createProjectTFBackendsTable(db *sql.DB) error {
 	return err
 }
 
-func dropProjectTFBackendsTable(db *sql.DB) error {
-	_, err := db.Exec("DROP TABLE IF EXISTS project_tf_backends")
+func dropWorkspaceTFBackendsTable(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE IF EXISTS workspace_tf_backends")
 	return err
 }
