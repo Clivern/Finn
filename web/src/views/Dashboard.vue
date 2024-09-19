@@ -16,30 +16,6 @@
                 Dashboard
               </router-link>
               <router-link
-                to="/gateways"
-                class="text-notion-textLight hover:bg-notion-hover hover:text-notion-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
-              >
-                Gateways
-              </router-link>
-              <router-link
-                to="/mcps"
-                class="text-notion-textLight hover:bg-notion-hover hover:text-notion-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
-              >
-                MCPs
-              </router-link>
-              <router-link
-                to="/servers"
-                class="text-notion-textLight hover:bg-notion-hover hover:text-notion-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
-              >
-                Servers
-              </router-link>
-              <router-link
-                to="/tools"
-                class="text-notion-textLight hover:bg-notion-hover hover:text-notion-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
-              >
-                Tools
-              </router-link>
-              <router-link
                 to="/users"
                 class="text-notion-textLight hover:bg-notion-hover hover:text-notion-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
               >
@@ -76,7 +52,7 @@
 
       <!-- Stats Grid -->
       <div class="mb-6">
-        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <!-- Stat Card 1 -->
           <div class="bg-white rounded-lg border border-notion-border p-5 hover:shadow-sm transition-shadow">
             <p class="text-xs font-medium text-notion-textLight mb-2 uppercase tracking-wide">Status</p>
@@ -95,30 +71,15 @@
             <p class="text-2xl font-semibold text-notion-text">{{ stats.avgResponse }}ms</p>
           </div>
 
-          <!-- Stat Card 4 -->
-          <div class="bg-white rounded-lg border border-notion-border p-5 hover:shadow-sm transition-shadow">
-            <p class="text-xs font-medium text-notion-textLight mb-2 uppercase tracking-wide">Active Gateways</p>
-            <p class="text-2xl font-semibold text-notion-text">{{ stats.activeGateways }}</p>
-          </div>
         </div>
       </div>
 
       <!-- Content Grid -->
       <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        <!-- Recent Activity -->
+        <!-- Welcome -->
         <div class="bg-white rounded-lg border border-notion-border p-6">
-          <h3 class="text-sm font-semibold text-notion-text mb-5">Recent Activity</h3>
-          <div class="space-y-4">
-            <div
-              v-for="activity in recentActivities"
-              :key="activity.id"
-              class="pb-4 last:pb-0 border-b border-notion-border last:border-0"
-            >
-              <p class="text-sm font-medium text-notion-text">{{ activity.title }}</p>
-              <p class="text-sm text-notion-textLight mt-1">{{ activity.description }}</p>
-              <p class="text-xs text-notion-textLight mt-1.5">{{ activity.time }}</p>
-            </div>
-          </div>
+          <h3 class="text-sm font-semibold text-notion-text mb-5">Welcome</h3>
+          <p class="text-sm text-notion-textLight">Basic tables plus users and sessions. Extend from here.</p>
         </div>
 
         <!-- System Info -->
@@ -150,9 +111,8 @@
         <div class="bg-white rounded-lg border border-notion-border p-6">
           <h3 class="text-sm font-semibold text-notion-text mb-4">Quick Actions</h3>
           <div class="flex flex-wrap gap-2">
-            <button class="btn-primary">Add Gateway</button>
-            <button class="btn-secondary">Configure</button>
-            <button class="btn-secondary">View Analytics</button>
+            <router-link to="/users" class="btn-primary">Manage Users</router-link>
+            <router-link to="/settings" class="btn-secondary">Settings</router-link>
           </div>
         </div>
       </div>
@@ -172,40 +132,8 @@ const authStore = useAuthStore()
 const stats = ref({
   status: 'Online',
   totalRequests: 42853,
-  avgResponse: 145,
-  activeGateways: 3
+  avgResponse: 145
 })
-
-const recentActivities = ref([
-  {
-    id: 1,
-    title: 'Gateway Connected',
-    description: 'New MCP gateway registered successfully',
-    time: '2 minutes ago',
-    statusColor: 'bg-green-500'
-  },
-  {
-    id: 2,
-    title: 'Request Processed',
-    description: 'API request completed in 120ms',
-    time: '5 minutes ago',
-    statusColor: 'bg-blue-500'
-  },
-  {
-    id: 3,
-    title: 'Configuration Updated',
-    description: 'Gateway settings modified',
-    time: '15 minutes ago',
-    statusColor: 'bg-yellow-500'
-  },
-  {
-    id: 4,
-    title: 'Health Check',
-    description: 'All systems operational',
-    time: '30 minutes ago',
-    statusColor: 'bg-green-500'
-  }
-])
 
 const systemInfo = ref({
   uptime: '7 days, 14 hours',

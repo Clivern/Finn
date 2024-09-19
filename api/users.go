@@ -66,7 +66,7 @@ func CreateUserAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Info().Int64("userID", user.ID).Msg("User created successfully")
+	log.Info().Str("userID", user.ID.String()).Msg("User created successfully")
 	service.WriteJSON(w, http.StatusCreated, map[string]interface{}{
 		"id":          user.ID,
 		"email":       user.Email,
@@ -84,8 +84,7 @@ func GetUserAction(w http.ResponseWriter, r *http.Request) {
 	log.Debug().Msg("Get user endpoint called")
 
 	userIDStr := chi.URLParam(r, "id")
-	userID, err := strconv.ParseInt(userIDStr, 10, 64)
-	if err != nil {
+	if userIDStr == "" {
 		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
 			"errorMessage": "Invalid user ID",
 		})
@@ -93,7 +92,7 @@ func GetUserAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userModule := module.NewUser(db.NewUserRepository(db.GetDB()))
-	user, err := userModule.GetUser(userID)
+	user, err := userModule.GetUser(db.ID(userIDStr))
 	if err != nil {
 		if errors.Is(err, module.ErrUserNotFound) {
 			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
@@ -126,8 +125,7 @@ func UpdateUserAction(w http.ResponseWriter, r *http.Request) {
 
 	// Get user ID from URL
 	userIDStr := chi.URLParam(r, "id")
-	userID, err := strconv.ParseInt(userIDStr, 10, 64)
-	if err != nil {
+	if userIDStr == "" {
 		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
 			"errorMessage": "Invalid user ID",
 		})
@@ -142,7 +140,7 @@ func UpdateUserAction(w http.ResponseWriter, r *http.Request) {
 
 	userModule := module.NewUser(db.NewUserRepository(db.GetDB()))
 	user, err := userModule.UpdateUser(&module.UpdateUserOptions{
-		UserID:   userID,
+		UserID:   db.ID(userIDStr),
 		Email:    req.Email,
 		Password: req.Password,
 		Role:     req.Role,
@@ -169,7 +167,7 @@ func UpdateUserAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Info().Int64("userID", user.ID).Msg("User updated successfully")
+	log.Info().Str("userID", user.ID.String()).Msg("User updated successfully")
 	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"id":          user.ID,
 		"email":       user.Email,
@@ -250,13 +248,13 @@ func DeleteUserAction(w http.ResponseWriter, r *http.Request) {
 
 	// Get user ID from URL
 	userIDStr := chi.URLParam(r, "id")
-	userID, err := strconv.ParseInt(userIDStr, 10, 64)
-	if err != nil {
+	if userIDStr == "" {
 		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
 			"errorMessage": "Invalid user ID",
 		})
 		return
 	}
+	userID := db.ID(userIDStr)
 
 	// Prevent self-deletion
 	if currentUser.ID == userID {
@@ -267,7 +265,7 @@ func DeleteUserAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userModule := module.NewUser(db.NewUserRepository(db.GetDB()))
-	err = userModule.DeleteUser(userID)
+	err := userModule.DeleteUser(userID)
 	if err != nil {
 		if errors.Is(err, module.ErrUserNotFound) {
 			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
@@ -282,6 +280,6 @@ func DeleteUserAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Info().Int64("userID", userID).Msg("User deleted successfully")
+	log.Info().Str("userID", userID.String()).Msg("User deleted successfully")
 	service.WriteJSON(w, http.StatusNoContent, map[string]interface{}{})
 }

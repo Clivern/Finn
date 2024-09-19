@@ -32,7 +32,7 @@ func RequireRole(allowedRoles ...string) func(http.Handler) http.Handler {
 			if !user.IsActive {
 				log.Info().
 					Str("path", r.URL.Path).
-					Int64("userID", user.ID).
+					Str("userID", user.ID.String()).
 					Msg("Inactive user attempted to access protected route")
 				service.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
 					"errorMessage": "Account is inactive",
@@ -53,7 +53,7 @@ func RequireRole(allowedRoles ...string) func(http.Handler) http.Handler {
 			if !hasRole {
 				log.Info().
 					Str("path", r.URL.Path).
-					Int64("userID", user.ID).
+					Str("userID", user.ID.String()).
 					Str("userRole", user.Role).
 					Strs("allowedRoles", allowedRoles).
 					Msg("User does not have required role")

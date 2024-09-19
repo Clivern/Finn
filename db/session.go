@@ -6,14 +6,15 @@ package db
 
 import (
 	"database/sql"
+	"strconv"
 	"time"
 )
 
 // Session represents a user session in the database.
 type Session struct {
-	ID        int64
+	ID        ID
 	Token     string
-	UserID    int64
+	UserID    ID
 	IPAddress *string
 	UserAgent *string
 	ExpiresAt time.Time
@@ -33,11 +34,23 @@ func NewSessionRepository(db *sql.DB) *SessionRepository {
 
 // Create inserts a new session into the database.
 func (r *SessionRepository) Create(session *Session) error {
-	result, err := r.db.Exec(
-		`INSERT INTO sessions (token, user_id, ip_address, user_agent, expires_at)
-		VALUES (?, ?, ?, ?, ?)`,
+	driver := GetDriver()
+	if driver == "postgres" || driver == "postgresql" {
+		q := `INSERT INTO sessions (token, user_id, ip_address, user_agent, expires_at)
+			VALUES ($1, $2, $3, $4, $5) RETURNING id`
+		return r.db.QueryRow(q,
+			session.Token,
+			session.UserID.String(),
+			session.IPAddress,
+			session.UserAgent,
+			session.ExpiresAt,
+		).Scan(&session.ID)
+	}
+	q := Placeholder(`INSERT INTO sessions (token, user_id, ip_address, user_agent, expires_at)
+		VALUES (?, ?, ?, ?, ?)`, driver)
+	result, err := r.db.Exec(q,
 		session.Token,
-		session.UserID,
+		session.UserID.String(),
 		session.IPAddress,
 		session.UserAgent,
 		session.ExpiresAt,
@@ -45,20 +58,21 @@ func (r *SessionRepository) Create(session *Session) error {
 	if err != nil {
 		return err
 	}
-
-	session.ID, err = result.LastInsertId()
-	return err
+	lid, err := result.LastInsertId()
+	if err != nil {
+		return err
+	}
+	session.ID = ID(strconv.FormatInt(lid, 10))
+	return nil
 }
 
 // GetByToken retrieves a session by token.
 func (r *SessionRepository) GetByToken(token string) (*Session, error) {
 	session := &Session{}
-	err := r.db.QueryRow(
-		`SELECT id, token, user_id, ip_address, user_agent, expires_at, created_at, updated_at
+	q := Placeholder(`SELECT id, token, user_id, ip_address, user_agent, expires_at, created_at, updated_at
 		FROM sessions
-		WHERE token = ?`,
-		token,
-	).Scan(
+		WHERE token = ?`, GetDriver())
+	err := r.db.QueryRow(q, token).Scan(
 		&session.ID,
 		&session.Token,
 		&session.UserID,
@@ -80,14 +94,12 @@ func (r *SessionRepository) GetByToken(token string) (*Session, error) {
 }
 
 // GetByID retrieves a session by ID.
-func (r *SessionRepository) GetByID(id int64) (*Session, error) {
+func (r *SessionRepository) GetByID(id ID) (*Session, error) {
 	session := &Session{}
-	err := r.db.QueryRow(
-		`SELECT id, token, user_id, ip_address, user_agent, expires_at, created_at, updated_at
+	q := Placeholder(`SELECT id, token, user_id, ip_address, user_agent, expires_at, created_at, updated_at
 		FROM sessions
-		WHERE id = ?`,
-		id,
-	).Scan(
+		WHERE id = ?`, GetDriver())
+	err := r.db.QueryRow(q, id.String()).Scan(
 		&session.ID,
 		&session.Token,
 		&session.UserID,
@@ -109,14 +121,12 @@ func (r *SessionRepository) GetByID(id int64) (*Session, error) {
 }
 
 // GetByUserID retrieves all sessions for a user.
-func (r *SessionRepository) GetByUserID(userID int64) ([]*Session, error) {
-	rows, err := r.db.Query(
-		`SELECT id, token, user_id, ip_address, user_agent, expires_at, created_at, updated_at
+func (r *SessionRepository) GetByUserID(userID ID) ([]*Session, error) {
+	q := Placeholder(`SELECT id, token, user_id, ip_address, user_agent, expires_at, created_at, updated_at
 		FROM sessions
 		WHERE user_id = ?
-		ORDER BY created_at DESC`,
-		userID,
-	)
+		ORDER BY created_at DESC`, GetDriver())
+	rows, err := r.db.Query(q, userID.String())
 	if err != nil {
 		return nil, err
 	}
@@ -144,26 +154,30 @@ func (r *SessionRepository) GetByUserID(userID int64) ([]*Session, error) {
 }
 
 // Delete removes a session from the database.
-func (r *SessionRepository) Delete(id int64) error {
-	_, err := r.db.Exec("DELETE FROM sessions WHERE id = ?", id)
+func (r *SessionRepository) Delete(id ID) error {
+	q := Placeholder("DELETE FROM sessions WHERE id = ?", GetDriver())
+	_, err := r.db.Exec(q, id.String())
 	return err
 }
 
 // DeleteByToken removes a session by token.
 func (r *SessionRepository) DeleteByToken(token string) error {
-	_, err := r.db.Exec("DELETE FROM sessions WHERE token = ?", token)
+	q := Placeholder("DELETE FROM sessions WHERE token = ?", GetDriver())
+	_, err := r.db.Exec(q, token)
 	return err
 }
 
 // DeleteByUserID removes all sessions for a user.
-func (r *SessionRepository) DeleteByUserID(userID int64) error {
-	_, err := r.db.Exec("DELETE FROM sessions WHERE user_id = ?", userID)
+func (r *SessionRepository) DeleteByUserID(userID ID) error {
+	q := Placeholder("DELETE FROM sessions WHERE user_id = ?", GetDriver())
+	_, err := r.db.Exec(q, userID.String())
 	return err
 }
 
 // DeleteExpired removes all expired sessions.
 func (r *SessionRepository) DeleteExpired() (int64, error) {
-	result, err := r.db.Exec("DELETE FROM sessions WHERE expires_at < ?", time.Now().UTC())
+	q := Placeholder("DELETE FROM sessions WHERE expires_at < ?", GetDriver())
+	result, err := r.db.Exec(q, time.Now().UTC())
 	if err != nil {
 		return 0, err
 	}
@@ -186,32 +200,26 @@ func (r *SessionRepository) IsValid(token string) (bool, error) {
 }
 
 // UpdateExpiration updates the expiration time of a session.
-func (r *SessionRepository) UpdateExpiration(id int64, expiresAt time.Time) error {
-	_, err := r.db.Exec(
-		`UPDATE sessions SET
+func (r *SessionRepository) UpdateExpiration(id ID, expiresAt time.Time) error {
+	q := Placeholder(`UPDATE sessions SET
 			expires_at = ?, updated_at = ?
-		WHERE id = ?`,
-		expiresAt,
-		time.Now().UTC(),
-		id,
-	)
+		WHERE id = ?`, GetDriver())
+	_, err := r.db.Exec(q, expiresAt, time.Now().UTC(), id.String())
 	return err
 }
 
 // Count returns the total number of active (non-expired) sessions.
 func (r *SessionRepository) Count() (int64, error) {
 	var count int64
-	err := r.db.QueryRow("SELECT COUNT(*) FROM sessions WHERE expires_at > ?", time.Now().UTC()).Scan(&count)
+	q := Placeholder("SELECT COUNT(*) FROM sessions WHERE expires_at > ?", GetDriver())
+	err := r.db.QueryRow(q, time.Now().UTC()).Scan(&count)
 	return count, err
 }
 
 // CountByUserID returns the number of active sessions for a user.
-func (r *SessionRepository) CountByUserID(userID int64) (int64, error) {
+func (r *SessionRepository) CountByUserID(userID ID) (int64, error) {
 	var count int64
-	err := r.db.QueryRow(
-		`SELECT COUNT(*) FROM sessions WHERE user_id = ? AND expires_at > ?`,
-		userID,
-		time.Now().UTC(),
-	).Scan(&count)
+	q := Placeholder(`SELECT COUNT(*) FROM sessions WHERE user_id = ? AND expires_at > ?`, GetDriver())
+	err := r.db.QueryRow(q, userID.String(), time.Now().UTC()).Scan(&count)
 	return count, err
 }

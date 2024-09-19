@@ -24,33 +24,31 @@ func NewSettings(optionRepository *db.OptionRepository) *Settings {
 
 // UpdateSettingsOptions contains the settings fields that can be updated.
 type UpdateSettingsOptions struct {
-	GatewayName        string
-	GatewayURL         string
-	GatewayEmail       string
-	GatewayDescription string
-	SMTPServer         string
-	SMTPPort           int
-	SMTPFromEmail      string
-	SMTPUsername       string
-	SMTPPassword       string
-	SMTPUseTLS         bool
-	MaintenanceMode    bool
+	PlatformName    string
+	PlatformURL     string
+	PlatformEmail   string
+	SMTPServer      string
+	SMTPPort        int
+	SMTPFromEmail   string
+	SMTPUsername    string
+	SMTPPassword    string
+	SMTPUseTLS      bool
+	MaintenanceMode bool
 }
 
 // Update persists the provided settings to the options repository.
 func (s *Settings) Update(options *UpdateSettingsOptions) error {
 	updates := map[string]string{
-		"gateway_name":        strings.TrimSpace(options.GatewayName),
-		"gateway_url":         strings.TrimSpace(options.GatewayURL),
-		"gateway_email":       strings.TrimSpace(options.GatewayEmail),
-		"gateway_description": strings.TrimSpace(options.GatewayDescription),
-		"smtp_server":         strings.TrimSpace(options.SMTPServer),
-		"smtp_port":           strconv.Itoa(options.SMTPPort),
-		"smtp_from_email":     strings.TrimSpace(options.SMTPFromEmail),
-		"smtp_username":       strings.TrimSpace(options.SMTPUsername),
-		"smtp_password":       options.SMTPPassword,
-		"smtp_use_tls":        boolToOption(options.SMTPUseTLS),
-		"maintenance_mode":    boolToOption(options.MaintenanceMode),
+		"platform_name":    strings.TrimSpace(options.PlatformName),
+		"platform_url":     strings.TrimSpace(options.PlatformURL),
+		"platform_email":   strings.TrimSpace(options.PlatformEmail),
+		"smtp_server":      strings.TrimSpace(options.SMTPServer),
+		"smtp_port":        strconv.Itoa(options.SMTPPort),
+		"smtp_from_email":  strings.TrimSpace(options.SMTPFromEmail),
+		"smtp_username":    strings.TrimSpace(options.SMTPUsername),
+		"smtp_password":    options.SMTPPassword,
+		"smtp_use_tls":     boolToOption(options.SMTPUseTLS),
+		"maintenance_mode": boolToOption(options.MaintenanceMode),
 	}
 
 	for key, value := range updates {
@@ -72,17 +70,15 @@ func boolToOption(value bool) string {
 // GetSettings retrieves the current settings from the options repository.
 func (s *Settings) GetSettings() (map[string]string, error) {
 	keys := []string{
-		"gateway_name",
-		"gateway_url",
-		"gateway_email",
-		"gateway_description",
+		"platform_name",
+		"platform_url",
+		"platform_email",
 		"smtp_server",
 		"smtp_port",
 		"smtp_from_email",
 		"smtp_username",
 		"smtp_password",
 		"smtp_use_tls",
-		"maintenance_mode",
 	}
 
 	settings := make(map[string]string, len(keys))

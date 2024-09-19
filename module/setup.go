@@ -22,9 +22,9 @@ type Setup struct {
 
 // SetupOptions contains the configuration options for gateway setup.
 type SetupOptions struct {
-	GatewayURL    string
-	GatewayEmail  string
-	GatewayName   string
+	PlatformURL   string
+	PlatformEmail string
+	PlatformName  string
 	AdminEmail    string
 	AdminPassword string
 }
@@ -34,7 +34,7 @@ func NewSetup(optionRepository *db.OptionRepository, userRepository *db.UserRepo
 	return &Setup{OptionRepository: optionRepository, UserRepository: userRepository}
 }
 
-// IsInstalled checks whether the gateway has been installed.
+// IsInstalled checks whether the platform has been installed.
 func (s *Setup) IsInstalled() bool {
 	option, err := s.OptionRepository.Get("is_installed")
 	if err != nil {
@@ -43,10 +43,10 @@ func (s *Setup) IsInstalled() bool {
 	return option != nil
 }
 
-// Install performs the initial gateway installation with the provided options.
+// Install performs the initial platform installation with the provided options.
 func (s *Setup) Install(options *SetupOptions) error {
 	if s.IsInstalled() {
-		return errors.New("gateway is already installed")
+		return errors.New("platform is already installed")
 	}
 
 	hashedPassword, err := service.HashPassword(options.AdminPassword)
@@ -72,27 +72,22 @@ func (s *Setup) Install(options *SetupOptions) error {
 		return err
 	}
 
-	err = s.OptionRepository.Create("gateway_url", options.GatewayURL)
+	err = s.OptionRepository.Create("platform_url", options.PlatformURL)
 	if err != nil {
 		return err
 	}
 
-	err = s.OptionRepository.Create("gateway_email", options.GatewayEmail)
+	err = s.OptionRepository.Create("platform_email", options.PlatformEmail)
 	if err != nil {
 		return err
 	}
 
-	err = s.OptionRepository.Create("gateway_name", options.GatewayName)
+	err = s.OptionRepository.Create("platform_name", options.PlatformName)
 	if err != nil {
 		return err
 	}
 
 	err = s.OptionRepository.Create("maintenance_mode", "0")
-	if err != nil {
-		return err
-	}
-
-	err = s.OptionRepository.Create("gateway_description", "")
 	if err != nil {
 		return err
 	}

@@ -6,6 +6,7 @@ package db
 
 import (
 	"database/sql"
+	"strconv"
 	"time"
 )
 
@@ -18,7 +19,7 @@ const (
 
 // User represents a user in the database.
 type User struct {
-	ID          int64
+	ID          ID
 	Email       string
 	Password    string
 	Role        string
@@ -41,9 +42,23 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 
 // Create inserts a new user into the database.
 func (r *UserRepository) Create(user *User) error {
-	result, err := r.db.Exec(
-		`INSERT INTO users (email, password, role, api_key, is_active, last_login_at)
-		VALUES (?, ?, ?, ?, ?, ?)`,
+	driver := GetDriver()
+	q := Placeholder(`INSERT INTO users (email, password, role, api_key, is_active, last_login_at)
+		VALUES (?, ?, ?, ?, ?, ?)`, driver)
+	if driver == "postgres" || driver == "postgresql" {
+		q = `INSERT INTO users (email, password, role, api_key, is_active, last_login_at)
+			VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
+		err := r.db.QueryRow(q,
+			user.Email,
+			user.Password,
+			user.Role,
+			user.APIKey,
+			user.IsActive,
+			user.LastLoginAt,
+		).Scan(&user.ID)
+		return err
+	}
+	result, err := r.db.Exec(q,
 		user.Email,
 		user.Password,
 		user.Role,
@@ -54,20 +69,21 @@ func (r *UserRepository) Create(user *User) error {
 	if err != nil {
 		return err
 	}
-
-	user.ID, err = result.LastInsertId()
-	return err
+	lid, err := result.LastInsertId()
+	if err != nil {
+		return err
+	}
+	user.ID = ID(strconv.FormatInt(lid, 10))
+	return nil
 }
 
 // GetByID retrieves a user by ID.
-func (r *UserRepository) GetByID(id int64) (*User, error) {
+func (r *UserRepository) GetByID(id ID) (*User, error) {
 	user := &User{}
-	err := r.db.QueryRow(
-		`SELECT id, email, password, role, api_key, is_active, last_login_at, created_at, updated_at
+	q := Placeholder(`SELECT id, email, password, role, api_key, is_active, last_login_at, created_at, updated_at
 		FROM users
-		WHERE id = ?`,
-		id,
-	).Scan(
+		WHERE id = ?`, GetDriver())
+	err := r.db.QueryRow(q, id.String()).Scan(
 		&user.ID,
 		&user.Email,
 		&user.Password,
@@ -92,12 +108,10 @@ func (r *UserRepository) GetByID(id int64) (*User, error) {
 // GetByEmail retrieves a user by email.
 func (r *UserRepository) GetByEmail(email string) (*User, error) {
 	user := &User{}
-	err := r.db.QueryRow(
-		`SELECT id, email, password, role, api_key, is_active, last_login_at, created_at, updated_at
+	q := Placeholder(`SELECT id, email, password, role, api_key, is_active, last_login_at, created_at, updated_at
 		FROM users
-		WHERE email = ?`,
-		email,
-	).Scan(
+		WHERE email = ?`, GetDriver())
+	err := r.db.QueryRow(q, email).Scan(
 		&user.ID,
 		&user.Email,
 		&user.Password,
@@ -122,12 +136,10 @@ func (r *UserRepository) GetByEmail(email string) (*User, error) {
 // GetByAPIKey retrieves a user by API key.
 func (r *UserRepository) GetByAPIKey(apiKey string) (*User, error) {
 	user := &User{}
-	err := r.db.QueryRow(
-		`SELECT id, email, password, role, api_key, is_active, last_login_at, created_at, updated_at
+	q := Placeholder(`SELECT id, email, password, role, api_key, is_active, last_login_at, created_at, updated_at
 		FROM users
-		WHERE api_key = ?`,
-		apiKey,
-	).Scan(
+		WHERE api_key = ?`, GetDriver())
+	err := r.db.QueryRow(q, apiKey).Scan(
 		&user.ID,
 		&user.Email,
 		&user.Password,
@@ -151,11 +163,11 @@ func (r *UserRepository) GetByAPIKey(apiKey string) (*User, error) {
 
 // Update updates a user's information.
 func (r *UserRepository) Update(user *User) error {
-	_, err := r.db.Exec(
-		`UPDATE users SET
+	q := Placeholder(`UPDATE users SET
 			email = ?, password = ?, role = ?, api_key = ?, is_active = ?,
 			last_login_at = ?, updated_at = ?
-		WHERE id = ?`,
+		WHERE id = ?`, GetDriver())
+	_, err := r.db.Exec(q,
 		user.Email,
 		user.Password,
 		user.Role,
@@ -163,41 +175,35 @@ func (r *UserRepository) Update(user *User) error {
 		user.IsActive,
 		user.LastLoginAt,
 		time.Now().UTC(),
-		user.ID,
+		user.ID.String(),
 	)
 	return err
 }
 
 // UpdateLastLogin updates the user's last login timestamp.
-func (r *UserRepository) UpdateLastLogin(id int64) error {
+func (r *UserRepository) UpdateLastLogin(id ID) error {
 	now := time.Now().UTC()
-	_, err := r.db.Exec(
-		`UPDATE users SET
+	q := Placeholder(`UPDATE users SET
 			last_login_at = ?, updated_at = ?
-		WHERE id = ?`,
-		now,
-		now,
-		id,
-	)
+		WHERE id = ?`, GetDriver())
+	_, err := r.db.Exec(q, now, now, id.String())
 	return err
 }
 
 // Delete removes a user from the database.
-func (r *UserRepository) Delete(id int64) error {
-	_, err := r.db.Exec("DELETE FROM users WHERE id = ?", id)
+func (r *UserRepository) Delete(id ID) error {
+	q := Placeholder("DELETE FROM users WHERE id = ?", GetDriver())
+	_, err := r.db.Exec(q, id.String())
 	return err
 }
 
 // List retrieves all users with pagination.
 func (r *UserRepository) List(limit, offset int) ([]*User, error) {
-	rows, err := r.db.Query(
-		`SELECT id, email, password, role, api_key, is_active, last_login_at, created_at, updated_at
+	q := Placeholder(`SELECT id, email, password, role, api_key, is_active, last_login_at, created_at, updated_at
 		FROM users
 		ORDER BY created_at DESC
-		LIMIT ? OFFSET ?`,
-		limit,
-		offset,
-	)
+		LIMIT ? OFFSET ?`, GetDriver())
+	rows, err := r.db.Query(q, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -234,10 +240,10 @@ func (r *UserRepository) Count() (int64, error) {
 
 // UserMeta represents metadata associated with a user.
 type UserMeta struct {
-	ID        int64
+	ID        ID
 	Key       string
 	Value     string
-	UserID    int64
+	UserID    ID
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -253,26 +259,19 @@ func NewUserMetaRepository(db *sql.DB) *UserMetaRepository {
 }
 
 // Create inserts new metadata for a user.
-func (r *UserMetaRepository) Create(userID int64, key, value string) error {
-	_, err := r.db.Exec(
-		"INSERT INTO users_meta (user_id, key, value) VALUES (?, ?, ?)",
-		userID,
-		key,
-		value,
-	)
+func (r *UserMetaRepository) Create(userID ID, key, value string) error {
+	q := Placeholder("INSERT INTO users_meta (user_id, key, value) VALUES (?, ?, ?)", GetDriver())
+	_, err := r.db.Exec(q, userID.String(), key, value)
 	return err
 }
 
 // Get retrieves metadata for a user by key.
-func (r *UserMetaRepository) Get(userID int64, key string) (*UserMeta, error) {
+func (r *UserMetaRepository) Get(userID ID, key string) (*UserMeta, error) {
 	meta := &UserMeta{}
-	err := r.db.QueryRow(
-		`SELECT id, key, value, user_id, created_at, updated_at
+	q := Placeholder(`SELECT id, key, value, user_id, created_at, updated_at
 		FROM users_meta
-		WHERE user_id = ? AND key = ?`,
-		userID,
-		key,
-	).Scan(
+		WHERE user_id = ? AND key = ?`, GetDriver())
+	err := r.db.QueryRow(q, userID.String(), key).Scan(
 		&meta.ID,
 		&meta.Key,
 		&meta.Value,
@@ -292,38 +291,28 @@ func (r *UserMetaRepository) Get(userID int64, key string) (*UserMeta, error) {
 }
 
 // Update updates metadata for a user.
-func (r *UserMetaRepository) Update(userID int64, key, value string) error {
-	_, err := r.db.Exec(
-		`UPDATE users_meta SET
+func (r *UserMetaRepository) Update(userID ID, key, value string) error {
+	q := Placeholder(`UPDATE users_meta SET
 			value = ?, updated_at = ?
-		WHERE user_id = ? AND key = ?`,
-		value,
-		time.Now().UTC(),
-		userID,
-		key,
-	)
+		WHERE user_id = ? AND key = ?`, GetDriver())
+	_, err := r.db.Exec(q, value, time.Now().UTC(), userID.String(), key)
 	return err
 }
 
 // Delete removes metadata for a user.
-func (r *UserMetaRepository) Delete(userID int64, key string) error {
-	_, err := r.db.Exec(
-		"DELETE FROM users_meta WHERE user_id = ? AND key = ?",
-		userID,
-		key,
-	)
+func (r *UserMetaRepository) Delete(userID ID, key string) error {
+	q := Placeholder("DELETE FROM users_meta WHERE user_id = ? AND key = ?", GetDriver())
+	_, err := r.db.Exec(q, userID.String(), key)
 	return err
 }
 
 // ListByUser retrieves all metadata for a user.
-func (r *UserMetaRepository) ListByUser(userID int64) ([]*UserMeta, error) {
-	rows, err := r.db.Query(
-		`SELECT id, key, value, user_id, created_at, updated_at
+func (r *UserMetaRepository) ListByUser(userID ID) ([]*UserMeta, error) {
+	q := Placeholder(`SELECT id, key, value, user_id, created_at, updated_at
 		FROM users_meta
 		WHERE user_id = ?
-		ORDER BY key`,
-		userID,
-	)
+		ORDER BY key`, GetDriver())
+	rows, err := r.db.Query(q, userID.String())
 	if err != nil {
 		return nil, err
 	}
@@ -349,7 +338,7 @@ func (r *UserMetaRepository) ListByUser(userID int64) ([]*UserMeta, error) {
 }
 
 // Upsert inserts or updates metadata for a user.
-func (r *UserMetaRepository) Upsert(userID int64, key, value string) error {
+func (r *UserMetaRepository) Upsert(userID ID, key, value string) error {
 	existing, err := r.Get(userID, key)
 	if err != nil {
 		return err

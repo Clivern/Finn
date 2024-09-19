@@ -16,30 +16,6 @@
                 Dashboard
               </router-link>
               <router-link
-                to="/gateways"
-                class="text-notion-textLight hover:bg-notion-hover hover:text-notion-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
-              >
-                Gateways
-              </router-link>
-              <router-link
-                to="/mcps"
-                class="text-notion-textLight hover:bg-notion-hover hover:text-notion-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
-              >
-                MCPs
-              </router-link>
-              <router-link
-                to="/servers"
-                class="text-notion-textLight hover:bg-notion-hover hover:text-notion-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
-              >
-                Servers
-              </router-link>
-              <router-link
-                to="/tools"
-                class="text-notion-textLight hover:bg-notion-hover hover:text-notion-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
-              >
-                Tools
-              </router-link>
-              <router-link
                 to="/users"
                 class="text-notion-textLight hover:bg-notion-hover hover:text-notion-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
               >

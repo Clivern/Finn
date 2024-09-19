@@ -109,7 +109,7 @@ func TestUnitOptionRepository_Get(t *testing.T) {
 		assert.NotNil(t, opt)
 		assert.Equal(t, "test_key", opt.Key)
 		assert.Equal(t, "test_value", opt.Value)
-		assert.Greater(t, opt.ID, int64(0))
+		assert.NotEmpty(t, opt.ID.String())
 		assert.False(t, opt.CreatedAt.IsZero())
 		assert.False(t, opt.UpdatedAt.IsZero())
 	})
@@ -290,7 +290,7 @@ func TestUnitOptionRepository_List(t *testing.T) {
 		for _, opt := range options {
 			keys[opt.Key] = true
 			assert.Equal(t, testData[opt.Key], opt.Value)
-			assert.Greater(t, opt.ID, int64(0))
+			assert.NotEmpty(t, opt.ID.String())
 		}
 
 		for key := range testData {

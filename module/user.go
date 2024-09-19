@@ -68,7 +68,7 @@ func (u *User) CreateUser(options *CreateUserOptions) (*db.User, error) {
 }
 
 // GetUser retrieves a user by ID.
-func (u *User) GetUser(userID int64) (*db.User, error) {
+func (u *User) GetUser(userID db.ID) (*db.User, error) {
 	user, err := u.UserRepository.GetByID(userID)
 	if err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ func (u *User) GetUser(userID int64) (*db.User, error) {
 
 // UpdateUserOptions contains options for updating a user.
 type UpdateUserOptions struct {
-	UserID   int64
+	UserID   db.ID
 	Email    string
 	Password string
 	Role     string
@@ -103,7 +103,7 @@ func (u *User) UpdateUser(options *UpdateUserOptions) (*db.User, error) {
 		if err != nil {
 			return nil, err
 		}
-		if existingUser != nil && existingUser.ID != options.UserID {
+		if existingUser != nil && existingUser.ID.String() != options.UserID.String() {
 			return nil, ErrUserEmailAlreadyExists
 		}
 	}
@@ -159,7 +159,7 @@ func (u *User) ListUsers(options *ListUsersOptions) (*ListUsersResult, error) {
 }
 
 // DeleteUser deletes a user by ID.
-func (u *User) DeleteUser(userID int64) error {
+func (u *User) DeleteUser(userID db.ID) error {
 	user, err := u.UserRepository.GetByID(userID)
 	if err != nil {
 		return err

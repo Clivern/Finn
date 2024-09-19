@@ -13,9 +13,11 @@ import (
 )
 
 var (
-	// globalConnection holds the singleton database connection
-	globalConnection *Connection
-	// mu protects globalConnection during initialization
+	// dbConn holds the singleton database connection
+	dbConn *Connection
+	// dbDriver is the driver name from config
+	dbDriver string
+	// mu protects dbConn during initialization
 	mu sync.RWMutex
 )
 
@@ -24,7 +26,7 @@ func InitDB(config Config) error {
 	mu.Lock()
 	defer mu.Unlock()
 
-	if globalConnection != nil {
+	if dbConn != nil {
 		log.Warn().Msg("Database connection already initialized")
 		return nil
 	}
@@ -34,7 +36,8 @@ func InitDB(config Config) error {
 		return fmt.Errorf("failed to initialize database: %w", err)
 	}
 
-	globalConnection = conn
+	dbConn = conn
+	dbDriver = config.Driver
 	log.Info().Msg("Global database connection initialized")
 	return nil
 }
@@ -44,12 +47,41 @@ func GetDB() *sql.DB {
 	mu.RLock()
 	defer mu.RUnlock()
 
-	if globalConnection == nil {
+	if dbConn == nil {
 		log.Error().Msg("Database not initialized")
 		return nil
 	}
 
-	return globalConnection.DB
+	return dbConn.DB
+}
+
+// GetDriver returns the database driver name from config
+func GetDriver() string {
+	return dbDriver
+}
+
+// Placeholder returns the query with placeholders suitable for the current driver.
+func Placeholder(query, driver string) string {
+	if driver == "postgres" || driver == "postgresql" {
+		n := 0
+		return placeholderReplacer(query, func() string {
+			n++
+			return fmt.Sprintf("$%d", n)
+		})
+	}
+	return query
+}
+
+func placeholderReplacer(query string, next func() string) string {
+	var out []byte
+	for i := 0; i < len(query); i++ {
+		if query[i] == '?' {
+			out = append(out, next()...)
+		} else {
+			out = append(out, query[i])
+		}
+	}
+	return string(out)
 }
 
 // CloseDB closes the global database connection
@@ -57,11 +89,12 @@ func CloseDB() error {
 	mu.Lock()
 	defer mu.Unlock()
 
-	if globalConnection == nil {
+	if dbConn == nil {
 		return nil
 	}
 
-	err := globalConnection.Close()
-	globalConnection = nil
+	err := dbConn.Close()
+	dbConn = nil
+	dbDriver = ""
 	return err
 }

@@ -16,9 +16,9 @@ import (
 
 // SetupRequest represents the setup request payload
 type SetupRequest struct {
-	GatewayURL    string `json:"gatewayURL" validate:"required,url,min=4,max=60" label:"Gateway URL"`
-	GatewayEmail  string `json:"gatewayEmail" validate:"required,email,min=4,max=60" label:"Gateway Email"`
-	GatewayName   string `json:"gatewayName" validate:"required,min=2,max=50" label:"Gateway Name"`
+	PlatformURL   string `json:"platformURL" validate:"required,url,min=4,max=60" label:"Platform URL"`
+	PlatformEmail string `json:"platformEmail" validate:"required,email,min=4,max=60" label:"Platform Email"`
+	PlatformName  string `json:"platformName" validate:"required,min=2,max=50" label:"Platform Name"`
 	AdminEmail    string `json:"adminEmail" validate:"required,email,min=4,max=60" label:"Admin Email"`
 	AdminPassword string `json:"adminPassword" validate:"required,strong_password,min=8,max=60" label:"Admin Password"`
 }
@@ -39,15 +39,15 @@ func SetupAction(w http.ResponseWriter, r *http.Request) {
 
 	if setupModule.IsInstalled() {
 		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Gateway is already installed",
+			"errorMessage": "Platform is already installed",
 		})
 		return
 	}
 
 	err := setupModule.Install(&module.SetupOptions{
-		GatewayURL:    req.GatewayURL,
-		GatewayEmail:  req.GatewayEmail,
-		GatewayName:   req.GatewayName,
+		PlatformURL:   req.PlatformURL,
+		PlatformEmail: req.PlatformEmail,
+		PlatformName:  req.PlatformName,
 		AdminEmail:    req.AdminEmail,
 		AdminPassword: req.AdminPassword,
 	})
@@ -60,13 +60,13 @@ func SetupAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Info().Msg("Gateway setup completed successfully")
+	log.Info().Msg("Platform setup completed successfully")
 	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"successMessage": "Gateway setup completed successfully",
+		"successMessage": "Platform setup completed successfully",
 	})
 }
 
-// SetupStatusAction checks if the gateway is already installed
+// SetupStatusAction checks if the platform is already installed
 func SetupStatusAction(w http.ResponseWriter, _ *http.Request) {
 	setupModule := module.NewSetup(
 		db.NewOptionRepository(db.GetDB()),

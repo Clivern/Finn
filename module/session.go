@@ -28,7 +28,7 @@ func NewSessionManager(sessionRepo *db.SessionRepository, userRepo *db.UserRepos
 }
 
 // CreateSession creates a new session for a user.
-func (s *SessionManager) CreateSession(userID int64, duration time.Duration, ipAddress, userAgent string) (*db.Session, error) {
+func (s *SessionManager) CreateSession(userID db.ID, duration time.Duration, ipAddress, userAgent string) (*db.Session, error) {
 	user, err := s.UserRepo.GetByID(userID)
 	if err != nil {
 		return nil, err
@@ -89,12 +89,12 @@ func (s *SessionManager) ValidateSession(token string) (*db.User, *db.Session, e
 }
 
 // RevokeUserSessions revokes all sessions for a user.
-func (s *SessionManager) RevokeUserSessions(userID int64) error {
+func (s *SessionManager) RevokeUserSessions(userID db.ID) error {
 	return s.SessionRepo.DeleteByUserID(userID)
 }
 
 // GetUserSessions retrieves all active sessions for a user.
-func (s *SessionManager) GetUserSessions(userID int64) ([]*db.Session, error) {
+func (s *SessionManager) GetUserSessions(userID db.ID) ([]*db.Session, error) {
 	sessions, err := s.SessionRepo.GetByUserID(userID)
 	if err != nil {
 		return nil, err

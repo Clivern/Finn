@@ -11,7 +11,7 @@ import (
 
 // Option represents a key-value option in the database.
 type Option struct {
-	ID        int64
+	ID        ID
 	Key       string
 	Value     string
 	CreatedAt time.Time
@@ -30,23 +30,18 @@ func NewOptionRepository(db *sql.DB) *OptionRepository {
 
 // Create inserts a new option into the database.
 func (r *OptionRepository) Create(key, value string) error {
-	_, err := r.db.Exec(
-		"INSERT INTO options (key, value) VALUES (?, ?)",
-		key,
-		value,
-	)
+	q := Placeholder("INSERT INTO options (key, value) VALUES (?, ?)", GetDriver())
+	_, err := r.db.Exec(q, key, value)
 	return err
 }
 
 // Get retrieves an option by key.
 func (r *OptionRepository) Get(key string) (*Option, error) {
 	option := &Option{}
-	err := r.db.QueryRow(
-		`SELECT id, key, value, created_at, updated_at
+	q := Placeholder(`SELECT id, key, value, created_at, updated_at
 		FROM options
-		WHERE key = ?`,
-		key,
-	).Scan(
+		WHERE key = ?`, GetDriver())
+	err := r.db.QueryRow(q, key).Scan(
 		&option.ID,
 		&option.Key,
 		&option.Value,
@@ -65,26 +60,24 @@ func (r *OptionRepository) Get(key string) (*Option, error) {
 
 // Update updates an option value.
 func (r *OptionRepository) Update(key, value string) error {
-	_, err := r.db.Exec(
-		`UPDATE options SET
+	q := Placeholder(`UPDATE options SET
 			value = ?, updated_at = ?
-		WHERE key = ?`,
-		value,
-		time.Now().UTC(),
-		key,
-	)
+		WHERE key = ?`, GetDriver())
+	_, err := r.db.Exec(q, value, time.Now().UTC(), key)
 	return err
 }
 
 // Delete removes an option from the database.
 func (r *OptionRepository) Delete(key string) error {
-	_, err := r.db.Exec("DELETE FROM options WHERE key = ?", key)
+	q := Placeholder("DELETE FROM options WHERE key = ?", GetDriver())
+	_, err := r.db.Exec(q, key)
 	return err
 }
 
 // List retrieves all options from the database.
 func (r *OptionRepository) List() ([]*Option, error) {
-	rows, err := r.db.Query("SELECT id, key, value, created_at, updated_at FROM options ORDER BY key")
+	q := Placeholder("SELECT id, key, value, created_at, updated_at FROM options ORDER BY key", GetDriver())
+	rows, err := r.db.Query(q)
 	if err != nil {
 		return nil, err
 	}

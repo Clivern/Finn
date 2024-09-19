@@ -4,11 +4,7 @@ import Login from '@/views/Login.vue'
 import Dashboard from '@/views/Dashboard.vue'
 import Setup from '@/views/Setup.vue'
 import Settings from '@/views/Settings.vue'
-import Gateways from '@/views/Gateways.vue'
 import Users from '@/views/Users.vue'
-import Servers from '@/views/Servers.vue'
-import Tools from '@/views/Tools.vue'
-import Mcps from '@/views/Mcps.vue'
 
 const routes = [
   {
@@ -30,33 +26,9 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/gateways',
-    name: 'Gateways',
-    component: Gateways,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/mcps',
-    name: 'Mcps',
-    component: Mcps,
-    meta: { requiresAuth: true }
-  },
-  {
     path: '/users',
     name: 'Users',
     component: Users,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/servers',
-    name: 'Servers',
-    component: Servers,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/tools',
-    name: 'Tools',
-    component: Tools,
     meta: { requiresAuth: true }
   },
   {
