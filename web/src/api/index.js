@@ -75,3 +75,12 @@ export const settingsAPI = {
   getSettings: () => api.get('/action/settings'),
   updateSettings: (data) => api.put('/action/settings', data),
 }
+
+// API endpoints for workspaces (projects)
+export const workspaceAPI = {
+  list: () => api.get('/workspaces'),
+  get: (id) => api.get(`/workspaces/${id}`),
+  create: (data) => api.post('/workspaces', data),
+  update: (id, data) => api.put(`/workspaces/${id}`, data),
+  delete: (id) => api.delete(`/workspaces/${id}`),
+}

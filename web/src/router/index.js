@@ -5,6 +5,7 @@ import Dashboard from '@/views/Dashboard.vue'
 import Setup from '@/views/Setup.vue'
 import Settings from '@/views/Settings.vue'
 import Users from '@/views/Users.vue'
+import SelectWorkspace from '@/views/SelectWorkspace.vue'
 
 const routes = [
   {
@@ -35,6 +36,12 @@ const routes = [
     path: '/settings',
     name: 'Settings',
     component: Settings,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/workspaces',
+    name: 'SelectWorkspace',
+    component: SelectWorkspace,
     meta: { requiresAuth: true }
   },
   {

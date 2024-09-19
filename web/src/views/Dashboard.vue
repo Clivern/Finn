@@ -29,16 +29,8 @@
               </router-link>
             </div>
           </div>
-          <div class="flex items-center gap-3">
-            <span class="hidden sm:block text-sm text-theme-textLight truncate max-w-[140px]">
-              {{ authStore.currentUser?.email }}
-            </span>
-            <button
-              @click="handleLogout"
-              class="btn-secondary text-sm"
-            >
-              Logout
-            </button>
+          <div class="flex items-center">
+            <UserAvatarDropdown />
           </div>
         </div>
       </div>
@@ -150,11 +142,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { healthAPI } from '@/api'
+import UserAvatarDropdown from '@/components/UserAvatarDropdown.vue'
 
-const router = useRouter()
 const authStore = useAuthStore()
 
 const stats = ref({
@@ -168,11 +159,6 @@ const systemInfo = ref({
   memory: '245 MB / 2 GB',
   cpu: '12%'
 })
-
-const handleLogout = () => {
-  authStore.logout()
-  router.push('/login')
-}
 
 onMounted(async () => {
   try {

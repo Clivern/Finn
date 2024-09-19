@@ -3,6 +3,7 @@
  */
 
 const USER_STORAGE_KEY = 'met_user'
+const WORKSPACE_STORAGE_KEY = 'met_workspace'
 
 /**
  * Load user data from localStorage
@@ -42,6 +43,36 @@ export const clearUserStorage = () => {
     localStorage.removeItem(USER_STORAGE_KEY)
   } catch (err) {
     console.error('Failed to clear user from localStorage:', err)
+  }
+}
+
+/**
+ * Load current workspace from localStorage
+ * @returns {Object|null} The stored workspace object or null
+ */
+export const loadWorkspaceFromStorage = () => {
+  try {
+    const stored = localStorage.getItem(WORKSPACE_STORAGE_KEY)
+    return stored ? JSON.parse(stored) : null
+  } catch (err) {
+    console.error('Failed to load workspace from localStorage:', err)
+    return null
+  }
+}
+
+/**
+ * Save current workspace to localStorage
+ * @param {Object|null} workspace - The workspace object to store, or null to clear
+ */
+export const saveWorkspaceToStorage = (workspace) => {
+  try {
+    if (workspace) {
+      localStorage.setItem(WORKSPACE_STORAGE_KEY, JSON.stringify(workspace))
+    } else {
+      localStorage.removeItem(WORKSPACE_STORAGE_KEY)
+    }
+  } catch (err) {
+    console.error('Failed to save workspace to localStorage:', err)
   }
 }
 

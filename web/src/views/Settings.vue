@@ -30,12 +30,7 @@
             </div>
           </div>
           <div class="flex items-center">
-            <button
-              @click="handleLogout"
-              class="btn-secondary text-sm"
-            >
-              Logout
-            </button>
+            <UserAvatarDropdown />
           </div>
         </div>
       </div>
@@ -232,11 +227,10 @@
 
 <script setup>
 import { ref, reactive, onMounted, watch, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { settingsAPI } from '@/api'
+import UserAvatarDropdown from '@/components/UserAvatarDropdown.vue'
 
-const router = useRouter()
 const authStore = useAuthStore()
 
 const loading = ref(false)
@@ -255,11 +249,6 @@ const form = reactive({
   smtpPassword: '',
   smtpUseTLS: true
 })
-
-const handleLogout = () => {
-  authStore.logout()
-  router.push('/login')
-}
 
 const loadSettings = async () => {
   loading.value = true

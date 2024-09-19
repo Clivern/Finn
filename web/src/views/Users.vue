@@ -30,14 +30,7 @@
             </div>
           </div>
           <div class="flex items-center">
-            <div class="flex items-center space-x-3">
-              <button
-                @click="handleLogout"
-                class="btn-secondary text-sm"
-              >
-                Logout
-              </button>
-            </div>
+            <UserAvatarDropdown />
           </div>
         </div>
       </div>
@@ -437,11 +430,10 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { userAPI } from '@/api'
+import UserAvatarDropdown from '@/components/UserAvatarDropdown.vue'
 
-const router = useRouter()
 const authStore = useAuthStore()
 
 // State
@@ -477,11 +469,6 @@ const editForm = reactive({
   role: 'user',
   isActive: true
 })
-
-const handleLogout = () => {
-  authStore.logout()
-  router.push('/login')
-}
 
 const formatDate = (dateString) => {
   if (!dateString) return 'Never'
