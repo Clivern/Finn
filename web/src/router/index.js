@@ -6,7 +6,13 @@ import Setup from '@/views/Setup.vue'
 import Settings from '@/views/Settings.vue'
 import Users from '@/views/Users.vue'
 import SelectWorkspace from '@/views/SelectWorkspace.vue'
-import Placeholder from '@/views/Placeholder.vue'
+import TaskTemplates from '@/views/TaskTemplates.vue'
+import Inventory from '@/views/Inventory.vue'
+import Environment from '@/views/Environment.vue'
+import Repositories from '@/views/Repositories.vue'
+import TFBackends from '@/views/TFBackends.vue'
+import Runners from '@/views/Runners.vue'
+import Integrations from '@/views/Integrations.vue'
 import NotFound from '@/views/NotFound.vue'
 import ServerError from '@/views/ServerError.vue'
 
@@ -51,43 +57,43 @@ const routes = [
   {
     path: '/task-templates',
     name: 'TaskTemplates',
-    component: Placeholder,
+    component: TaskTemplates,
     meta: { requiresAuth: true, title: 'Task Templates', description: 'Manage task templates' }
   },
   {
     path: '/inventory',
     name: 'Inventory',
-    component: Placeholder,
+    component: Inventory,
     meta: { requiresAuth: true, title: 'Inventory', description: 'Manage inventory' }
   },
   {
     path: '/environment',
     name: 'Environment',
-    component: Placeholder,
+    component: Environment,
     meta: { requiresAuth: true, title: 'Environment', description: 'Environment configuration' }
   },
   {
     path: '/repositories',
     name: 'Repositories',
-    component: Placeholder,
+    component: Repositories,
     meta: { requiresAuth: true, title: 'Repositories', description: 'Manage repositories' }
   },
   {
     path: '/tf-backends',
     name: 'TFBackends',
-    component: Placeholder,
+    component: TFBackends,
     meta: { requiresAuth: true, title: 'TF Backends', description: 'Terraform backends' }
   },
   {
     path: '/runners',
     name: 'Runners',
-    component: Placeholder,
+    component: Runners,
     meta: { requiresAuth: true, title: 'Runners', description: 'Manage runners' }
   },
   {
     path: '/integrations',
     name: 'Integrations',
-    component: Placeholder,
+    component: Integrations,
     meta: { requiresAuth: true, title: 'Integrations', description: 'Manage integrations' }
   },
   {
