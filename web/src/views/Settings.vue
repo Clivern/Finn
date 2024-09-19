@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-theme-bg">
     <!-- Navigation -->
     <nav class="bg-white border-b border-theme-border">
-      <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <div class="w-full px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-14">
           <div class="flex items-center">
             <div class="flex-shrink-0 flex items-center">
@@ -30,216 +30,203 @@
             </div>
           </div>
           <div class="flex items-center">
-            <div class="flex items-center space-x-3">
-              <button
-                @click="handleLogout"
-                class="btn-secondary text-sm"
-              >
-                Logout
-              </button>
-            </div>
+            <button
+              @click="handleLogout"
+              class="btn-secondary text-sm"
+            >
+              Logout
+            </button>
           </div>
         </div>
       </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto py-8 px-6 lg:px-8">
-      <!-- Page Header -->
-      <div class="mb-8">
-        <h1 class="text-3xl font-semibold text-theme-text">Settings</h1>
-        <p class="text-sm text-theme-textLight mt-2">Manage platform settings and preferences</p>
-      </div>
-
-      <!-- Success/Error Messages -->
-      <div v-if="successMessage" class="mb-6 rounded-md border border-green-200 bg-green-50 p-4">
-        <p class="text-sm text-green-800">{{ successMessage }}</p>
-      </div>
-      <div v-if="errorMessage" class="mb-6 rounded-md border border-red-200 bg-red-50 p-4">
-        <p class="text-sm text-red-800">{{ errorMessage }}</p>
-      </div>
-
-      <!-- Settings Form -->
-      <form @submit.prevent="handleSave" class="space-y-6">
-        <!-- General Settings Box -->
-        <div class="bg-white rounded-lg border border-theme-border p-6 shadow-sm">
-          <h2 class="text-lg font-semibold text-theme-text mb-4">General</h2>
-          <div class="border-b border-theme-border mb-4"></div>
-          <div class="space-y-4">
-            <div>
-              <label for="platformName" class="block text-sm font-medium text-theme-text mb-2">
-                Platform Name
-              </label>
-              <input
-                id="platformName"
-                v-model="form.platformName"
-                type="text"
-                required
-                class="input-field max-w-md"
-                placeholder="Met"
-                :disabled="loading"
-              >
-            </div>
-            <div>
-              <label for="platformEmail" class="block text-sm font-medium text-theme-text mb-2">
-                Platform Email
-              </label>
-              <input
-                id="platformEmail"
-                v-model="form.platformEmail"
-                type="email"
-                required
-                class="input-field max-w-md"
-                placeholder="admin@met.example.com"
-                :disabled="loading"
-              >
-            </div>
-            <div>
-              <label for="platformURL" class="block text-sm font-medium text-theme-text mb-2">
-                Platform URL
-              </label>
-              <input
-                id="platformURL"
-                v-model="form.platformURL"
-                type="url"
-                required
-                class="input-field max-w-md"
-                placeholder="http://met.example.com"
-                :disabled="loading"
-              >
-            </div>
-          </div>
+    <!-- Settings content -->
+    <div class="w-full px-4 sm:px-6 lg:px-8 py-8">
+      <main>
+        <div class="mb-6">
+          <h1 class="text-2xl font-semibold text-theme-text">Settings</h1>
+          <p class="text-sm text-theme-textLight mt-1">Manage platform configuration</p>
         </div>
 
-        <!-- SMTP Configuration Box -->
-        <div class="bg-white rounded-lg border border-theme-border p-6 shadow-sm">
-          <h2 class="text-lg font-semibold text-theme-text mb-4">SMTP Configuration</h2>
-          <div class="border-b border-theme-border mb-4"></div>
-          <div class="space-y-4">
-            <div>
-              <label for="smtpServer" class="block text-sm font-medium text-theme-text mb-2">
-                SMTP Server
-              </label>
-              <input
-                id="smtpServer"
-                v-model="form.smtpServer"
-                type="text"
-                class="input-field max-w-md"
-                placeholder="smtp.met.example.com"
-                :disabled="loading"
-              >
-            </div>
-
-            <div>
-              <label for="smtpPort" class="block text-sm font-medium text-theme-text mb-2">
-                SMTP Port
-              </label>
-              <input
-                id="smtpPort"
-                v-model="form.smtpPort"
-                type="text"
-                class="input-field max-w-xs"
-                placeholder="587"
-                :disabled="loading"
-              >
-            </div>
-
-            <div>
-              <label for="smtpFromEmail" class="block text-sm font-medium text-theme-text mb-2">
-                SMTP From Email
-              </label>
-              <input
-                id="smtpFromEmail"
-                v-model="form.smtpFromEmail"
-                type="email"
-                class="input-field max-w-md"
-                placeholder="noreply@met.example.com"
-                :disabled="loading"
-              >
-            </div>
-
-            <div>
-              <label for="smtpUsername" class="block text-sm font-medium text-theme-text mb-2">
-                SMTP Username
-              </label>
-              <input
-                id="smtpUsername"
-                v-model="form.smtpUsername"
-                type="text"
-                class="input-field max-w-md"
-                placeholder="smtpuser"
-                :disabled="loading"
-              >
-            </div>
-
-            <div>
-              <label for="smtpPassword" class="block text-sm font-medium text-theme-text mb-2">
-                SMTP Password
-              </label>
-              <input
-                id="smtpPassword"
-                v-model="form.smtpPassword"
-                type="password"
-                class="input-field max-w-md"
-                placeholder="Enter SMTP password"
-                :disabled="loading"
-              >
-            </div>
-
-            <div class="flex items-start">
-              <input
-                id="smtpUseTLS"
-                v-model="form.smtpUseTLS"
-                type="checkbox"
-                class="h-4 w-4 mt-1 rounded text-theme-text focus:ring-theme-text border-theme-border"
-                :disabled="loading"
-              >
-              <label for="smtpUseTLS" class="ml-3 block">
-                <span class="text-sm font-medium text-theme-text">Use TLS</span>
-                <p class="text-xs text-theme-textLight mt-1">Enable TLS for SMTP connection</p>
-              </label>
-            </div>
-          </div>
+        <!-- Success / Error -->
+        <div v-if="successMessage" class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+          {{ successMessage }}
+        </div>
+        <div v-if="errorMessage" class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {{ errorMessage }}
         </div>
 
-        <!-- Maintenance Mode Box -->
-        <div class="bg-white rounded-lg border border-theme-border p-6 shadow-sm">
-          <h2 class="text-lg font-semibold text-theme-text mb-4">Maintenance</h2>
-          <div class="border-b border-theme-border mb-4"></div>
-          <div class="flex items-start">
-            <input
-              id="maintenanceMode"
-              v-model="form.maintenanceMode"
-              type="checkbox"
-              class="h-4 w-4 mt-1 rounded text-theme-text focus:ring-theme-text border-theme-border"
+        <form @submit.prevent="handleSave" class="space-y-8">
+          <!-- General -->
+          <section class="rounded-xl bg-white border border-theme-border shadow-sm overflow-hidden">
+              <div class="px-6 py-4 border-b border-theme-border bg-primary-50/50">
+                <h2 class="text-base font-semibold text-theme-text">General</h2>
+                <p class="text-xs text-theme-textLight mt-0.5">Platform identity and contact</p>
+              </div>
+              <div class="p-6 space-y-5">
+                <div>
+                  <label for="platformName" class="block text-sm font-medium text-theme-text mb-1.5">Platform Name</label>
+                  <input
+                    id="platformName"
+                    v-model="form.platformName"
+                    type="text"
+                    required
+                    class="input-field max-w-md"
+                    placeholder="Met"
+                    :disabled="loading"
+                  >
+                </div>
+                <div>
+                  <label for="platformEmail" class="block text-sm font-medium text-theme-text mb-1.5">Platform Email</label>
+                  <input
+                    id="platformEmail"
+                    v-model="form.platformEmail"
+                    type="email"
+                    required
+                    class="input-field max-w-md"
+                    placeholder="admin@met.example.com"
+                    :disabled="loading"
+                  >
+                </div>
+                <div>
+                  <label for="platformURL" class="block text-sm font-medium text-theme-text mb-1.5">Platform URL</label>
+                  <input
+                    id="platformURL"
+                    v-model="form.platformURL"
+                    type="url"
+                    required
+                    class="input-field max-w-md"
+                    placeholder="https://met.example.com"
+                    :disabled="loading"
+                  >
+                </div>
+              </div>
+            </section>
+
+          <!-- Email (SMTP) -->
+          <section class="rounded-xl bg-white border border-theme-border shadow-sm overflow-hidden">
+              <div class="px-6 py-4 border-b border-theme-border bg-primary-50/50">
+                <h2 class="text-base font-semibold text-theme-text">Email</h2>
+                <p class="text-xs text-theme-textLight mt-0.5">SMTP server for outgoing mail</p>
+              </div>
+              <div class="p-6 space-y-5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div>
+                    <label for="smtpServer" class="block text-sm font-medium text-theme-text mb-1.5">SMTP Server</label>
+                    <input
+                      id="smtpServer"
+                      v-model="form.smtpServer"
+                      type="text"
+                      class="input-field"
+                      placeholder="smtp.example.com"
+                      :disabled="loading"
+                    >
+                  </div>
+                  <div>
+                    <label for="smtpPort" class="block text-sm font-medium text-theme-text mb-1.5">Port</label>
+                    <input
+                      id="smtpPort"
+                      v-model="form.smtpPort"
+                      type="text"
+                      class="input-field"
+                      placeholder="587"
+                      :disabled="loading"
+                    >
+                  </div>
+                </div>
+                <div>
+                  <label for="smtpFromEmail" class="block text-sm font-medium text-theme-text mb-1.5">From Email</label>
+                  <input
+                    id="smtpFromEmail"
+                    v-model="form.smtpFromEmail"
+                    type="email"
+                    class="input-field max-w-md"
+                    placeholder="noreply@example.com"
+                    :disabled="loading"
+                  >
+                </div>
+                <div>
+                  <label for="smtpUsername" class="block text-sm font-medium text-theme-text mb-1.5">Username</label>
+                  <input
+                    id="smtpUsername"
+                    v-model="form.smtpUsername"
+                    type="text"
+                    class="input-field max-w-md"
+                    placeholder="SMTP username"
+                    :disabled="loading"
+                  >
+                </div>
+                <div>
+                  <label for="smtpPassword" class="block text-sm font-medium text-theme-text mb-1.5">Password</label>
+                  <input
+                    id="smtpPassword"
+                    v-model="form.smtpPassword"
+                    type="password"
+                    class="input-field max-w-md"
+                    placeholder="SMTP password"
+                    :disabled="loading"
+                  >
+                </div>
+                <label class="flex items-start gap-3 cursor-pointer">
+                  <input
+                    id="smtpUseTLS"
+                    v-model="form.smtpUseTLS"
+                    type="checkbox"
+                    class="mt-1 h-4 w-4 rounded border-theme-border text-primary-800 focus:ring-primary-500"
+                    :disabled="loading"
+                  >
+                  <span class="text-sm text-theme-text">
+                    <span class="font-medium">Use TLS</span>
+                    <span class="text-theme-textLight ml-1">— secure connection</span>
+                  </span>
+                </label>
+              </div>
+            </section>
+
+          <!-- Maintenance -->
+          <section class="rounded-xl bg-white border border-theme-border shadow-sm overflow-hidden">
+              <div class="px-6 py-4 border-b border-theme-border bg-primary-50/50">
+                <h2 class="text-base font-semibold text-theme-text">Maintenance</h2>
+                <p class="text-xs text-theme-textLight mt-0.5">Control application availability</p>
+              </div>
+              <div class="p-6">
+                <label class="flex items-start gap-3 cursor-pointer">
+                  <input
+                    id="maintenanceMode"
+                    v-model="form.maintenanceMode"
+                    type="checkbox"
+                    class="mt-1 h-4 w-4 rounded border-theme-border text-primary-800 focus:ring-primary-500"
+                    :disabled="loading"
+                  >
+                  <span class="text-sm text-theme-text">
+                    <span class="font-medium">Maintenance mode</span>
+                    <span class="text-theme-textLight ml-1">— disable access for non-admins</span>
+                  </span>
+                </label>
+              </div>
+            </section>
+
+          <!-- Save -->
+          <div class="flex items-center justify-end pt-2 pb-4">
+            <button
+              type="submit"
+              class="btn-primary"
               :disabled="loading"
             >
-            <label for="maintenanceMode" class="ml-3 block">
-              <span class="text-sm font-medium text-theme-text">Enable Maintenance Mode</span>
-              <p class="text-xs text-theme-textLight mt-1">Put the application in maintenance mode</p>
-            </label>
+              <span v-if="!loading">Save settings</span>
+              <span v-else class="inline-flex items-center gap-2">
+                <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Saving…
+              </span>
+            </button>
           </div>
-        </div>
-
-        <!-- Submit Button -->
-        <div class="flex justify-end gap-3">
-          <button
-            type="submit"
-            class="btn-primary"
-            :disabled="loading"
-          >
-            <span v-if="!loading">Save Settings</span>
-            <span v-else class="flex items-center">
-              <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              Saving...
-            </span>
-          </button>
-        </div>
-      </form>
-    </main>
+        </form>
+      </main>
+    </div>
   </div>
 </template>
 
@@ -257,9 +244,9 @@ const successMessage = ref(null)
 const errorMessage = ref(null)
 
 const form = reactive({
+  platformName: '',
   platformURL: '',
   platformEmail: '',
-  platformName: '',
   maintenanceMode: false,
   smtpServer: '',
   smtpPort: '',
@@ -277,16 +264,13 @@ const handleLogout = () => {
 const loadSettings = async () => {
   loading.value = true
   errorMessage.value = null
-
   try {
     const response = await settingsAPI.getSettings()
     const settings = response.data?.settings
-
     if (settings) {
-      // Map API response (snake_case) to form fields
+      form.platformName = settings.platform_name || ''
       form.platformURL = settings.platform_url || ''
       form.platformEmail = settings.platform_email || ''
-      form.platformName = settings.platform_name || ''
       form.maintenanceMode = settings.maintenance_mode === '1'
       form.smtpServer = settings.smtp_server || ''
       form.smtpPort = settings.smtp_port || ''
@@ -307,12 +291,9 @@ const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-// Watch for message changes and scroll to top
 watch([successMessage, errorMessage], () => {
   if (successMessage.value || errorMessage.value) {
-    nextTick(() => {
-      scrollToTop()
-    })
+    nextTick(scrollToTop)
   }
 })
 
@@ -320,9 +301,7 @@ const handleSave = async () => {
   loading.value = true
   successMessage.value = null
   errorMessage.value = null
-
   try {
-    // Map form fields to API request format (camelCase)
     const payload = {
       platformName: form.platformName,
       platformUrl: form.platformURL,
@@ -330,35 +309,24 @@ const handleSave = async () => {
       maintenanceMode: form.maintenanceMode,
       smtpUseTLS: form.smtpUseTLS
     }
-
-    // Only include SMTP fields if they have values
-    if (form.smtpServer) { payload.smtpServer = form.smtpServer }
-    if (form.smtpPort) { payload.smtpPort = parseInt(form.smtpPort, 10) || 587 }
-    if (form.smtpFromEmail) { payload.smtpFromEmail = form.smtpFromEmail }
-    if (form.smtpUsername) { payload.smtpUsername = form.smtpUsername }
-    if (form.smtpPassword) { payload.smtpPassword = form.smtpPassword }
+    if (form.smtpServer) payload.smtpServer = form.smtpServer
+    if (form.smtpPort) payload.smtpPort = parseInt(form.smtpPort, 10) || 587
+    if (form.smtpFromEmail) payload.smtpFromEmail = form.smtpFromEmail
+    if (form.smtpUsername) payload.smtpUsername = form.smtpUsername
+    if (form.smtpPassword) payload.smtpPassword = form.smtpPassword
 
     const response = await settingsAPI.updateSettings(payload)
-
     if (response.data?.successMessage) {
       successMessage.value = response.data.successMessage
-      setTimeout(() => {
-        successMessage.value = null
-      }, 3000)
+      setTimeout(() => { successMessage.value = null }, 3000)
     }
   } catch (err) {
     console.error('Failed to save settings:', err)
-    if (err.response?.data?.errorMessage) {
-      errorMessage.value = err.response.data.errorMessage
-    } else {
-      errorMessage.value = 'Failed to save settings. Please try again.'
-    }
+    errorMessage.value = err.response?.data?.errorMessage || 'Failed to save settings. Please try again.'
   } finally {
     loading.value = false
   }
 }
 
-onMounted(() => {
-  loadSettings()
-})
+onMounted(loadSettings)
 </script>

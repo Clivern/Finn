@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-theme-bg">
     <!-- Navigation -->
     <nav class="bg-white border-b border-theme-border">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="w-full px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-14">
           <div class="flex items-center">
             <div class="flex-shrink-0 flex items-center">
@@ -45,7 +45,7 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="w-full px-4 sm:px-6 lg:px-8 py-8">
       <!-- Page Header -->
       <header class="mb-8">
         <h1 class="text-2xl sm:text-3xl font-semibold text-theme-text tracking-tight">
