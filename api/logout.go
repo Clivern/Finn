@@ -15,14 +15,17 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// LogoutAction handles logout requests
+// LogoutAction handles logout requests.
+// Returns 200 even when not authenticated (idempotent: "already logged out").
 func LogoutAction(w http.ResponseWriter, r *http.Request) {
 	log.Debug().Msg("Logout endpoint called")
 
+	service.DeleteCookie(w, "_met_session")
+
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Not authenticated",
+		service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+			"successMessage": "Logout successful",
 		})
 		return
 	}
@@ -37,8 +40,6 @@ func LogoutAction(w http.ResponseWriter, r *http.Request) {
 	if err := sessionManager.RevokeUserSessions(user.ID); err != nil {
 		log.Error().Err(err).Msg("Failed to revoke session")
 	}
-	service.DeleteCookie(w, "_met_session")
-
 	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"successMessage": "Logout successful",
 	})

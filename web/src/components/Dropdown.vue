@@ -12,7 +12,7 @@
         class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary-200 text-sm font-medium text-theme-text"
         aria-hidden="true"
       >
-        {{ userInitials }}
+        <img :src="authStore.currentUser?.avatar ?? ''" :alt="authStore.currentUser?.email ?? ''" class="h-8 w-8 rounded-full">
       </span>
       <svg
         class="h-4 w-4 text-theme-textLight transition-transform"

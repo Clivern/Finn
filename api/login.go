@@ -86,6 +86,8 @@ func LoginAction(w http.ResponseWriter, r *http.Request) {
 			"email":       user.Email,
 			"role":        user.Role,
 			"isActive":    user.IsActive,
+			"name":        user.Name,
+			"avatar":      service.GravatarURL(user.Email, 80),
 			"lastLoginAt": user.LastLoginAt.UTC().Format(time.RFC3339),
 			"createdAt":   user.CreatedAt.UTC().Format(time.RFC3339),
 			"updatedAt":   user.UpdatedAt.UTC().Format(time.RFC3339),

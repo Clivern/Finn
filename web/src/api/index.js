@@ -5,19 +5,6 @@ const api = axios.create({
   timeout: 10000,
 })
 
-// Request interceptor
-// Note: Authentication is handled via HTTP-only cookies (_met_session)
-// This interceptor is kept for future extensibility (e.g., API keys, CSRF tokens)
-api.interceptors.request.use(
-  (config) => {
-    // Could add custom headers here if needed
-    return config
-  },
-  (error) => {
-    return Promise.reject(error)
-  }
-)
-
 // Response interceptor
 api.interceptors.response.use(
   (response) => response,
@@ -26,15 +13,18 @@ api.interceptors.response.use(
     // 1. It's a 401 error
     // 2. NOT from the login endpoint
     // 3. NOT from the profile endpoint (used to check auth on page load)
-    // 4. NOT already on the login or setup page
+    // 4. NOT from the logout endpoint (session may already be expired)
+    // 5. NOT already on the login or setup page
     const isLoginEndpoint = error.config?.url === 'public/action/login'
     const isProfileEndpoint = error.config?.url === '/action/profile'
+    const isLogoutEndpoint = error.config?.url === 'public/action/logout'
     const isOnPublicPage = window.location.pathname === '/login' ||
                            window.location.pathname === '/setup'
 
     if (error.response?.status === 401 &&
         !isLoginEndpoint &&
         !isProfileEndpoint &&
+        !isLogoutEndpoint &&
         !isOnPublicPage) {
       window.location.href = '/login'
     }

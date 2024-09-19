@@ -18,7 +18,7 @@
           </div>
         </div>
         <div class="flex items-center">
-          <UserAvatarDropdown />
+          <Dropdown />
         </div>
       </div>
     </div>
@@ -27,7 +27,7 @@
 
 <script setup>
 import { useRoute } from 'vue-router'
-import UserAvatarDropdown from '@/components/UserAvatarDropdown.vue'
+import Dropdown from '@/components/Dropdown.vue'
 
 const route = useRoute()
 
