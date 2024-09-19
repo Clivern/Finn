@@ -1,3 +1,4 @@
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -19,7 +20,7 @@ export default {
           800: '#37352F',
           900: '#2F2D29',
         },
-        notion: {
+        theme: {
           bg: '#F7F6F3',
           text: '#37352F',
           textLight: '#6B6966',
@@ -31,4 +32,3 @@ export default {
   },
   plugins: [],
 }
-

@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen bg-notion-bg">
+  <div class="min-h-screen bg-theme-bg">
     <!-- Navigation -->
-    <nav class="bg-white border-b border-notion-border">
+    <nav class="bg-white border-b border-theme-border">
       <div class="max-w-7xl mx-auto px-6 lg:px-8">
         <div class="flex justify-between h-14">
           <div class="flex items-center">
@@ -11,19 +11,19 @@
             <div class="hidden md:ml-8 md:flex md:space-x-1">
               <router-link
                 to="/dashboard"
-                class="text-notion-textLight hover:bg-notion-hover hover:text-notion-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+                class="text-theme-textLight hover:bg-theme-hover hover:text-theme-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
               >
                 Dashboard
               </router-link>
               <router-link
                 to="/users"
-                class="text-notion-textLight hover:bg-notion-hover hover:text-notion-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+                class="text-theme-textLight hover:bg-theme-hover hover:text-theme-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
               >
                 Users
               </router-link>
               <router-link
                 to="/settings"
-                class="bg-notion-hover text-notion-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium"
+                class="bg-theme-hover text-theme-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium"
               >
                 Settings
               </router-link>
@@ -47,8 +47,8 @@
     <main class="max-w-7xl mx-auto py-8 px-6 lg:px-8">
       <!-- Page Header -->
       <div class="mb-8">
-        <h1 class="text-3xl font-semibold text-notion-text">Settings</h1>
-        <p class="text-sm text-notion-textLight mt-2">Manage gateway settings and preferences</p>
+        <h1 class="text-3xl font-semibold text-theme-text">Settings</h1>
+        <p class="text-sm text-theme-textLight mt-2">Manage gateway settings and preferences</p>
       </div>
 
       <!-- Success/Error Messages -->
@@ -62,12 +62,12 @@
       <!-- Settings Form -->
       <form @submit.prevent="handleSave" class="space-y-6">
         <!-- General Settings Box -->
-        <div class="bg-white rounded-lg border border-notion-border p-6 shadow-sm">
-          <h2 class="text-lg font-semibold text-notion-text mb-4">General</h2>
-          <div class="border-b border-notion-border mb-4"></div>
+        <div class="bg-white rounded-lg border border-theme-border p-6 shadow-sm">
+          <h2 class="text-lg font-semibold text-theme-text mb-4">General</h2>
+          <div class="border-b border-theme-border mb-4"></div>
           <div class="space-y-4">
             <div>
-              <label for="gatewayName" class="block text-sm font-medium text-notion-text mb-2">
+              <label for="gatewayName" class="block text-sm font-medium text-theme-text mb-2">
                 Gateway Name
               </label>
               <input
@@ -81,7 +81,7 @@
               >
             </div>
             <div>
-              <label for="gatewayEmail" class="block text-sm font-medium text-notion-text mb-2">
+              <label for="gatewayEmail" class="block text-sm font-medium text-theme-text mb-2">
                 Gateway Email
               </label>
               <input
@@ -95,7 +95,7 @@
               >
             </div>
             <div>
-              <label for="gatewayURL" class="block text-sm font-medium text-notion-text mb-2">
+              <label for="gatewayURL" class="block text-sm font-medium text-theme-text mb-2">
                 Gateway URL
               </label>
               <input
@@ -109,7 +109,7 @@
               >
             </div>
             <div>
-              <label for="gatewayDescription" class="block text-sm font-medium text-notion-text mb-2">
+              <label for="gatewayDescription" class="block text-sm font-medium text-theme-text mb-2">
                 Gateway Description
               </label>
               <textarea
@@ -125,12 +125,12 @@
         </div>
 
         <!-- SMTP Configuration Box -->
-        <div class="bg-white rounded-lg border border-notion-border p-6 shadow-sm">
-          <h2 class="text-lg font-semibold text-notion-text mb-4">SMTP Configuration</h2>
-          <div class="border-b border-notion-border mb-4"></div>
+        <div class="bg-white rounded-lg border border-theme-border p-6 shadow-sm">
+          <h2 class="text-lg font-semibold text-theme-text mb-4">SMTP Configuration</h2>
+          <div class="border-b border-theme-border mb-4"></div>
           <div class="space-y-4">
             <div>
-              <label for="smtpServer" class="block text-sm font-medium text-notion-text mb-2">
+              <label for="smtpServer" class="block text-sm font-medium text-theme-text mb-2">
                 SMTP Server
               </label>
               <input
@@ -144,7 +144,7 @@
             </div>
 
             <div>
-              <label for="smtpPort" class="block text-sm font-medium text-notion-text mb-2">
+              <label for="smtpPort" class="block text-sm font-medium text-theme-text mb-2">
                 SMTP Port
               </label>
               <input
@@ -158,7 +158,7 @@
             </div>
 
             <div>
-              <label for="smtpFromEmail" class="block text-sm font-medium text-notion-text mb-2">
+              <label for="smtpFromEmail" class="block text-sm font-medium text-theme-text mb-2">
                 SMTP From Email
               </label>
               <input
@@ -172,7 +172,7 @@
             </div>
 
             <div>
-              <label for="smtpUsername" class="block text-sm font-medium text-notion-text mb-2">
+              <label for="smtpUsername" class="block text-sm font-medium text-theme-text mb-2">
                 SMTP Username
               </label>
               <input
@@ -186,7 +186,7 @@
             </div>
 
             <div>
-              <label for="smtpPassword" class="block text-sm font-medium text-notion-text mb-2">
+              <label for="smtpPassword" class="block text-sm font-medium text-theme-text mb-2">
                 SMTP Password
               </label>
               <input
@@ -204,32 +204,32 @@
                 id="smtpUseTLS"
                 v-model="form.smtpUseTLS"
                 type="checkbox"
-                class="h-4 w-4 mt-1 rounded text-notion-text focus:ring-notion-text border-notion-border"
+                class="h-4 w-4 mt-1 rounded text-theme-text focus:ring-theme-text border-theme-border"
                 :disabled="loading"
               >
               <label for="smtpUseTLS" class="ml-3 block">
-                <span class="text-sm font-medium text-notion-text">Use TLS</span>
-                <p class="text-xs text-notion-textLight mt-1">Enable TLS for SMTP connection</p>
+                <span class="text-sm font-medium text-theme-text">Use TLS</span>
+                <p class="text-xs text-theme-textLight mt-1">Enable TLS for SMTP connection</p>
               </label>
             </div>
           </div>
         </div>
 
         <!-- Maintenance Mode Box -->
-        <div class="bg-white rounded-lg border border-notion-border p-6 shadow-sm">
-          <h2 class="text-lg font-semibold text-notion-text mb-4">Maintenance</h2>
-          <div class="border-b border-notion-border mb-4"></div>
+        <div class="bg-white rounded-lg border border-theme-border p-6 shadow-sm">
+          <h2 class="text-lg font-semibold text-theme-text mb-4">Maintenance</h2>
+          <div class="border-b border-theme-border mb-4"></div>
           <div class="flex items-start">
             <input
               id="maintenanceMode"
               v-model="form.maintenanceMode"
               type="checkbox"
-              class="h-4 w-4 mt-1 rounded text-notion-text focus:ring-notion-text border-notion-border"
+              class="h-4 w-4 mt-1 rounded text-theme-text focus:ring-theme-text border-theme-border"
               :disabled="loading"
             >
             <label for="maintenanceMode" class="ml-3 block">
-              <span class="text-sm font-medium text-notion-text">Enable Maintenance Mode</span>
-              <p class="text-xs text-notion-textLight mt-1">Put the application in maintenance mode</p>
+              <span class="text-sm font-medium text-theme-text">Enable Maintenance Mode</span>
+              <p class="text-xs text-theme-textLight mt-1">Put the application in maintenance mode</p>
             </label>
           </div>
         </div>

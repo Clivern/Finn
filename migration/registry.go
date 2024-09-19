@@ -65,12 +65,6 @@ func GetAll() []Migration {
 			Down:        dropUserAPIKeysTable,
 		},
 		{
-			Version:     "20250101000008",
-			Description: "Create user_api_keys table",
-			Up:          createUserAPIKeysTable,
-			Down:        dropUserAPIKeysTable,
-		},
-		{
 			Version:     "20250101000009",
 			Description: "Create projects table",
 			Up:          createProjectsTable,
@@ -681,8 +675,7 @@ func createRunnersTable(db *sql.DB) error {
 			public_key TEXT,
 			url VARCHAR(255),
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`
 	case "postgres":
 		query = `

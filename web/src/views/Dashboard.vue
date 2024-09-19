@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen bg-notion-bg">
+  <div class="min-h-screen bg-theme-bg">
     <!-- Navigation -->
-    <nav class="bg-white border-b border-notion-border">
-      <div class="max-w-7xl mx-auto px-6 lg:px-8">
+    <nav class="bg-white border-b border-theme-border">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-14">
           <div class="flex items-center">
             <div class="flex-shrink-0 flex items-center">
@@ -11,111 +11,139 @@
             <div class="hidden md:ml-8 md:flex md:space-x-1">
               <router-link
                 to="/dashboard"
-                class="bg-notion-hover text-notion-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium"
+                class="bg-theme-hover text-theme-text inline-flex items-center px-3 py-2 rounded-md text-sm font-medium"
               >
                 Dashboard
               </router-link>
               <router-link
                 to="/users"
-                class="text-notion-textLight hover:bg-notion-hover hover:text-notion-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+                class="text-theme-textLight hover:bg-theme-hover hover:text-theme-text inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 Users
               </router-link>
               <router-link
                 to="/settings"
-                class="text-notion-textLight hover:bg-notion-hover hover:text-notion-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+                class="text-theme-textLight hover:bg-theme-hover hover:text-theme-text inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 Settings
               </router-link>
             </div>
           </div>
-          <div class="flex items-center">
-            <div class="flex items-center space-x-3">
-              <button
-                @click="handleLogout"
-                class="btn-secondary text-sm"
-              >
-                Logout
-              </button>
-            </div>
+          <div class="flex items-center gap-3">
+            <span class="hidden sm:block text-sm text-theme-textLight truncate max-w-[140px]">
+              {{ authStore.currentUser?.email }}
+            </span>
+            <button
+              @click="handleLogout"
+              class="btn-secondary text-sm"
+            >
+              Logout
+            </button>
           </div>
         </div>
       </div>
     </nav>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto py-8 px-6 lg:px-8">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Page Header -->
-      <div class="mb-8">
-        <h1 class="text-3xl font-semibold text-notion-text">Dashboard</h1>
-      </div>
+      <header class="mb-8">
+        <h1 class="text-2xl sm:text-3xl font-semibold text-theme-text tracking-tight">
+          Dashboard
+        </h1>
+        <p class="mt-1 text-sm text-theme-textLight">
+          Overview of your platform status and quick actions
+        </p>
+        <p v-if="authStore.currentUser?.email" class="mt-2 text-sm text-theme-text">
+          Welcome back, <span class="font-medium">{{ authStore.currentUser.email }}</span>
+        </p>
+      </header>
 
       <!-- Stats Grid -->
-      <div class="mb-6">
-        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <!-- Stat Card 1 -->
-          <div class="bg-white rounded-lg border border-notion-border p-5 hover:shadow-sm transition-shadow">
-            <p class="text-xs font-medium text-notion-textLight mb-2 uppercase tracking-wide">Status</p>
-            <p class="text-2xl font-semibold text-notion-text">{{ stats.status }}</p>
+      <section class="mb-8" aria-label="Key metrics">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div class="stat-card group">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="stat-label">Status</p>
+                <p class="stat-value mt-1 flex items-center gap-2">
+                  <span class="inline-block h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-emerald-500/30" aria-hidden="true"></span>
+                  {{ stats.status }}
+                </p>
+              </div>
+            </div>
           </div>
-
-          <!-- Stat Card 2 -->
-          <div class="bg-white rounded-lg border border-notion-border p-5 hover:shadow-sm transition-shadow">
-            <p class="text-xs font-medium text-notion-textLight mb-2 uppercase tracking-wide">Total Requests</p>
-            <p class="text-2xl font-semibold text-notion-text">{{ stats.totalRequests.toLocaleString() }}</p>
+          <div class="stat-card group">
+            <div>
+              <p class="stat-label">Total Requests</p>
+              <p class="stat-value mt-1">{{ stats.totalRequests.toLocaleString() }}</p>
+            </div>
           </div>
-
-          <!-- Stat Card 3 -->
-          <div class="bg-white rounded-lg border border-notion-border p-5 hover:shadow-sm transition-shadow">
-            <p class="text-xs font-medium text-notion-textLight mb-2 uppercase tracking-wide">Avg Response</p>
-            <p class="text-2xl font-semibold text-notion-text">{{ stats.avgResponse }}ms</p>
+          <div class="stat-card group">
+            <div>
+              <p class="stat-label">Avg Response</p>
+              <p class="stat-value mt-1">{{ stats.avgResponse }}ms</p>
+            </div>
           </div>
-
         </div>
-      </div>
+      </section>
 
       <!-- Content Grid -->
-      <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        <!-- Welcome -->
-        <div class="bg-white rounded-lg border border-notion-border p-6">
-          <h3 class="text-sm font-semibold text-notion-text mb-5">Welcome</h3>
-          <p class="text-sm text-notion-textLight">Basic tables plus users and sessions. Extend from here.</p>
+      <section class="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-8" aria-label="Overview and system info">
+        <div class="section">
+          <h2 class="section-title">Overview</h2>
+          <p class="text-sm text-theme-textLight leading-relaxed">
+            Your platform is running with users and sessions. Use the links below to manage users, adjust settings, or explore the API.
+          </p>
+          <ul class="mt-4 space-y-2 text-sm">
+            <li class="flex items-center gap-2 text-theme-text">
+              <span class="text-theme-textLight">•</span>
+              User management and roles
+            </li>
+            <li class="flex items-center gap-2 text-theme-text">
+              <span class="text-theme-textLight">•</span>
+              Session-based authentication
+            </li>
+            <li class="flex items-center gap-2 text-theme-text">
+              <span class="text-theme-textLight">•</span>
+              Extend from here with your own features
+            </li>
+          </ul>
         </div>
 
-        <!-- System Info -->
-        <div class="bg-white rounded-lg border border-notion-border p-6">
-          <h3 class="text-sm font-semibold text-notion-text mb-5">System Information</h3>
-          <div class="space-y-3">
-            <div class="flex justify-between py-2.5 border-b border-notion-border">
-              <span class="text-sm text-notion-textLight">Version</span>
-              <span class="text-sm font-medium text-notion-text">v0.4.0</span>
+        <div class="section">
+          <h2 class="section-title">System Information</h2>
+          <dl class="space-y-0">
+            <div class="flex justify-between py-3 border-b border-theme-border">
+              <dt class="text-sm text-theme-textLight">Version</dt>
+              <dd class="text-sm font-medium text-theme-text">v0.4.0</dd>
             </div>
-            <div class="flex justify-between py-2.5 border-b border-notion-border">
-              <span class="text-sm text-notion-textLight">Uptime</span>
-              <span class="text-sm font-medium text-notion-text">{{ systemInfo.uptime }}</span>
+            <div class="flex justify-between py-3 border-b border-theme-border">
+              <dt class="text-sm text-theme-textLight">Uptime</dt>
+              <dd class="text-sm font-medium text-theme-text">{{ systemInfo.uptime }}</dd>
             </div>
-            <div class="flex justify-between py-2.5 border-b border-notion-border">
-              <span class="text-sm text-notion-textLight">Memory Usage</span>
-              <span class="text-sm font-medium text-notion-text">{{ systemInfo.memory }}</span>
+            <div class="flex justify-between py-3 border-b border-theme-border">
+              <dt class="text-sm text-theme-textLight">Memory Usage</dt>
+              <dd class="text-sm font-medium text-theme-text">{{ systemInfo.memory }}</dd>
             </div>
-            <div class="flex justify-between py-2.5">
-              <span class="text-sm text-notion-textLight">CPU Usage</span>
-              <span class="text-sm font-medium text-notion-text">{{ systemInfo.cpu }}</span>
+            <div class="flex justify-between py-3">
+              <dt class="text-sm text-theme-textLight">CPU Usage</dt>
+              <dd class="text-sm font-medium text-theme-text">{{ systemInfo.cpu }}</dd>
             </div>
-          </div>
+          </dl>
         </div>
-      </div>
+      </section>
 
       <!-- Quick Actions -->
-      <div class="mt-3">
-        <div class="bg-white rounded-lg border border-notion-border p-6">
-          <h3 class="text-sm font-semibold text-notion-text mb-4">Quick Actions</h3>
-          <div class="flex flex-wrap gap-2">
+      <section aria-label="Quick actions">
+        <div class="section">
+          <h2 class="section-title">Quick Actions</h2>
+          <div class="flex flex-wrap gap-3">
             <router-link to="/users" class="btn-primary">Manage Users</router-link>
             <router-link to="/settings" class="btn-secondary">Settings</router-link>
           </div>
         </div>
-      </div>
+      </section>
     </main>
   </div>
 </template>
@@ -148,11 +176,9 @@ const handleLogout = () => {
 
 onMounted(async () => {
   try {
-    // Check API health
     await healthAPI.check()
   } catch (error) {
     console.error('Failed to check API health:', error)
   }
 })
 </script>
-

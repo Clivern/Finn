@@ -10,7 +10,6 @@ import (
 
 	"github.com/clivern/met/db"
 	"github.com/clivern/met/service"
-	"github.com/google/uuid"
 )
 
 var (
@@ -52,10 +51,10 @@ func (u *User) CreateUser(options *CreateUserOptions) (*db.User, error) {
 	}
 
 	user := &db.User{
+		Name:        "",
 		Email:       options.Email,
 		Password:    hashedPassword,
 		Role:        options.Role,
-		APIKey:      uuid.New().String(),
 		IsActive:    options.IsActive,
 		LastLoginAt: time.Time{},
 	}

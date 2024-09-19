@@ -5,7 +5,9 @@
 package db
 
 import (
+	"crypto/sha256"
 	"database/sql"
+	"fmt"
 	"strconv"
 	"time"
 )
@@ -20,10 +22,10 @@ const (
 // User represents a user in the database.
 type User struct {
 	ID          ID
+	Name        string
 	Email       string
 	Password    string
 	Role        string
-	APIKey      string
 	IsActive    bool
 	LastLoginAt time.Time
 	CreatedAt   time.Time
@@ -43,26 +45,26 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 // Create inserts a new user into the database.
 func (r *UserRepository) Create(user *User) error {
 	driver := GetDriver()
-	q := Placeholder(`INSERT INTO users (email, password, role, api_key, is_active, last_login_at)
+	q := Placeholder(`INSERT INTO users (name, email, password_hash, role, is_active, last_login_at)
 		VALUES (?, ?, ?, ?, ?, ?)`, driver)
 	if driver == "postgres" || driver == "postgresql" {
-		q = `INSERT INTO users (email, password, role, api_key, is_active, last_login_at)
+		q = `INSERT INTO users (name, email, password_hash, role, is_active, last_login_at)
 			VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
 		err := r.db.QueryRow(q,
+			user.Name,
 			user.Email,
 			user.Password,
 			user.Role,
-			user.APIKey,
 			user.IsActive,
 			user.LastLoginAt,
 		).Scan(&user.ID)
 		return err
 	}
 	result, err := r.db.Exec(q,
+		user.Name,
 		user.Email,
 		user.Password,
 		user.Role,
-		user.APIKey,
 		user.IsActive,
 		user.LastLoginAt,
 	)
@@ -80,15 +82,48 @@ func (r *UserRepository) Create(user *User) error {
 // GetByID retrieves a user by ID.
 func (r *UserRepository) GetByID(id ID) (*User, error) {
 	user := &User{}
-	q := Placeholder(`SELECT id, email, password, role, api_key, is_active, last_login_at, created_at, updated_at
+	q := Placeholder(`SELECT id, name, email, password_hash, role, is_active, last_login_at, created_at, updated_at
 		FROM users
 		WHERE id = ?`, GetDriver())
 	err := r.db.QueryRow(q, id.String()).Scan(
 		&user.ID,
+		&user.Name,
 		&user.Email,
 		&user.Password,
 		&user.Role,
-		&user.APIKey,
+		&user.IsActive,
+		&user.LastLoginAt,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+// GetByAPIKey retrieves a user by API key from the user_api_keys table.
+func (r *UserRepository) GetByAPIKey(apiKey string) (*User, error) {
+	if apiKey == "" {
+		return nil, nil
+	}
+	keyHash := fmt.Sprintf("%x", sha256.Sum256([]byte(apiKey)))
+	user := &User{}
+	q := Placeholder(`SELECT u.id, u.name, u.email, u.password_hash, u.role, u.is_active, u.last_login_at, u.created_at, u.updated_at
+		FROM users u
+		INNER JOIN user_api_keys k ON u.id = k.user_id
+		WHERE k.key_hash = ? AND (k.expires_at IS NULL OR k.expires_at > CURRENT_TIMESTAMP)`, GetDriver())
+	err := r.db.QueryRow(q, keyHash).Scan(
+		&user.ID,
+		&user.Name,
+		&user.Email,
+		&user.Password,
+		&user.Role,
 		&user.IsActive,
 		&user.LastLoginAt,
 		&user.CreatedAt,
@@ -108,43 +143,15 @@ func (r *UserRepository) GetByID(id ID) (*User, error) {
 // GetByEmail retrieves a user by email.
 func (r *UserRepository) GetByEmail(email string) (*User, error) {
 	user := &User{}
-	q := Placeholder(`SELECT id, email, password, role, api_key, is_active, last_login_at, created_at, updated_at
+	q := Placeholder(`SELECT id, name, email, password_hash, role, is_active, last_login_at, created_at, updated_at
 		FROM users
 		WHERE email = ?`, GetDriver())
 	err := r.db.QueryRow(q, email).Scan(
 		&user.ID,
+		&user.Name,
 		&user.Email,
 		&user.Password,
 		&user.Role,
-		&user.APIKey,
-		&user.IsActive,
-		&user.LastLoginAt,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-	)
-
-	if err == sql.ErrNoRows {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	return user, nil
-}
-
-// GetByAPIKey retrieves a user by API key.
-func (r *UserRepository) GetByAPIKey(apiKey string) (*User, error) {
-	user := &User{}
-	q := Placeholder(`SELECT id, email, password, role, api_key, is_active, last_login_at, created_at, updated_at
-		FROM users
-		WHERE api_key = ?`, GetDriver())
-	err := r.db.QueryRow(q, apiKey).Scan(
-		&user.ID,
-		&user.Email,
-		&user.Password,
-		&user.Role,
-		&user.APIKey,
 		&user.IsActive,
 		&user.LastLoginAt,
 		&user.CreatedAt,
@@ -164,14 +171,14 @@ func (r *UserRepository) GetByAPIKey(apiKey string) (*User, error) {
 // Update updates a user's information.
 func (r *UserRepository) Update(user *User) error {
 	q := Placeholder(`UPDATE users SET
-			email = ?, password = ?, role = ?, api_key = ?, is_active = ?,
+			name = ?, email = ?, password_hash = ?, role = ?, is_active = ?,
 			last_login_at = ?, updated_at = ?
 		WHERE id = ?`, GetDriver())
 	_, err := r.db.Exec(q,
+		user.Name,
 		user.Email,
 		user.Password,
 		user.Role,
-		user.APIKey,
 		user.IsActive,
 		user.LastLoginAt,
 		time.Now().UTC(),
@@ -199,7 +206,7 @@ func (r *UserRepository) Delete(id ID) error {
 
 // List retrieves all users with pagination.
 func (r *UserRepository) List(limit, offset int) ([]*User, error) {
-	q := Placeholder(`SELECT id, email, password, role, api_key, is_active, last_login_at, created_at, updated_at
+	q := Placeholder(`SELECT id, name, email, password_hash, role, is_active, last_login_at, created_at, updated_at
 		FROM users
 		ORDER BY created_at DESC
 		LIMIT ? OFFSET ?`, GetDriver())
@@ -214,10 +221,10 @@ func (r *UserRepository) List(limit, offset int) ([]*User, error) {
 		user := &User{}
 		if err := rows.Scan(
 			&user.ID,
+			&user.Name,
 			&user.Email,
 			&user.Password,
 			&user.Role,
-			&user.APIKey,
 			&user.IsActive,
 			&user.LastLoginAt,
 			&user.CreatedAt,

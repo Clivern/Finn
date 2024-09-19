@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen bg-notion-bg">
+  <div class="min-h-screen bg-theme-bg">
     <!-- Navigation -->
-    <nav class="bg-white border-b border-notion-border">
+    <nav class="bg-white border-b border-theme-border">
       <div class="max-w-7xl mx-auto px-6 lg:px-8">
         <div class="flex justify-between h-14">
           <div class="flex items-center">
@@ -11,19 +11,19 @@
             <div class="hidden md:ml-8 md:flex md:space-x-1">
               <router-link
                 to="/dashboard"
-                class="text-notion-textLight hover:bg-notion-hover hover:text-notion-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+                class="text-theme-textLight hover:bg-theme-hover hover:text-theme-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
               >
                 Dashboard
               </router-link>
               <router-link
                 to="/users"
-                class="bg-notion-hover text-notion-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium"
+                class="bg-theme-hover text-theme-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium"
               >
                 Users
               </router-link>
               <router-link
                 to="/settings"
-                class="text-notion-textLight hover:bg-notion-hover hover:text-notion-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+                class="text-theme-textLight hover:bg-theme-hover hover:text-theme-text inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
               >
                 Settings
               </router-link>
@@ -48,8 +48,8 @@
       <!-- Page Header -->
       <div class="mb-8 flex justify-between items-center">
         <div>
-          <h1 class="text-3xl font-semibold text-notion-text">Users</h1>
-          <p class="text-notion-textLight mt-2">Manage user accounts and permissions</p>
+          <h1 class="text-3xl font-semibold text-theme-text">Users</h1>
+          <p class="text-theme-textLight mt-2">Manage user accounts and permissions</p>
         </div>
         <button
           @click="openCreateModal"
@@ -68,46 +68,46 @@
       </div>
 
       <!-- Users Table -->
-      <div class="bg-white rounded-lg border border-notion-border overflow-hidden">
+      <div class="bg-white rounded-lg border border-theme-border overflow-hidden">
         <div v-if="loading" class="p-8 text-center">
-          <svg class="animate-spin h-6 w-6 mx-auto text-notion-text" fill="none" viewBox="0 0 24 24">
+          <svg class="animate-spin h-6 w-6 mx-auto text-theme-text" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
-          <p class="text-notion-textLight mt-2">Loading users...</p>
+          <p class="text-theme-textLight mt-2">Loading users...</p>
         </div>
 
         <div v-else-if="users.length === 0" class="p-8 text-center">
-          <p class="text-notion-textLight">No users found</p>
+          <p class="text-theme-textLight">No users found</p>
         </div>
 
-        <table v-else class="min-w-full divide-y divide-notion-border">
-          <thead class="bg-notion-hover">
+        <table v-else class="min-w-full divide-y divide-theme-border">
+          <thead class="bg-theme-hover">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-notion-textLight uppercase tracking-wider">
+              <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
                 Email
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-notion-textLight uppercase tracking-wider">
+              <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
                 Role
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-notion-textLight uppercase tracking-wider">
+              <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
                 Status
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-notion-textLight uppercase tracking-wider">
+              <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
                 Last Login
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-notion-textLight uppercase tracking-wider">
+              <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
                 Created
               </th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-notion-textLight uppercase tracking-wider">
+              <th class="px-6 py-3 text-right text-xs font-medium text-theme-textLight uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody class="bg-white divide-y divide-notion-border">
-            <tr v-for="user in users" :key="user.id" class="hover:bg-notion-hover">
+          <tbody class="bg-white divide-y divide-theme-border">
+            <tr v-for="user in users" :key="user.id" class="hover:bg-theme-hover">
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-notion-text">{{ user.email }}</div>
+                <div class="text-sm font-medium text-theme-text">{{ user.email }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span class="px-2 py-1 text-xs font-medium rounded-full"
@@ -128,10 +128,10 @@
                   {{ user.isActive ? 'Active' : 'Inactive' }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-notion-textLight">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-theme-textLight">
                 {{ formatDate(user.lastLoginAt) }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-notion-textLight">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-theme-textLight">
                 {{ formatDate(user.createdAt) }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -153,8 +153,8 @@
         </table>
 
         <!-- Pagination -->
-        <div v-if="total > 0" class="bg-white px-6 py-4 border-t border-notion-border flex items-center justify-between">
-          <div class="text-sm text-notion-textLight">
+        <div v-if="total > 0" class="bg-white px-6 py-4 border-t border-theme-border flex items-center justify-between">
+          <div class="text-sm text-theme-textLight">
             Showing {{ offset + 1 }} to {{ Math.min(offset + limit, total) }} of {{ total }} users
           </div>
           <div class="flex items-center space-x-2">
@@ -185,11 +185,11 @@
           <form @submit.prevent="handleCreate">
             <div class="bg-white px-6 pt-6 pb-4">
               <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-notion-text">Create User</h3>
+                <h3 class="text-lg font-semibold text-theme-text">Create User</h3>
                 <button
                   type="button"
                   @click="closeCreateModal"
-                  class="text-notion-textLight hover:text-notion-text"
+                  class="text-theme-textLight hover:text-theme-text"
                 >
                   <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -198,7 +198,7 @@
               </div>
               <div class="space-y-4">
                 <div>
-                  <label for="create-email" class="block text-sm font-medium text-notion-text mb-2">
+                  <label for="create-email" class="block text-sm font-medium text-theme-text mb-2">
                     Email *
                   </label>
                   <input
@@ -211,7 +211,7 @@
                   />
                 </div>
                 <div>
-                  <label for="create-password" class="block text-sm font-medium text-notion-text mb-2">
+                  <label for="create-password" class="block text-sm font-medium text-theme-text mb-2">
                     Password *
                   </label>
                   <input
@@ -224,7 +224,7 @@
                   />
                 </div>
                 <div>
-                  <label for="create-role" class="block text-sm font-medium text-notion-text mb-2">
+                  <label for="create-role" class="block text-sm font-medium text-theme-text mb-2">
                     Role *
                   </label>
                   <select
@@ -243,16 +243,16 @@
                     id="create-isActive"
                     v-model="createForm.isActive"
                     type="checkbox"
-                    class="h-4 w-4 mt-1 rounded text-notion-text focus:ring-notion-text border-notion-border"
+                    class="h-4 w-4 mt-1 rounded text-theme-text focus:ring-theme-text border-theme-border"
                   />
                   <label for="create-isActive" class="ml-3 block">
-                    <span class="text-sm font-medium text-notion-text">Active</span>
-                    <p class="text-xs text-notion-textLight mt-1">User account is active and can log in</p>
+                    <span class="text-sm font-medium text-theme-text">Active</span>
+                    <p class="text-xs text-theme-textLight mt-1">User account is active and can log in</p>
                   </label>
                 </div>
               </div>
             </div>
-            <div class="bg-notion-hover px-6 py-4 flex justify-end space-x-3">
+            <div class="bg-theme-hover px-6 py-4 flex justify-end space-x-3">
               <button
                 type="button"
                 @click="closeCreateModal"
@@ -288,11 +288,11 @@
           <form @submit.prevent="handleUpdate">
             <div class="bg-white px-6 pt-6 pb-4">
               <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-notion-text">Edit User</h3>
+                <h3 class="text-lg font-semibold text-theme-text">Edit User</h3>
                 <button
                   type="button"
                   @click="closeEditModal"
-                  class="text-notion-textLight hover:text-notion-text"
+                  class="text-theme-textLight hover:text-theme-text"
                 >
                   <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -301,7 +301,7 @@
               </div>
               <div class="space-y-4">
                 <div>
-                  <label for="edit-email" class="block text-sm font-medium text-notion-text mb-2">
+                  <label for="edit-email" class="block text-sm font-medium text-theme-text mb-2">
                     Email *
                   </label>
                   <input
@@ -314,7 +314,7 @@
                   />
                 </div>
                 <div>
-                  <label for="edit-password" class="block text-sm font-medium text-notion-text mb-2">
+                  <label for="edit-password" class="block text-sm font-medium text-theme-text mb-2">
                     Password
                   </label>
                   <input
@@ -324,10 +324,10 @@
                     class="input-field"
                     placeholder="Leave empty to keep current password"
                   />
-                  <p class="text-xs text-notion-textLight mt-1">Leave empty to keep current password</p>
+                  <p class="text-xs text-theme-textLight mt-1">Leave empty to keep current password</p>
                 </div>
                 <div>
-                  <label for="edit-role" class="block text-sm font-medium text-notion-text mb-2">
+                  <label for="edit-role" class="block text-sm font-medium text-theme-text mb-2">
                     Role *
                   </label>
                   <select
@@ -346,16 +346,16 @@
                     id="edit-isActive"
                     v-model="editForm.isActive"
                     type="checkbox"
-                    class="h-4 w-4 mt-1 rounded text-notion-text focus:ring-notion-text border-notion-border"
+                    class="h-4 w-4 mt-1 rounded text-theme-text focus:ring-theme-text border-theme-border"
                   />
                   <label for="edit-isActive" class="ml-3 block">
-                    <span class="text-sm font-medium text-notion-text">Active</span>
-                    <p class="text-xs text-notion-textLight mt-1">User account is active and can log in</p>
+                    <span class="text-sm font-medium text-theme-text">Active</span>
+                    <p class="text-xs text-theme-textLight mt-1">User account is active and can log in</p>
                   </label>
                 </div>
               </div>
             </div>
-            <div class="bg-notion-hover px-6 py-4 flex justify-end space-x-3">
+            <div class="bg-theme-hover px-6 py-4 flex justify-end space-x-3">
               <button
                 type="button"
                 @click="closeEditModal"
@@ -390,23 +390,23 @@
         <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
           <div class="bg-white px-6 pt-6 pb-4">
             <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-semibold text-notion-text">Delete User</h3>
+              <h3 class="text-lg font-semibold text-theme-text">Delete User</h3>
               <button
                 type="button"
                 @click="closeDeleteModal"
-                class="text-notion-textLight hover:text-notion-text"
+                class="text-theme-textLight hover:text-theme-text"
               >
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            <p class="text-sm text-notion-textLight">
-              Are you sure you want to delete user <strong class="text-notion-text">{{ userToDelete?.email }}</strong>?
+            <p class="text-sm text-theme-textLight">
+              Are you sure you want to delete user <strong class="text-theme-text">{{ userToDelete?.email }}</strong>?
               This action cannot be undone.
             </p>
           </div>
-          <div class="bg-notion-hover px-6 py-4 flex justify-end space-x-3">
+          <div class="bg-theme-hover px-6 py-4 flex justify-end space-x-3">
             <button
               type="button"
               @click="closeDeleteModal"

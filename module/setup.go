@@ -6,12 +6,10 @@ package module
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/clivern/met/db"
 	"github.com/clivern/met/service"
-	"github.com/google/uuid"
 )
 
 // Setup handles the initial installation and configuration of the gateway.
@@ -54,14 +52,13 @@ func (s *Setup) Install(options *SetupOptions) error {
 		return err
 	}
 	user := &db.User{
+		Name:        "",
 		Email:       options.AdminEmail,
 		Password:    hashedPassword,
 		Role:        db.UserRoleAdmin,
-		APIKey:      uuid.New().String(),
 		IsActive:    true,
 		LastLoginAt: time.Now().UTC(),
 	}
-	fmt.Println("user", user)
 	err = s.UserRepository.Create(user)
 	if err != nil {
 		return err

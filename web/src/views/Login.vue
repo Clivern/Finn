@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-notion-bg px-4">
+  <div class="min-h-screen flex items-center justify-center bg-theme-bg px-4">
     <div class="max-w-md w-full">
       <!-- Logo and Header -->
       <div class="text-center mb-10">
@@ -9,12 +9,12 @@
       </div>
 
       <!-- Login Form -->
-      <div class="bg-white rounded-lg border border-notion-border p-8 shadow-sm">
-        <h2 class="text-2xl font-semibold text-notion-text mb-6 text-center">Welcome back</h2>
+      <div class="bg-white rounded-lg border border-theme-border p-8 shadow-sm">
+        <h2 class="text-2xl font-semibold text-theme-text mb-6 text-center">Welcome back</h2>
         <form class="space-y-5" @submit.prevent="handleLogin">
           <!-- Email Field -->
           <div>
-            <label for="email" class="block text-sm font-medium text-notion-text mb-2">
+            <label for="email" class="block text-sm font-medium text-theme-text mb-2">
               Email
             </label>
             <input
@@ -30,7 +30,7 @@
 
           <!-- Password Field -->
           <div>
-            <label for="password" class="block text-sm font-medium text-notion-text mb-2">
+            <label for="password" class="block text-sm font-medium text-theme-text mb-2">
               Password
             </label>
             <input
@@ -51,9 +51,9 @@
                 id="remember-me"
                 v-model="form.rememberMe"
                 type="checkbox"
-                class="h-4 w-4 rounded text-notion-text focus:ring-notion-text border-notion-border"
+                class="h-4 w-4 rounded text-theme-text focus:ring-theme-text border-theme-border"
               >
-              <label for="remember-me" class="ml-2 block text-sm text-notion-textLight">
+              <label for="remember-me" class="ml-2 block text-sm text-theme-textLight">
                 Remember me
               </label>
             </div>
@@ -87,7 +87,7 @@
       </div>
 
       <!-- Footer -->
-      <p class="text-center text-xs text-notion-textLight mt-8">
+      <p class="text-center text-xs text-theme-textLight mt-8">
         Copyright © 2025 Met. All rights reserved.
       </p>
     </div>
