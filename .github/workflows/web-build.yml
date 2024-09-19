@@ -8,6 +8,8 @@ jobs:
   build:
     name: Build Dashboard
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # required for git push
 
     steps:
       - name: Checkout code
@@ -45,7 +47,11 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add web/dist/
-          git commit -m "chore: rebuild web assets [skip ci]" || echo "No changes to commit"
-          git push
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: rebuild web assets [skip ci]"
+            git push
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
