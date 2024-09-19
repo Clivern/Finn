@@ -1,5 +1,5 @@
 <p align="center">
-    <img alt="Met Logo" src="/static/logo.png?v=0.1.0" width="220" />
+    <img alt="Met Logo" src="/static/logo.png?v=0.1.0" width="180" />
     <h3 align="center">Met</h3>
     <p align="center">Run Ansible, Terraform, OpenTofu with AI-powered Platform</p>
     <p align="center">
