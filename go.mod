@@ -1,6 +1,6 @@
 module github.com/clivern/met
 
-go 1.24.9
+go 1.24.12
 
 require (
 	github.com/drone/envsubst v1.0.3
