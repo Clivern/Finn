@@ -39,6 +39,12 @@ const (
 	CanGetWorkspaceGitCred    = "CAN_GET_WORKSPACE_GIT_CRED"
 	CanUpdateWorkspaceGitCred = "CAN_UPDATE_WORKSPACE_GIT_CRED"
 	CanDeleteWorkspaceGitCred = "CAN_DELETE_WORKSPACE_GIT_CRED"
+
+	CanGetWorkspaceBackends   = "CAN_GET_WORKSPACE_BACKENDS"
+	CanAddWorkspaceBackend    = "CAN_ADD_WORKSPACE_BACKEND"
+	CanGetWorkspaceBackend    = "CAN_GET_WORKSPACE_BACKEND"
+	CanUpdateWorkspaceBackend = "CAN_UPDATE_WORKSPACE_BACKEND"
+	CanDeleteWorkspaceBackend = "CAN_DELETE_WORKSPACE_BACKEND"
 )
 
 // Permission checks user permissions for resources (e.g. workspace).
@@ -48,6 +54,7 @@ type Permission struct {
 	WorkspaceRepoRepository    db.WorkspaceRepoRepository
 	WorkspaceSSHKeyRepository  db.WorkspaceSSHKeyRepository
 	WorkspaceGitCredRepository db.WorkspaceGitCredRepository
+	WorkspaceBackendRepository db.WorkspaceBackendRepository
 }
 
 // NewPermission creates a new permission module.
@@ -58,6 +65,7 @@ func NewPermission(dbConn *sql.DB) *Permission {
 		WorkspaceRepoRepository:    db.NewWorkspaceRepoRepository(dbConn),
 		WorkspaceSSHKeyRepository:  db.NewWorkspaceSSHKeyRepository(dbConn),
 		WorkspaceGitCredRepository: db.NewWorkspaceGitCredRepository(dbConn),
+		WorkspaceBackendRepository: db.NewWorkspaceBackendRepository(dbConn),
 	}
 }
 
@@ -175,6 +183,30 @@ func (p *Permission) CheckWorkspaceGitCredPermission(user *db.User, workspaceGit
 	case CanGetWorkspaceGitCred, CanGetWorkspaceGitCreds:
 		return true, nil
 	case CanUpdateWorkspaceGitCred, CanDeleteWorkspaceGitCred, CanAddWorkspaceGitCred:
+		return membership.Role == db.UserRoleAdmin || membership.Role == db.UserRoleOwner, nil
+	default:
+		return false, nil
+	}
+}
+
+// CheckWorkspaceBackendPermission checks if the user has the given permission on the workspace backend.
+func (p *Permission) CheckWorkspaceBackendPermission(user *db.User, backend *db.WorkspaceBackend, permission string) (bool, error) {
+	if user.Role == db.UserRoleAdmin {
+		return true, nil
+	}
+
+	membership, err := p.WorkspaceRepository.GetWorkspaceMembership(backend.WorkspaceID, user.ID)
+	if err != nil {
+		return false, err
+	}
+	if membership == nil {
+		return false, nil
+	}
+
+	switch permission {
+	case CanGetWorkspaceBackend, CanGetWorkspaceBackends:
+		return true, nil
+	case CanUpdateWorkspaceBackend, CanDeleteWorkspaceBackend, CanAddWorkspaceBackend:
 		return membership.Role == db.UserRoleAdmin || membership.Role == db.UserRoleOwner, nil
 	default:
 		return false, nil

@@ -11,8 +11,9 @@ import (
 	"time"
 
 	"github.com/clivern/finn/db"
-	"github.com/clivern/finn/runner"
-	"github.com/clivern/finn/service"
+	"github.com/clivern/finn/locale"
+	"github.com/clivern/finn/service/runner"
+	"github.com/clivern/finn/service/util"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -64,8 +65,8 @@ func ListRunnersAction(w http.ResponseWriter, r *http.Request) {
 	total, err := repo.Count()
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to count runners")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to list runners",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedListRunners"),
 		})
 		return
 	}
@@ -73,8 +74,8 @@ func ListRunnersAction(w http.ResponseWriter, r *http.Request) {
 	runners, err := repo.List(limit, offset)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to list runners")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to list runners",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedListRunners"),
 		})
 		return
 	}
@@ -96,7 +97,7 @@ func ListRunnersAction(w http.ResponseWriter, r *http.Request) {
 		list = append(list, item)
 	}
 
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"runners": list,
 		"_meta": map[string]interface{}{
 			"limit":  limit,
@@ -112,8 +113,8 @@ func GetRunnerAction(w http.ResponseWriter, r *http.Request) {
 
 	idStr := chi.URLParam(r, "id")
 	if idStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid runner ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidRunnerID"),
 		})
 		return
 	}
@@ -122,19 +123,19 @@ func GetRunnerAction(w http.ResponseWriter, r *http.Request) {
 	runner, err := repo.GetByID(db.ID(idStr))
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get runner")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get runner",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetRunner"),
 		})
 		return
 	}
 	if runner == nil {
-		service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-			"errorMessage": "Runner not found",
+		util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+			"errorMessage": locale.TR(r, "runnerNotFound"),
 		})
 		return
 	}
 
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"id":               runner.ID,
 		"token":            runner.Token,
 		"name":             runner.Name,
@@ -153,23 +154,23 @@ func CreateRunnerAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Create runner endpoint called")
 
 	var req CreateRunnerRequest
-	if err := service.DecodeAndValidate(r, &req); err != nil {
-		service.WriteValidationError(w, err)
+	if err := util.DecodeAndValidate(r, &req); err != nil {
+		util.WriteValidationError(w, err)
 		return
 	}
 
 	token := strings.TrimSpace(req.Token)
 	if _, err := uuid.Parse(token); err != nil {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Token must be a valid UUID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "tokenMustBeValidUUID"),
 		})
 		return
 	}
 
 	repo := db.NewRunnerRepository(db.GetDB())
 	if existing, _ := repo.GetByToken(token); existing != nil {
-		service.WriteJSON(w, http.StatusConflict, map[string]interface{}{
-			"errorMessage": "A runner with this token already exists",
+		util.WriteJSON(w, http.StatusConflict, map[string]interface{}{
+			"errorMessage": locale.TR(r, "runnerWithTokenExists"),
 		})
 		return
 	}
@@ -199,14 +200,14 @@ func CreateRunnerAction(w http.ResponseWriter, r *http.Request) {
 
 	if err := repo.Create(runner); err != nil {
 		log.Error().Err(err).Msg("Failed to create runner")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to create runner",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCreateRunner"),
 		})
 		return
 	}
 
 	log.Info().Str("runnerID", runner.ID.String()).Msg("Runner created successfully")
-	service.WriteJSON(w, http.StatusCreated, map[string]interface{}{
+	util.WriteJSON(w, http.StatusCreated, map[string]interface{}{
 		"id":               runner.ID,
 		"token":            token,
 		"name":             runner.Name,
@@ -226,15 +227,15 @@ func UpdateRunnerAction(w http.ResponseWriter, r *http.Request) {
 
 	idStr := chi.URLParam(r, "id")
 	if idStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid runner ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidRunnerID"),
 		})
 		return
 	}
 
 	var req UpdateRunnerRequest
-	if err := service.DecodeAndValidate(r, &req); err != nil {
-		service.WriteValidationError(w, err)
+	if err := util.DecodeAndValidate(r, &req); err != nil {
+		util.WriteValidationError(w, err)
 		return
 	}
 
@@ -242,14 +243,14 @@ func UpdateRunnerAction(w http.ResponseWriter, r *http.Request) {
 	runner, err := repo.GetByID(db.ID(idStr))
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get runner for update")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to update runner",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedUpdateRunner"),
 		})
 		return
 	}
 	if runner == nil {
-		service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-			"errorMessage": "Runner not found",
+		util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+			"errorMessage": locale.TR(r, "runnerNotFound"),
 		})
 		return
 	}
@@ -257,21 +258,21 @@ func UpdateRunnerAction(w http.ResponseWriter, r *http.Request) {
 	if req.Token != nil {
 		token := strings.TrimSpace(*req.Token)
 		if token == "" {
-			service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-				"errorMessage": "Token cannot be empty",
+			util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+				"errorMessage": locale.TR(r, "tokenCannotBeEmpty"),
 			})
 			return
 		}
 		if _, err := uuid.Parse(token); err != nil {
-			service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-				"errorMessage": "Token must be a valid UUID",
+			util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+				"errorMessage": locale.TR(r, "tokenMustBeValidUUID"),
 			})
 			return
 		}
 		existing, _ := repo.GetByToken(token)
 		if existing != nil && existing.ID != runner.ID {
-			service.WriteJSON(w, http.StatusConflict, map[string]interface{}{
-				"errorMessage": "A runner with this token already exists",
+			util.WriteJSON(w, http.StatusConflict, map[string]interface{}{
+				"errorMessage": locale.TR(r, "runnerWithTokenExists"),
 			})
 			return
 		}
@@ -298,14 +299,14 @@ func UpdateRunnerAction(w http.ResponseWriter, r *http.Request) {
 
 	if err := repo.Update(runner); err != nil {
 		log.Error().Err(err).Msg("Failed to update runner")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to update runner",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedUpdateRunner"),
 		})
 		return
 	}
 
 	log.Info().Str("runnerID", runner.ID.String()).Msg("Runner updated successfully")
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"id":               runner.ID,
 		"token":            runner.Token,
 		"name":             runner.Name,
@@ -325,8 +326,8 @@ func DeleteRunnerAction(w http.ResponseWriter, r *http.Request) {
 
 	idStr := chi.URLParam(r, "id")
 	if idStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid runner ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidRunnerID"),
 		})
 		return
 	}
@@ -335,36 +336,36 @@ func DeleteRunnerAction(w http.ResponseWriter, r *http.Request) {
 	existing, err := repo.GetByID(db.ID(idStr))
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get runner for delete")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to delete runner",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedDeleteRunner"),
 		})
 		return
 	}
 	if existing == nil {
-		service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-			"errorMessage": "Runner not found",
+		util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+			"errorMessage": locale.TR(r, "runnerNotFound"),
 		})
 		return
 	}
 
 	if err := repo.Delete(db.ID(idStr)); err != nil {
 		log.Error().Err(err).Msg("Failed to delete runner")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to delete runner",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedDeleteRunner"),
 		})
 		return
 	}
 
 	log.Info().Str("runnerID", idStr).Msg("Runner deleted successfully")
-	service.WriteJSON(w, http.StatusNoContent, map[string]interface{}{})
+	util.WriteJSON(w, http.StatusNoContent, map[string]interface{}{})
 }
 
 // PingRunnerAction pings a runner by ID using its URL, public key and token, and returns status.
 func PingRunnerAction(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	if idStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid runner ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidRunnerID"),
 		})
 		return
 	}
@@ -373,27 +374,27 @@ func PingRunnerAction(w http.ResponseWriter, r *http.Request) {
 	run, err := repo.GetByID(db.ID(idStr))
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get runner for ping")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get runner for ping",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetRunnerForPing"),
 		})
 		return
 	}
 	if run == nil {
-		service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-			"errorMessage": "Runner not found",
+		util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+			"errorMessage": locale.TR(r, "runnerNotFound"),
 		})
 		return
 	}
 
 	if run.URL == nil || strings.TrimSpace(*run.URL) == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Runner URL is not configured",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "runnerUrlNotConfigured"),
 		})
 		return
 	}
 	if run.PublicKey == nil || strings.TrimSpace(*run.PublicKey) == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Runner public key is not configured",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "runnerPublicKeyNotConfigured"),
 		})
 		return
 	}
@@ -405,14 +406,14 @@ func PingRunnerAction(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := client.Ping(r.Context()); err != nil {
 		log.Info().Err(err).Str("runnerID", idStr).Msg("Runner ping failed")
-		service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 			"status":       "failed",
 			"errorMessage": err.Error(),
 		})
 		return
 	}
 
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"status":       "ok",
 		"errorMessage": "",
 	})

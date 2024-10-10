@@ -26,7 +26,7 @@
             class="flex items-center gap-2 rounded-full border border-theme-border bg-white pl-1 pr-2.5 py-1 text-left hover:bg-theme-hover focus:outline-none focus:ring-2 focus:ring-primary-800 focus:ring-offset-1 transition-colors"
             :aria-expanded="open"
             aria-haspopup="true"
-            :aria-label="isMobile ? 'Menu' : 'User menu'"
+            :aria-label="isMobile ? $t('nav.menu') : $t('nav.userMenu')"
           >
             <span
               class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary-200 text-sm font-medium text-theme-text"
@@ -80,6 +80,27 @@
                   {{ user?.email ?? '' }}
                 </p>
               </div>
+              <div class="border-b border-theme-border px-4 py-2">
+                <p class="text-xs font-medium text-theme-textLight uppercase tracking-wider mb-2">{{ $t('nav.language') }}</p>
+                <div class="flex gap-2">
+                  <button
+                    type="button"
+                    :class="locale === 'en' ? 'bg-primary-100 text-primary-800 font-medium' : 'text-theme-text hover:bg-theme-hover'"
+                    class="rounded px-3 py-1.5 text-sm transition-colors"
+                    @click="setLocale('en')"
+                  >
+                    {{ $t('nav.english') }}
+                  </button>
+                  <button
+                    type="button"
+                    :class="locale === 'fr' ? 'bg-primary-100 text-primary-800 font-medium' : 'text-theme-text hover:bg-theme-hover'"
+                    class="rounded px-3 py-1.5 text-sm transition-colors"
+                    @click="setLocale('fr')"
+                  >
+                    {{ $t('nav.french') }}
+                  </button>
+                </div>
+              </div>
               <div class="py-1" v-if="isAdmin">
                 <router-link
                   to="/manage"
@@ -87,7 +108,7 @@
                   role="menuitem"
                   @click="open = false"
                 >
-                  Manage
+                  {{ $t('nav.manage') }}
                 </router-link>
               </div>
               <div class="py-1">
@@ -97,7 +118,7 @@
                   role="menuitem"
                   @click="open = false"
                 >
-                  Profile
+                  {{ $t('nav.profile') }}
                 </router-link>
                 <router-link
                   to="/select-workspace"
@@ -105,7 +126,7 @@
                   role="menuitem"
                   @click="open = false"
                 >
-                  Select Workspace
+                  {{ $t('nav.selectWorkspace') }}
                 </router-link>
                 <button
                   type="button"
@@ -113,7 +134,7 @@
                   role="menuitem"
                   @click="handleLogout"
                 >
-                  Logout
+                  {{ $t('nav.logout') }}
                 </button>
               </div>
             </div>
@@ -127,6 +148,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { authAPI } from '@/api'
 import { loadWorkspaceFromStorage, removeWorkspaceFromStorage } from '@/utils/storage'
 import { user, clearUser } from '@/lib/auth'
@@ -149,19 +171,28 @@ const isWorkspaceAdminOrOwner = computed(() => {
   return role === 'admin' || role === 'owner'
 })
 
+const { t, locale } = useI18n()
+
+function setLocale(newLocale) {
+  locale.value = newLocale
+  try {
+    localStorage.setItem('finn-locale', newLocale)
+  } catch (_) {}
+}
+
 const navItems = computed(() => {
   const items = [
-    { to: '/dashboard', label: 'Dashboard' },
-    { to: '/templates', label: 'Templates' },
-    { to: '/flows', label: 'Flows' },
-    { to: '/inventory', label: 'Inventory' },
-    { to: '/environment', label: 'Environment' },
-    { to: '/repositories', label: 'Repositories' },
-    { to: '/secrets', label: 'Secrets' },
-    { to: '/backends', label: 'Backends' }
+    { to: '/dashboard', label: t('nav.dashboard') },
+    { to: '/templates', label: t('nav.templates') },
+    { to: '/flows', label: t('nav.flows') },
+    { to: '/inventory', label: t('nav.inventory') },
+    { to: '/environment', label: t('nav.environment') },
+    { to: '/repositories', label: t('nav.repositories') },
+    { to: '/secrets', label: t('nav.secrets') },
+    { to: '/backends', label: t('nav.backends') }
   ]
   if (isWorkspaceAdminOrOwner.value) {
-    items.push({ to: '/workspace', label: 'Workspace' })
+    items.push({ to: '/workspace', label: t('nav.workspace') })
   }
   return items
 })

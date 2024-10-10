@@ -11,9 +11,10 @@ import (
 	"time"
 
 	"github.com/clivern/finn/db"
+	"github.com/clivern/finn/locale"
 	"github.com/clivern/finn/middleware"
 	"github.com/clivern/finn/module"
-	"github.com/clivern/finn/service"
+	"github.com/clivern/finn/service/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )
@@ -43,23 +44,23 @@ func CreateWorkspaceRepositoryAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Create workspace repository endpoint called")
 
 	var req CreateWorkspaceRepositoryRequest
-	if err := service.DecodeAndValidate(r, &req); err != nil {
-		service.WriteValidationError(w, err)
+	if err := util.DecodeAndValidate(r, &req); err != nil {
+		util.WriteValidationError(w, err)
 		return
 	}
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Not authenticated",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "notAuthenticated"),
 		})
 		return
 	}
 
 	workspaceIDStr := chi.URLParam(r, "workspaceID")
 	if workspaceIDStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid workspace ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidWorkspaceID"),
 		})
 		return
 	}
@@ -68,14 +69,14 @@ func CreateWorkspaceRepositoryAction(w http.ResponseWriter, r *http.Request) {
 	workspace, err := wsModule.GetWorkspace(db.ID(workspaceIDStr))
 	if err != nil {
 		if errors.Is(err, module.ErrWorkspaceNotFound) {
-			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-				"errorMessage": "Workspace not found",
+			util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+				"errorMessage": locale.TR(r, "workspaceNotFound"),
 			})
 			return
 		}
 		log.Error().Err(err).Msg("Failed to get workspace")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get workspace",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetWorkspace"),
 		})
 		return
 	}
@@ -88,21 +89,21 @@ func CreateWorkspaceRepositoryAction(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to check access",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCheckAccess"),
 		})
 		return
 	}
 	if !allowed {
-		service.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
-			"errorMessage": "Access denied to this workspace",
+		util.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
+			"errorMessage": locale.TR(r, "accessDeniedToWorkspace"),
 		})
 		return
 	}
 
 	if req.GitTag == "" && req.GitBranch == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Git branch or tag is required",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "gitBranchOrTagRequired"),
 		})
 		return
 	}
@@ -126,15 +127,15 @@ func CreateWorkspaceRepositoryAction(w http.ResponseWriter, r *http.Request) {
 	repoDB := db.NewWorkspaceRepoRepository(db.GetDB())
 	if err := repoDB.Create(repo); err != nil {
 		log.Error().Err(err).Msg("Failed to create workspace repository")
-		service.WriteJSON(
+		util.WriteJSON(
 			w,
 			http.StatusInternalServerError, map[string]interface{}{
-				"errorMessage": "Failed to create repository",
+				"errorMessage": locale.TR(r, "failedCreateRepository"),
 			},
 		)
 		return
 	}
-	service.WriteJSON(w, http.StatusCreated, map[string]interface{}{
+	util.WriteJSON(w, http.StatusCreated, map[string]interface{}{
 		"id":               repo.ID,
 		"workspaceId":      repo.WorkspaceID,
 		"name":             repo.Name,
@@ -154,16 +155,16 @@ func ListWorkspaceRepositoriesAction(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Not authenticated",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "notAuthenticated"),
 		})
 		return
 	}
 
 	workspaceIDStr := chi.URLParam(r, "workspaceID")
 	if workspaceIDStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid workspace ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidWorkspaceID"),
 		})
 		return
 	}
@@ -172,14 +173,14 @@ func ListWorkspaceRepositoriesAction(w http.ResponseWriter, r *http.Request) {
 	workspace, err := wsModule.GetWorkspace(db.ID(workspaceIDStr))
 	if err != nil {
 		if errors.Is(err, module.ErrWorkspaceNotFound) {
-			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-				"errorMessage": "Workspace not found",
+			util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+				"errorMessage": locale.TR(r, "workspaceNotFound"),
 			})
 			return
 		}
 		log.Error().Err(err).Msg("Failed to get workspace")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get workspace",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetWorkspace"),
 		})
 		return
 	}
@@ -193,14 +194,14 @@ func ListWorkspaceRepositoriesAction(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to check access",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCheckAccess"),
 		})
 		return
 	}
 	if !allowed {
-		service.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
-			"errorMessage": "Access denied to this workspace",
+		util.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
+			"errorMessage": locale.TR(r, "accessDeniedToWorkspace"),
 		})
 		return
 	}
@@ -221,10 +222,10 @@ func ListWorkspaceRepositoriesAction(w http.ResponseWriter, r *http.Request) {
 	list, err := repoDB.ListByWorkspaceID(workspace.ID, limit, offset)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to list workspace repositories")
-		service.WriteJSON(
+		util.WriteJSON(
 			w,
 			http.StatusInternalServerError, map[string]interface{}{
-				"errorMessage": "Failed to list repositories",
+				"errorMessage": locale.TR(r, "failedListRepositories"),
 			},
 		)
 		return
@@ -246,7 +247,7 @@ func ListWorkspaceRepositoriesAction(w http.ResponseWriter, r *http.Request) {
 			"updatedAt":        repo.UpdatedAt.UTC().Format(time.RFC3339),
 		})
 	}
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"repositories": items,
 		"_meta": map[string]interface{}{
 			"limit":  limit,
@@ -262,16 +263,16 @@ func GetWorkspaceRepositoryAction(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Not authenticated",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "notAuthenticated"),
 		})
 		return
 	}
 
 	workspaceIDStr := chi.URLParam(r, "workspaceID")
 	if workspaceIDStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid workspace ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidWorkspaceID"),
 		})
 		return
 	}
@@ -280,22 +281,22 @@ func GetWorkspaceRepositoryAction(w http.ResponseWriter, r *http.Request) {
 	workspace, err := wsModule.GetWorkspace(db.ID(workspaceIDStr))
 	if err != nil {
 		if errors.Is(err, module.ErrWorkspaceNotFound) {
-			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-				"errorMessage": "Workspace not found",
+			util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+				"errorMessage": locale.TR(r, "workspaceNotFound"),
 			})
 			return
 		}
 		log.Error().Err(err).Msg("Failed to get workspace")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get workspace",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetWorkspace"),
 		})
 		return
 	}
 
 	idStr := chi.URLParam(r, "id")
 	if idStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid repository ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidRepositoryID"),
 		})
 		return
 	}
@@ -304,14 +305,14 @@ func GetWorkspaceRepositoryAction(w http.ResponseWriter, r *http.Request) {
 	repo, err := repoDB.GetByIDAndWorkspace(db.ID(idStr), workspace.ID)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get workspace repository")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get repository",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetRepository"),
 		})
 		return
 	}
 	if repo == nil {
-		service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-			"errorMessage": "Repository not found",
+		util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+			"errorMessage": locale.TR(r, "repositoryNotFound"),
 		})
 		return
 	}
@@ -324,19 +325,19 @@ func GetWorkspaceRepositoryAction(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to check access",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCheckAccess"),
 		})
 		return
 	}
 	if !allowed {
-		service.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
-			"errorMessage": "Access denied to this workspace",
+		util.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
+			"errorMessage": locale.TR(r, "accessDeniedToWorkspace"),
 		})
 		return
 	}
 
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"id":               repo.ID,
 		"workspaceId":      repo.WorkspaceID,
 		"name":             repo.Name,
@@ -355,23 +356,23 @@ func UpdateWorkspaceRepositoryAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Update workspace repository endpoint called")
 
 	var req UpdateWorkspaceRepositoryRequest
-	if err := service.DecodeAndValidate(r, &req); err != nil {
-		service.WriteValidationError(w, err)
+	if err := util.DecodeAndValidate(r, &req); err != nil {
+		util.WriteValidationError(w, err)
 		return
 	}
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Not authenticated",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "notAuthenticated"),
 		})
 		return
 	}
 
 	workspaceIDStr := chi.URLParam(r, "workspaceID")
 	if workspaceIDStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid workspace ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidWorkspaceID"),
 		})
 		return
 	}
@@ -380,22 +381,22 @@ func UpdateWorkspaceRepositoryAction(w http.ResponseWriter, r *http.Request) {
 	workspace, err := wsModule.GetWorkspace(db.ID(workspaceIDStr))
 	if err != nil {
 		if errors.Is(err, module.ErrWorkspaceNotFound) {
-			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-				"errorMessage": "Workspace not found",
+			util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+				"errorMessage": locale.TR(r, "workspaceNotFound"),
 			})
 			return
 		}
 		log.Error().Err(err).Msg("Failed to get workspace")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get workspace",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetWorkspace"),
 		})
 		return
 	}
 
 	idStr := chi.URLParam(r, "id")
 	if idStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid repository ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidRepositoryID"),
 		})
 		return
 	}
@@ -403,8 +404,8 @@ func UpdateWorkspaceRepositoryAction(w http.ResponseWriter, r *http.Request) {
 	repoDB := db.NewWorkspaceRepoRepository(db.GetDB())
 	repo, err := repoDB.GetByIDAndWorkspace(db.ID(idStr), workspace.ID)
 	if err != nil || repo == nil {
-		service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-			"errorMessage": "Repository not found",
+		util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+			"errorMessage": locale.TR(r, "repositoryNotFound"),
 		})
 		return
 	}
@@ -417,21 +418,21 @@ func UpdateWorkspaceRepositoryAction(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to check access",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCheckAccess"),
 		})
 		return
 	}
 	if !allowed {
-		service.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
-			"errorMessage": "Access denied to this workspace",
+		util.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
+			"errorMessage": locale.TR(r, "accessDeniedToWorkspace"),
 		})
 		return
 	}
 
 	if req.GitTag == "" && req.GitBranch == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Git branch or tag is required",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "gitBranchOrTagRequired"),
 		})
 		return
 	}
@@ -452,13 +453,13 @@ func UpdateWorkspaceRepositoryAction(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := repoDB.Update(repo); err != nil {
 		log.Error().Err(err).Msg("Failed to update workspace repository")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to update repository",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedUpdateRepository"),
 		})
 		return
 	}
 
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"id":               repo.ID,
 		"workspaceId":      repo.WorkspaceID,
 		"name":             repo.Name,
@@ -478,16 +479,16 @@ func DeleteWorkspaceRepositoryAction(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Not authenticated",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "notAuthenticated"),
 		})
 		return
 	}
 
 	workspaceIDStr := chi.URLParam(r, "workspaceID")
 	if workspaceIDStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid workspace ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidWorkspaceID"),
 		})
 		return
 	}
@@ -496,22 +497,22 @@ func DeleteWorkspaceRepositoryAction(w http.ResponseWriter, r *http.Request) {
 	workspace, err := wsModule.GetWorkspace(db.ID(workspaceIDStr))
 	if err != nil {
 		if errors.Is(err, module.ErrWorkspaceNotFound) {
-			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-				"errorMessage": "Workspace not found",
+			util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+				"errorMessage": locale.TR(r, "workspaceNotFound"),
 			})
 			return
 		}
 		log.Error().Err(err).Msg("Failed to get workspace")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get workspace",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetWorkspace"),
 		})
 		return
 	}
 
 	idStr := chi.URLParam(r, "id")
 	if idStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid repository ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidRepositoryID"),
 		})
 		return
 	}
@@ -519,8 +520,8 @@ func DeleteWorkspaceRepositoryAction(w http.ResponseWriter, r *http.Request) {
 	repoDB := db.NewWorkspaceRepoRepository(db.GetDB())
 	repo, err := repoDB.GetByIDAndWorkspace(db.ID(idStr), workspace.ID)
 	if err != nil || repo == nil {
-		service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-			"errorMessage": "Repository not found",
+		util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+			"errorMessage": locale.TR(r, "repositoryNotFound"),
 		})
 		return
 	}
@@ -533,26 +534,26 @@ func DeleteWorkspaceRepositoryAction(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to check access",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCheckAccess"),
 		})
 		return
 	}
 	if !allowed {
-		service.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
-			"errorMessage": "Access denied to this workspace",
+		util.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
+			"errorMessage": locale.TR(r, "accessDeniedToWorkspace"),
 		})
 		return
 	}
 
 	if err := repoDB.Delete(repo.ID); err != nil {
 		log.Error().Err(err).Msg("Failed to delete workspace repository")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to delete repository",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedDeleteRepository"),
 		})
 		return
 	}
 
 	log.Info().Str("repositoryID", idStr).Msg("Repository deleted successfully")
-	service.WriteJSON(w, http.StatusNoContent, map[string]interface{}{})
+	util.WriteJSON(w, http.StatusNoContent, map[string]interface{}{})
 }

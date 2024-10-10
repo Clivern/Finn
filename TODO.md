@@ -7,12 +7,16 @@ Track tasks, improvements, and planned work for the project.
 - [x] Workspace SSH Keys Logic
 - [x] Workspace Git Credentials Logic
 - [x] Workspace Git Repositories Logic
+- [x] Locales Support
+- [x] Locales Switch
+- [x] Backend Logic
 - [ ] Workspace Inventory Logic
 - [ ] Workspace Environment Logic
 - [ ] Workspace Task Templates Logic
 - [ ] Sending Tasks to Runners like Repositories Clone
 - [ ] Workspace Task Run Logic
 - [ ] Workspace Flows Logic
+
 
 #### Refactor / Tech debt
 
@@ -31,3 +35,5 @@ Track tasks, improvements, and planned work for the project.
 - [ ] Workspace SSH Keys Logic
 - [ ] Workspace Git Credentials Logic
 - [ ] Workspace Git Repositories Logic
+- [ ] TF Backend Logic
+- [ ] Locales Switch Logic

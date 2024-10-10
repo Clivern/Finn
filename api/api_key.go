@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"github.com/clivern/finn/db"
+	"github.com/clivern/finn/locale"
 	"github.com/clivern/finn/middleware"
-	"github.com/clivern/finn/service"
+	"github.com/clivern/finn/service/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -28,23 +29,23 @@ func CreateUserAPIKeyAction(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Not authenticated",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "notAuthenticated"),
 		})
 		return
 	}
 
 	var req CreateUserAPIKeyRequest
-	if err := service.DecodeAndValidate(r, &req); err != nil {
-		service.WriteValidationError(w, err)
+	if err := util.DecodeAndValidate(r, &req); err != nil {
+		util.WriteValidationError(w, err)
 		return
 	}
 
 	id, err := uuid.NewRandom()
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to generate API key")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to create API key",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCreateApiKey"),
 		})
 		return
 	}
@@ -53,8 +54,8 @@ func CreateUserAPIKeyAction(w http.ResponseWriter, r *http.Request) {
 	if req.ExpiresAt != "" {
 		t, err := time.Parse(time.RFC3339, req.ExpiresAt)
 		if err != nil {
-			service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-				"errorMessage": "Invalid expiresAt format",
+			util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+				"errorMessage": locale.TR(r, "invalidExpiresAtFormat"),
 			})
 			return
 		}
@@ -75,8 +76,8 @@ func CreateUserAPIKeyAction(w http.ResponseWriter, r *http.Request) {
 	repo := db.NewAPIKeyRepository(db.GetDB())
 	if err := repo.Create(apiKey); err != nil {
 		log.Error().Err(err).Msg("Failed to create API key")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to create API key",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCreateApiKey"),
 		})
 		return
 	}
@@ -100,7 +101,7 @@ func CreateUserAPIKeyAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Info().Str("userID", user.ID.String()).Str("apiKeyID", created.ID.String()).Msg("User API key created")
-	service.WriteJSON(w, http.StatusCreated, resp)
+	util.WriteJSON(w, http.StatusCreated, resp)
 }
 
 // ListUserAPIKeysAction lists API keys for the current user (metadata only, never the key).
@@ -109,8 +110,8 @@ func ListUserAPIKeysAction(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Not authenticated",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "notAuthenticated"),
 		})
 		return
 	}
@@ -123,8 +124,8 @@ func ListUserAPIKeysAction(w http.ResponseWriter, r *http.Request) {
 	keys, err := repo.GetByUserID(user.ID)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to list API keys")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to list API keys",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedListApiKeys"),
 		})
 		return
 	}
@@ -146,7 +147,7 @@ func ListUserAPIKeysAction(w http.ResponseWriter, r *http.Request) {
 		list = append(list, item)
 	}
 
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"apiKeys": list,
 	})
 }
@@ -157,16 +158,16 @@ func GetUserAPIKeyAction(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Not authenticated",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "notAuthenticated"),
 		})
 		return
 	}
 
 	idStr := chi.URLParam(r, "id")
 	if idStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid API key ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidApiKeyID"),
 		})
 		return
 	}
@@ -179,14 +180,14 @@ func GetUserAPIKeyAction(w http.ResponseWriter, r *http.Request) {
 	k, err := repo.GetByID(db.ID(idStr))
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get API key")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get API key",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetApiKey"),
 		})
 		return
 	}
 	if k == nil || k.UserID != user.ID {
-		service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-			"errorMessage": "API key not found",
+		util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+			"errorMessage": locale.TR(r, "apiKeyNotFound"),
 		})
 		return
 	}
@@ -202,7 +203,7 @@ func GetUserAPIKeyAction(w http.ResponseWriter, r *http.Request) {
 	} else {
 		resp["expiresAt"] = nil
 	}
-	service.WriteJSON(w, http.StatusOK, resp)
+	util.WriteJSON(w, http.StatusOK, resp)
 }
 
 // DeleteUserAPIKeyAction deletes an API key for the current user.
@@ -211,16 +212,16 @@ func DeleteUserAPIKeyAction(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Not authenticated",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "notAuthenticated"),
 		})
 		return
 	}
 
 	idStr := chi.URLParam(r, "id")
 	if idStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid API key ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidApiKeyID"),
 		})
 		return
 	}
@@ -229,22 +230,22 @@ func DeleteUserAPIKeyAction(w http.ResponseWriter, r *http.Request) {
 	k, err := repo.GetByID(db.ID(idStr))
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get API key")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to delete API key",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedDeleteApiKey"),
 		})
 		return
 	}
 	if k == nil || k.UserID != user.ID {
-		service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-			"errorMessage": "API key not found",
+		util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+			"errorMessage": locale.TR(r, "apiKeyNotFound"),
 		})
 		return
 	}
 
 	if err := repo.Delete(k.ID); err != nil {
 		log.Error().Err(err).Msg("Failed to delete API key")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to delete API key",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedDeleteApiKey"),
 		})
 		return
 	}

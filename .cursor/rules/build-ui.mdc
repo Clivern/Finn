@@ -1,0 +1,14 @@
+---
+description: Run make web when the user asks to build the UI
+alwaysApply: true
+---
+
+# Build UI
+
+When the user asks to **build the UI** (or similar, e.g. "build the frontend", "build the web app", "compile the UI"), run:
+
+```bash
+make web
+```
+
+Run this in the project root. Do not suggest it as a manual step—execute the command.

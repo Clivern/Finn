@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/clivern/finn/db"
-	"github.com/clivern/finn/service"
+	"github.com/clivern/finn/service/util"
 
 	"github.com/rs/zerolog/log"
 )
@@ -21,14 +21,14 @@ func ReadyAction(w http.ResponseWriter, _ *http.Request) {
 	if err := database.Ping(); err != nil {
 		log.Error().Err(err).Msg("Database ping failed during readiness check")
 
-		service.WriteJSON(w, http.StatusServiceUnavailable, map[string]interface{}{
+		util.WriteJSON(w, http.StatusServiceUnavailable, map[string]interface{}{
 			"status": "not_ok",
 		})
 		return
 	}
 
 	log.Debug().Msg("Readiness check passed")
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"status": "ok",
 	})
 }

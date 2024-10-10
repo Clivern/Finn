@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/clivern/finn/db"
-	"github.com/clivern/finn/service"
+	"github.com/clivern/finn/service/util"
 )
 
 // Setup handles the initial installation and configuration of the gateway.
@@ -52,7 +52,7 @@ func (s *Setup) Install(options *SetupOptions) error {
 		return errors.New("platform is already installed")
 	}
 
-	hashedPassword, err := service.HashPassword(options.AdminPassword)
+	hashedPassword, err := util.HashPassword(options.AdminPassword)
 	if err != nil {
 		return err
 	}

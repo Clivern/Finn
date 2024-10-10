@@ -5,8 +5,8 @@
     <div class="w-full px-4 sm:px-6 lg:px-8 py-8">
       <main>
         <div class="mb-8">
-          <h1 class="text-2xl font-semibold text-theme-text">Manage</h1>
-          <p class="text-sm text-theme-textLight mt-1">Platform management and configuration</p>
+          <h1 class="text-2xl font-semibold text-theme-text">{{ $t('managePage.title') }}</h1>
+          <p class="text-sm text-theme-textLight mt-1">{{ $t('managePage.subtitle') }}</p>
         </div>
 
         <!-- Manage: quick access to admin areas -->
@@ -22,8 +22,8 @@
                 </svg>
               </span>
               <div class="min-w-0">
-                <p class="text-sm font-medium text-theme-text">Workspaces</p>
-                <p class="text-xs text-theme-textLight truncate">Manage workspaces</p>
+                <p class="text-sm font-medium text-theme-text">{{ $t('managePage.workspaces') }}</p>
+                <p class="text-xs text-theme-textLight truncate">{{ $t('managePage.workspacesDesc') }}</p>
               </div>
               <svg class="h-4 w-4 text-theme-textLight flex-shrink-0 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
             </router-link>
@@ -37,8 +37,8 @@
                 </svg>
               </span>
               <div class="min-w-0">
-                <p class="text-sm font-medium text-theme-text">Users</p>
-                <p class="text-xs text-theme-textLight truncate">User accounts and roles</p>
+                <p class="text-sm font-medium text-theme-text">{{ $t('managePage.users') }}</p>
+                <p class="text-xs text-theme-textLight truncate">{{ $t('managePage.usersDesc') }}</p>
               </div>
               <svg class="h-4 w-4 text-theme-textLight flex-shrink-0 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
             </router-link>
@@ -52,8 +52,8 @@
                 </svg>
               </span>
               <div class="min-w-0">
-                <p class="text-sm font-medium text-theme-text">Invites</p>
-                <p class="text-xs text-theme-textLight truncate">User invites and sign-up links</p>
+                <p class="text-sm font-medium text-theme-text">{{ $t('managePage.invites') }}</p>
+                <p class="text-xs text-theme-textLight truncate">{{ $t('managePage.invitesDesc') }}</p>
               </div>
               <svg class="h-4 w-4 text-theme-textLight flex-shrink-0 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
             </router-link>
@@ -67,8 +67,8 @@
                 </svg>
               </span>
               <div class="min-w-0">
-                <p class="text-sm font-medium text-theme-text">Integrations</p>
-                <p class="text-xs text-theme-textLight truncate">External services and APIs</p>
+                <p class="text-sm font-medium text-theme-text">{{ $t('managePage.integrations') }}</p>
+                <p class="text-xs text-theme-textLight truncate">{{ $t('managePage.integrationsDesc') }}</p>
               </div>
               <svg class="h-4 w-4 text-theme-textLight flex-shrink-0 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
             </router-link>
@@ -82,8 +82,8 @@
                 </svg>
               </span>
               <div class="min-w-0">
-                <p class="text-sm font-medium text-theme-text">Runners</p>
-                <p class="text-xs text-theme-textLight truncate">Execution runners</p>
+                <p class="text-sm font-medium text-theme-text">{{ $t('managePage.runners') }}</p>
+                <p class="text-xs text-theme-textLight truncate">{{ $t('managePage.runnersDesc') }}</p>
               </div>
               <svg class="h-4 w-4 text-theme-textLight flex-shrink-0 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
             </router-link>
@@ -98,8 +98,8 @@
                 </svg>
               </span>
               <div class="min-w-0">
-                <p class="text-sm font-medium text-theme-text">Settings</p>
-                <p class="text-xs text-theme-textLight truncate">Platform and email configuration</p>
+                <p class="text-sm font-medium text-theme-text">{{ $t('managePage.settings') }}</p>
+                <p class="text-xs text-theme-textLight truncate">{{ $t('managePage.settingsDesc') }}</p>
               </div>
               <svg class="h-4 w-4 text-theme-textLight flex-shrink-0 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
             </router-link>

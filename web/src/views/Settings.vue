@@ -12,10 +12,10 @@
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
-            Manage
+            {{ $t('nav.manage') }}
           </router-link>
-          <h1 class="text-2xl font-semibold text-theme-text">Settings</h1>
-          <p class="text-sm text-theme-textLight mt-1">Platform configuration and maintenance</p>
+          <h1 class="text-2xl font-semibold text-theme-text">{{ $t('settings.title') }}</h1>
+          <p class="text-sm text-theme-textLight mt-1">{{ $t('settingsPage.subtitleFull') }}</p>
         </div>
 
         <div v-if="successMessage" class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
@@ -29,12 +29,12 @@
           <!-- General -->
           <section class="rounded-xl bg-white border border-theme-border shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-theme-border bg-primary-50/50">
-              <h2 class="text-base font-semibold text-theme-text">General</h2>
-              <p class="text-xs text-theme-textLight mt-0.5">Platform identity and contact</p>
+              <h2 class="text-base font-semibold text-theme-text">{{ $t('settingsPage.general') }}</h2>
+              <p class="text-xs text-theme-textLight mt-0.5">{{ $t('settingsPage.generalDesc') }}</p>
             </div>
             <div class="p-6 space-y-5">
               <div>
-                <label for="platformName" class="block text-sm font-medium text-theme-text mb-1.5">Platform Name</label>
+                <label for="platformName" class="block text-sm font-medium text-theme-text mb-1.5">{{ $t('settingsPage.platformName') }}</label>
                 <input
                   id="platformName"
                   v-model="form.platformName"
@@ -46,7 +46,7 @@
                 >
               </div>
               <div>
-                <label for="platformEmail" class="block text-sm font-medium text-theme-text mb-1.5">Platform Email</label>
+                <label for="platformEmail" class="block text-sm font-medium text-theme-text mb-1.5">{{ $t('settingsPage.platformEmail') }}</label>
                 <input
                   id="platformEmail"
                   v-model="form.platformEmail"
@@ -58,7 +58,7 @@
                 >
               </div>
               <div>
-                <label for="platformURL" class="block text-sm font-medium text-theme-text mb-1.5">Platform URL</label>
+                <label for="platformURL" class="block text-sm font-medium text-theme-text mb-1.5">{{ $t('settingsPage.platformURL') }}</label>
                 <input
                   id="platformURL"
                   v-model="form.platformURL"
@@ -75,13 +75,13 @@
           <!-- Email (SMTP) -->
           <section class="rounded-xl bg-white border border-theme-border shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-theme-border bg-primary-50/50">
-              <h2 class="text-base font-semibold text-theme-text">Email</h2>
-              <p class="text-xs text-theme-textLight mt-0.5">SMTP server for outgoing mail</p>
+              <h2 class="text-base font-semibold text-theme-text">{{ $t('settingsPage.email') }}</h2>
+              <p class="text-xs text-theme-textLight mt-0.5">{{ $t('settingsPage.emailDesc') }}</p>
             </div>
             <div class="p-6 space-y-5">
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label for="smtpServer" class="block text-sm font-medium text-theme-text mb-1.5">SMTP Server</label>
+                  <label for="smtpServer" class="block text-sm font-medium text-theme-text mb-1.5">{{ $t('settingsPage.smtpServer') }}</label>
                   <input
                     id="smtpServer"
                     v-model="form.smtpServer"
@@ -92,7 +92,7 @@
                   >
                 </div>
                 <div>
-                  <label for="smtpPort" class="block text-sm font-medium text-theme-text mb-1.5">Port</label>
+                  <label for="smtpPort" class="block text-sm font-medium text-theme-text mb-1.5">{{ $t('settingsPage.port') }}</label>
                   <input
                     id="smtpPort"
                     v-model="form.smtpPort"
@@ -104,7 +104,7 @@
                 </div>
               </div>
               <div>
-                <label for="smtpFromEmail" class="block text-sm font-medium text-theme-text mb-1.5">From Email</label>
+                <label for="smtpFromEmail" class="block text-sm font-medium text-theme-text mb-1.5">{{ $t('settingsPage.fromEmail') }}</label>
                 <input
                   id="smtpFromEmail"
                   v-model="form.smtpFromEmail"
@@ -115,7 +115,7 @@
                 >
               </div>
               <div>
-                <label for="smtpUsername" class="block text-sm font-medium text-theme-text mb-1.5">Username</label>
+                <label for="smtpUsername" class="block text-sm font-medium text-theme-text mb-1.5">{{ $t('settingsPage.username') }}</label>
                 <input
                   id="smtpUsername"
                   v-model="form.smtpUsername"
@@ -126,7 +126,7 @@
                 >
               </div>
               <div>
-                <label for="smtpPassword" class="block text-sm font-medium text-theme-text mb-1.5">Password</label>
+                <label for="smtpPassword" class="block text-sm font-medium text-theme-text mb-1.5">{{ $t('settingsPage.password') }}</label>
                 <input
                   id="smtpPassword"
                   v-model="form.smtpPassword"
@@ -145,8 +145,8 @@
                   :disabled="loading"
                 >
                 <span class="text-sm text-theme-text">
-                  <span class="font-medium">Use TLS</span>
-                  <span class="text-theme-textLight ml-1">— secure connection</span>
+                  <span class="font-medium">{{ $t('settingsPage.useTLS') }}</span>
+                  <span class="text-theme-textLight ml-1">{{ $t('settingsPage.useTLSHint') }}</span>
                 </span>
               </label>
             </div>
@@ -155,8 +155,8 @@
           <!-- Maintenance -->
           <section class="rounded-xl bg-white border border-theme-border shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-theme-border bg-primary-50/50">
-              <h2 class="text-base font-semibold text-theme-text">Maintenance</h2>
-              <p class="text-xs text-theme-textLight mt-0.5">Control application availability</p>
+              <h2 class="text-base font-semibold text-theme-text">{{ $t('settingsPage.maintenance') }}</h2>
+              <p class="text-xs text-theme-textLight mt-0.5">{{ $t('settingsPage.maintenanceDesc') }}</p>
             </div>
             <div class="p-6">
               <label class="flex items-start gap-3 cursor-pointer">
@@ -168,8 +168,8 @@
                   :disabled="loading"
                 >
                 <span class="text-sm text-theme-text">
-                  <span class="font-medium">Maintenance mode</span>
-                  <span class="text-theme-textLight ml-1">— disable access for non-admins</span>
+                  <span class="font-medium">{{ $t('settingsPage.maintenanceMode') }}</span>
+                  <span class="text-theme-textLight ml-1">{{ $t('settingsPage.maintenanceModeHint') }}</span>
                 </span>
               </label>
             </div>
@@ -181,13 +181,13 @@
               class="btn-primary"
               :disabled="loading"
             >
-              <span v-if="!loading">Save</span>
+              <span v-if="!loading">{{ $t('common.save') }}</span>
               <span v-else class="inline-flex items-center gap-2">
                 <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                Saving…
+                {{ $t('settingsPage.saving') }}
               </span>
             </button>
           </div>
@@ -199,8 +199,11 @@
 
 <script setup>
 import { ref, reactive, onMounted, watch, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { settingsAPI } from '@/api'
 import AppNav from '@/components/AppNav.vue'
+
+const { t } = useI18n()
 
 const loading = ref(false)
 const successMessage = ref(null)
@@ -240,7 +243,7 @@ const loadSettings = async () => {
     }
   } catch (err) {
     console.error('Failed to load settings:', err)
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to load settings'
+    errorMessage.value = err.response?.data?.errorMessage || t('settingsPage.failedLoad')
   } finally {
     loading.value = false
   }
@@ -283,7 +286,7 @@ const handleSave = async () => {
     }
   } catch (err) {
     console.error('Failed to save settings:', err)
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to save settings. Please try again.'
+    errorMessage.value = err.response?.data?.errorMessage || t('settingsPage.failedSave')
   } finally {
     loading.value = false
   }

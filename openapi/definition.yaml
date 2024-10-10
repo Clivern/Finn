@@ -1,0 +1,608 @@
+openapi: 3.0.3
+info:
+  title: Finn API
+  description: A Platform to Run, Schedule, and Automate Ansible and Terraform Workflows Powered With AI.
+  version: 0.1.0
+
+servers:
+  - url: /api/v1
+    description: API v1 base path
+
+tags:
+  - name: Public
+    description: Unauthenticated endpoints
+  - name: Auth
+    description: Authentication and session
+  - name: Users
+    description: User management (admin)
+  - name: Workspaces
+    description: Workspace CRUD and membership
+
+paths:
+  /public/_health:
+    get:
+      tags: [Public]
+      summary: Health check
+      operationId: getHealth
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /public/action/login:
+    post:
+      tags: [Auth]
+      summary: Log in
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Invalid credentials or inactive account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /public/action/setup:
+    post:
+      tags: [Public]
+      summary: Initial platform setup
+      operationId: setup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetupRequest"
+      responses:
+        "200":
+          description: Setup completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessMessage"
+        "400":
+          description: Already installed or validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /action/profile:
+    get:
+      tags: [Auth]
+      summary: Get current user profile
+      operationId: getProfile
+      security:
+        - sessionCookie: []
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users:
+    post:
+      tags: [Users]
+      summary: Create user
+      operationId: createUser
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "409":
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      tags: [Users]
+      summary: List users
+      operationId: listUsers
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        "200":
+          description: Paginated user list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserListResponse"
+
+  /users/{id}:
+    get:
+      tags: [Users]
+      summary: Get user by ID
+      operationId: getUser
+      security:
+        - sessionCookie: []
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      tags: [Users]
+      summary: Update user
+      operationId: updateUser
+      security:
+        - sessionCookie: []
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+      responses:
+        "200":
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags: [Users]
+      summary: Delete user
+      operationId: deleteUser
+      security:
+        - sessionCookie: []
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "204":
+          description: User deleted
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /workspaces:
+    post:
+      tags: [Workspaces]
+      summary: Create workspace
+      operationId: createWorkspace
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWorkspaceRequest"
+      responses:
+        "201":
+          description: Workspace created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+    get:
+      tags: [Workspaces]
+      summary: List workspaces
+      operationId: listWorkspaces
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: all
+          in: query
+          description: If true (admin only), return all workspaces
+          schema:
+            type: string
+            enum: ["true", "false"]
+      responses:
+        "200":
+          description: Paginated workspace list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceListResponse"
+
+  /workspaces/{id}:
+    get:
+      tags: [Workspaces]
+      summary: Get workspace by ID
+      operationId: getWorkspace
+      security:
+        - sessionCookie: []
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      responses:
+        "200":
+          description: Workspace
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+        "404":
+          description: Workspace not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      tags: [Workspaces]
+      summary: Update workspace
+      operationId: updateWorkspace
+      security:
+        - sessionCookie: []
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWorkspaceRequest"
+      responses:
+        "200":
+          description: Workspace updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+        "404":
+          description: Workspace not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags: [Workspaces]
+      summary: Delete workspace
+      operationId: deleteWorkspace
+      security:
+        - sessionCookie: []
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      responses:
+        "204":
+          description: Workspace deleted
+        "404":
+          description: Workspace not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: _finn_session
+      description: Session token set by login
+
+  parameters:
+    UserId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    WorkspaceId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    # --- Common ---
+    ErrorResponse:
+      type: object
+      required: [errorMessage]
+      properties:
+        errorMessage:
+          type: string
+      description: Error payload (key may be errorMessage or validation details)
+
+    SuccessMessage:
+      type: object
+      properties:
+        successMessage:
+          type: string
+
+    ValidationError:
+      type: object
+      properties:
+        errorMessage:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: string
+          description: Field name to error message
+
+    # --- Health ---
+    HealthResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+
+    # --- Auth / Setup ---
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        rememberMe:
+          type: boolean
+          default: false
+
+    LoginResponse:
+      type: object
+      properties:
+        successMessage:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+
+    SetupRequest:
+      type: object
+      required: [platformURL, platformEmail, platformName, adminEmail, adminPassword]
+      properties:
+        platformURL:
+          type: string
+          format: uri
+          minLength: 4
+          maxLength: 60
+        platformEmail:
+          type: string
+          format: email
+          minLength: 4
+          maxLength: 60
+        platformName:
+          type: string
+          minLength: 2
+          maxLength: 50
+        adminEmail:
+          type: string
+          format: email
+          minLength: 4
+          maxLength: 60
+        adminPassword:
+          type: string
+          minLength: 8
+          maxLength: 60
+
+    # --- User ---
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [admin, regular]
+        isActive:
+          type: boolean
+        avatar:
+          type: string
+          format: uri
+        lastLoginAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateUserRequest:
+      type: object
+      required: [name, email, password, role]
+      properties:
+        name:
+          type: string
+          minLength: 4
+          maxLength: 60
+        email:
+          type: string
+          format: email
+          minLength: 4
+          maxLength: 60
+        password:
+          type: string
+          minLength: 8
+          maxLength: 60
+        role:
+          type: string
+          enum: [admin, regular]
+        isActive:
+          type: boolean
+          default: true
+
+    UpdateUserRequest:
+      type: object
+      required: [name, email, role]
+      properties:
+        name:
+          type: string
+          minLength: 4
+          maxLength: 60
+        email:
+          type: string
+          format: email
+          minLength: 4
+          maxLength: 60
+        password:
+          type: string
+          minLength: 8
+          maxLength: 60
+          description: Omit to leave unchanged
+        role:
+          type: string
+          enum: [admin, regular]
+        isActive:
+          type: boolean
+
+    UserListResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+        total:
+          type: integer
+          minimum: 0
+
+    # --- Workspace ---
+    Workspace:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        membersCount:
+          type: integer
+          minimum: 0
+        role:
+          type: string
+          description: Current user's role in the workspace
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateWorkspaceRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+
+    UpdateWorkspaceRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+
+    WorkspaceListResponse:
+      type: object
+      properties:
+        workspaces:
+          type: array
+          items:
+            $ref: "#/components/schemas/Workspace"
+        total:
+          type: integer
+          minimum: 0

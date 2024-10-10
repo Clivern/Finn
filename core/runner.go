@@ -16,7 +16,7 @@ import (
 
 	"github.com/clivern/finn/api"
 	"github.com/clivern/finn/middleware"
-	"github.com/clivern/finn/runner"
+	"github.com/clivern/finn/service/runner"
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"

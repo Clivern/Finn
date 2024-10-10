@@ -8,8 +8,8 @@ import (
 	"crypto/subtle"
 	"net/http"
 
-	"github.com/clivern/finn/runner"
-	"github.com/clivern/finn/service"
+	"github.com/clivern/finn/service/runner"
+	"github.com/clivern/finn/service/util"
 )
 
 const runnerTokenHeader = "X-Runner-Token"
@@ -23,14 +23,14 @@ func RunnerToken(deps *runner.Deps) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if token == "" {
-				service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+				util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
 					"errorMessage": "invalid or missing X-Runner-Token",
 				})
 				return
 			}
 			got := r.Header.Get(runnerTokenHeader)
 			if subtle.ConstantTimeCompare([]byte(got), []byte(token)) != 1 {
-				service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+				util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
 					"errorMessage": "invalid or missing X-Runner-Token",
 				})
 				return

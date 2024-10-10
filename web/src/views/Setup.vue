@@ -3,17 +3,17 @@
     <div class="max-w-md w-full">
       <div class="text-center mb-10">
         <div class="flex justify-center mb-6">
-          <img src="/logo.png" alt="Finn Logo" class="h-24 w-auto">
+          <img src="/logo.png" :alt="$t('common.logoAlt')" class="h-24 w-auto">
         </div>
-        <h1 class="text-2xl font-semibold text-theme-text mb-2">Finn</h1>
-        <p class="text-sm text-theme-textLight">Configure your platform and create an admin account</p>
+        <h1 class="text-2xl font-semibold text-theme-text mb-2">{{ $t('setup.title') }}</h1>
+        <p class="text-sm text-theme-textLight">{{ $t('setup.subtitle') }}</p>
       </div>
 
       <div class="bg-white rounded-lg border border-theme-border p-8 shadow-sm">
         <form class="space-y-5" @submit.prevent="handleSetup">
           <div>
             <label for="platform-name" class="block text-sm font-medium text-theme-text mb-2">
-              Platform Name
+              {{ $t('setup.platformName') }}
             </label>
             <input
               id="platform-name"
@@ -23,15 +23,15 @@
               minlength="2"
               maxlength="50"
               class="input-field"
-              placeholder="Finn"
+              :placeholder="$t('setup.platformNamePlaceholder')"
               :disabled="loading"
             >
-            <p class="text-xs text-theme-textLight mt-1.5">A friendly name for this platform</p>
+            <p class="text-xs text-theme-textLight mt-1.5">{{ $t('setup.platformNameHint') }}</p>
           </div>
 
           <div>
             <label for="platform-url" class="block text-sm font-medium text-theme-text mb-2">
-              Platform URL
+              {{ $t('setup.platformURL') }}
             </label>
             <input
               id="platform-url"
@@ -39,15 +39,15 @@
               type="url"
               required
               class="input-field"
-              placeholder="https://finn.io"
+              :placeholder="$t('setup.platformURLPlaceholder')"
               :disabled="loading"
             >
-            <p class="text-xs text-theme-textLight mt-1.5">The public URL where this platform will be accessible</p>
+            <p class="text-xs text-theme-textLight mt-1.5">{{ $t('setup.platformURLHint') }}</p>
           </div>
 
           <div>
             <label for="platform-email" class="block text-sm font-medium text-theme-text mb-2">
-              Platform Email
+              {{ $t('setup.platformEmail') }}
             </label>
             <input
               id="platform-email"
@@ -55,10 +55,10 @@
               type="email"
               required
               class="input-field"
-              placeholder="admin@finn.io"
+              :placeholder="$t('setup.platformEmailPlaceholder')"
               :disabled="loading"
             >
-            <p class="text-xs text-theme-textLight mt-1.5">The contact email for this platform</p>
+            <p class="text-xs text-theme-textLight mt-1.5">{{ $t('setup.platformEmailHint') }}</p>
           </div>
 
           <div class="relative py-3">
@@ -66,13 +66,13 @@
               <div class="w-full border-t border-theme-border"></div>
             </div>
             <div class="relative flex justify-center text-xs">
-              <span class="px-3 bg-white text-theme-textLight font-medium">Admin Account</span>
+              <span class="px-3 bg-white text-theme-textLight font-medium">{{ $t('setup.adminAccount') }}</span>
             </div>
           </div>
 
           <div>
             <label for="admin-email" class="block text-sm font-medium text-theme-text mb-2">
-              Admin Email
+              {{ $t('setup.adminEmail') }}
             </label>
             <input
               id="admin-email"
@@ -80,15 +80,15 @@
               type="email"
               required
               class="input-field"
-              placeholder="hello@finn.example.com"
+              :placeholder="$t('setup.adminEmailPlaceholder')"
               :disabled="loading"
             >
-            <p class="text-xs text-theme-textLight mt-1.5">The email address for the admin account</p>
+            <p class="text-xs text-theme-textLight mt-1.5">{{ $t('setup.adminEmailHint') }}</p>
           </div>
 
           <div>
             <label for="admin-password" class="block text-sm font-medium text-theme-text mb-2">
-              Admin Password
+              {{ $t('setup.adminPassword') }}
             </label>
             <input
               id="admin-password"
@@ -97,15 +97,15 @@
               required
               minlength="8"
               class="input-field"
-              placeholder="Enter a secure password (min. 8 characters)"
+              :placeholder="$t('setup.adminPasswordPlaceholder')"
               :disabled="loading"
             >
-            <p class="text-xs text-theme-textLight mt-1.5">Use a strong password with at least 8 characters</p>
+            <p class="text-xs text-theme-textLight mt-1.5">{{ $t('setup.adminPasswordHint') }}</p>
           </div>
 
           <div>
             <label for="confirm-password" class="block text-sm font-medium text-theme-text mb-2">
-              Confirm Password
+              {{ $t('setup.confirmPassword') }}
             </label>
             <input
               id="confirm-password"
@@ -114,7 +114,7 @@
               required
               minlength="8"
               class="input-field"
-              placeholder="Re-enter your password"
+              :placeholder="$t('setup.confirmPasswordPlaceholder')"
               :disabled="loading"
             >
           </div>
@@ -137,13 +137,13 @@
               class="w-full btn-primary py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
               :disabled="loading"
             >
-              <span v-if="!loading">Complete Setup</span>
+              <span v-if="!loading">{{ $t('setup.submit') }}</span>
               <span v-else class="flex items-center justify-center">
                 <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                Setting up...
+                {{ $t('setup.submitting') }}
               </span>
             </button>
           </div>
@@ -151,7 +151,7 @@
       </div>
 
       <p class="text-center text-xs text-theme-textLight mt-8">
-        Copyright © 2025 Finn. All rights reserved.
+        {{ $t('common.copyright') }}
       </p>
     </div>
   </div>
@@ -159,9 +159,11 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { setupAPI } from '@/api'
 
+const { t } = useI18n()
 const router = useRouter()
 const form = reactive({
   platformURL: '',
@@ -189,19 +191,19 @@ onMounted(async () => {
 
 const validateForm = () => {
   if (form.adminPassword !== form.confirmPassword) {
-    error.value = 'Passwords do not match'
+    error.value = t('setup.errorPasswordsMatch')
     return false
   }
 
   if (form.adminPassword.length < 8) {
-    error.value = 'Password must be at least 8 characters long'
+    error.value = t('setup.errorPasswordLength')
     return false
   }
 
   try {
     new URL(form.platformURL)
   } catch {
-    error.value = 'Please enter a valid platform URL'
+    error.value = t('setup.errorInvalidURL')
     return false
   }
 
@@ -227,13 +229,13 @@ const handleSetup = async () => {
       adminPassword: form.adminPassword
     })
 
-    success.value = 'Platform setup completed successfully! Redirecting to login...'
+    success.value = t('setup.success')
 
     setTimeout(() => {
       router.push('/login')
     }, 2000)
   } catch (err) {
-    error.value = err.response?.data?.errorMessage || 'Setup failed. Please try again.'
+    error.value = err.response?.data?.errorMessage || t('setup.errorDefault')
   } finally {
     loading.value = false
   }

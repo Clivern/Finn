@@ -9,9 +9,10 @@ import (
 	"time"
 
 	"github.com/clivern/finn/db"
+	"github.com/clivern/finn/locale"
 	"github.com/clivern/finn/middleware"
 	"github.com/clivern/finn/module"
-	"github.com/clivern/finn/service"
+	"github.com/clivern/finn/service/util"
 
 	"github.com/rs/zerolog/log"
 )
@@ -30,20 +31,20 @@ func GetProfileAction(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Not authenticated",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "notAuthenticated"),
 		})
 		return
 	}
 
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"user": map[string]interface{}{
 			"id":          user.ID,
 			"email":       user.Email,
 			"role":        user.Role,
 			"isActive":    user.IsActive,
 			"name":        user.Name,
-			"avatar":      service.GravatarURL(user.Email, 80),
+			"avatar":      util.GravatarURL(user.Email, 80),
 			"lastLoginAt": user.LastLoginAt.UTC().Format(time.RFC3339),
 			"createdAt":   user.CreatedAt.UTC().Format(time.RFC3339),
 			"updatedAt":   user.UpdatedAt.UTC().Format(time.RFC3339),
@@ -57,28 +58,28 @@ func UpdateProfileAction(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Not authenticated",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "notAuthenticated"),
 		})
 		return
 	}
 
 	var req UpdateProfileRequest
-	if err := service.DecodeAndValidate(r, &req); err != nil {
-		service.WriteValidationError(w, err)
+	if err := util.DecodeAndValidate(r, &req); err != nil {
+		util.WriteValidationError(w, err)
 		return
 	}
 
 	if (req.Email != "" && req.Email != user.Email) || (req.NewPassword != "") {
 		if req.CurrentPassword == "" {
-			service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-				"errorMessage": "Current password is required to change email or password",
+			util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+				"errorMessage": locale.TR(r, "currentPasswordRequired"),
 			})
 			return
 		}
-		if !service.ComparePassword(user.Password, req.CurrentPassword) {
-			service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-				"errorMessage": "Current password is incorrect",
+		if !util.ComparePassword(user.Password, req.CurrentPassword) {
+			util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+				"errorMessage": locale.TR(r, "currentPasswordIncorrect"),
 			})
 			return
 		}
@@ -108,31 +109,31 @@ func UpdateProfileAction(w http.ResponseWriter, r *http.Request) {
 	updated, err := userModule.UpdateUser(opts)
 	if err != nil {
 		if err == module.ErrUserEmailAlreadyExists {
-			service.WriteJSON(w, http.StatusConflict, map[string]interface{}{
-				"errorMessage": "An account with this email already exists",
+			util.WriteJSON(w, http.StatusConflict, map[string]interface{}{
+				"errorMessage": locale.TR(r, "accountWithEmailExists"),
 			})
 			return
 		}
 		log.Error().Err(err).Msg("Failed to update profile")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to update profile",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedUpdateProfile"),
 		})
 		return
 	}
 
 	log.Info().Str("userID", updated.ID.String()).Msg("Profile updated successfully")
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"user": map[string]interface{}{
 			"id":          updated.ID,
 			"email":       updated.Email,
 			"role":        updated.Role,
 			"isActive":    updated.IsActive,
 			"name":        updated.Name,
-			"avatar":      service.GravatarURL(updated.Email, 80),
+			"avatar":      util.GravatarURL(updated.Email, 80),
 			"lastLoginAt": updated.LastLoginAt.UTC().Format(time.RFC3339),
 			"createdAt":   updated.CreatedAt.UTC().Format(time.RFC3339),
 			"updatedAt":   updated.UpdatedAt.UTC().Format(time.RFC3339),
 		},
-		"successMessage": "Profile updated successfully",
+		"successMessage": locale.TR(r, "profileUpdatedSuccessfully"),
 	})
 }

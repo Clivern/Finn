@@ -131,12 +131,6 @@ func GetAll() []Migration {
 			Down:        dropWorkspaceEnvironmentsTable,
 		},
 		{
-			Version:     "20250101000019",
-			Description: "Create workspace_backends table",
-			Up:          createWorkspaceBackendsTable,
-			Down:        dropWorkspaceBackendsTable,
-		},
-		{
 			Version:     "20250101000020",
 			Description: "Create system_integrations table",
 			Up:          createSystemIntegrationsTable,
@@ -159,6 +153,30 @@ func GetAll() []Migration {
 			Description: "Create system_events table",
 			Up:          createSystemEventsTable,
 			Down:        dropSystemEventsTable,
+		},
+		{
+			Version:     "20250101000024",
+			Description: "Create workspace_backend table",
+			Up:          createWorkspaceBackendTable,
+			Down:        dropWorkspaceBackendTable,
+		},
+		{
+			Version:     "20250101000025",
+			Description: "Create workspace_backend_state table",
+			Up:          createWorkspaceBackendStateTable,
+			Down:        dropWorkspaceBackendStateTable,
+		},
+		{
+			Version:     "20250101000026",
+			Description: "Create workspace_backend_lock table",
+			Up:          createWorkspaceBackendLockTable,
+			Down:        dropWorkspaceBackendLockTable,
+		},
+		{
+			Version:     "20250101000027",
+			Description: "Add lock_id to workspace_backend_lock for Terraform client lock ID",
+			Up:          addLockIDToWorkspaceBackendLock,
+			Down:        dropLockIDFromWorkspaceBackendLock,
 		},
 	}
 }
@@ -1088,37 +1106,42 @@ func dropWorkspaceEnvironmentsTable(db *sql.DB) error {
 	return err
 }
 
-// createWorkspaceBackendsTable creates the workspace_backends table (Terraform/OpenTofu backend config per workspace)
-func createWorkspaceBackendsTable(db *sql.DB) error {
+// createWorkspaceBackendTable creates the backend table
+func createWorkspaceBackendTable(db *sql.DB) error {
 	driver := detectDriver(db)
 	var query string
 
 	switch driver {
 	case "sqlite":
 		query = `
-		CREATE TABLE workspace_backends (
+		CREATE TABLE workspace_backend (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			workspace_id INTEGER NOT NULL,
-			name VARCHAR(100) NOT NULL,
-			type VARCHAR(50) NOT NULL DEFAULT 'local',
-			config TEXT,
+			name VARCHAR(255) NOT NULL,
+			slug VARCHAR(255) NOT NULL,
+			username VARCHAR(255),
+			password TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+			FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+			UNIQUE(workspace_id, name),
+			UNIQUE(workspace_id, slug)
 		)`
 	case "postgres":
 		query = `
-		CREATE TABLE workspace_backends (
+		CREATE TABLE workspace_backend (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
-			name VARCHAR(100) NOT NULL,
-			type VARCHAR(50) NOT NULL DEFAULT 'local',
-			config TEXT,
+			name VARCHAR(255) NOT NULL,
+			slug VARCHAR(255) NOT NULL,
+			username VARCHAR(255),
+			password TEXT,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			UNIQUE(workspace_id, name),
+			UNIQUE(workspace_id, slug)
 		);
-		CREATE INDEX idx_workspace_backends_workspace_id ON workspace_backends(workspace_id);
-		CREATE INDEX idx_workspace_backends_type ON workspace_backends(type)`
+		CREATE INDEX idx_workspace_backend_workspace_id ON workspace_backend(workspace_id)`
 	default:
 		return fmt.Errorf("unsupported database driver: %s", driver)
 	}
@@ -1127,8 +1150,134 @@ func createWorkspaceBackendsTable(db *sql.DB) error {
 	return err
 }
 
-// dropWorkspaceBackendsTable drops the workspace_backends table.
-func dropWorkspaceBackendsTable(db *sql.DB) error {
-	_, err := db.Exec("DROP TABLE IF EXISTS workspace_backends")
+// dropWorkspaceBackendTable drops the backend table.
+func dropWorkspaceBackendTable(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE IF EXISTS workspace_backend")
 	return err
+}
+
+// createWorkspaceBackendStateTable creates the state table (TF state JSON per backend; name unique per backend).
+func createWorkspaceBackendStateTable(db *sql.DB) error {
+	driver := detectDriver(db)
+	var query string
+
+	switch driver {
+	case "sqlite":
+		query = `
+		CREATE TABLE workspace_backend_state (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			backend_id INTEGER NOT NULL,
+			name VARCHAR(255) NOT NULL,
+			value TEXT,
+			checksum VARCHAR(64),
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (backend_id) REFERENCES workspace_backend(id) ON DELETE CASCADE,
+			UNIQUE(backend_id, name)
+		)`
+	case "postgres":
+		query = `
+		CREATE TABLE workspace_backend_state (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			backend_id UUID NOT NULL REFERENCES workspace_backend(id) ON DELETE CASCADE,
+			name VARCHAR(255) NOT NULL,
+			value TEXT,
+			checksum VARCHAR(64),
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			UNIQUE(backend_id, name)
+		);
+		CREATE INDEX idx_workspace_backend_state_backend_id ON workspace_backend_state(backend_id)`
+	default:
+		return fmt.Errorf("unsupported database driver: %s", driver)
+	}
+
+	_, err := db.Exec(query)
+	return err
+}
+
+// dropWorkspaceBackendStateTable drops the state table.
+func dropWorkspaceBackendStateTable(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE IF EXISTS workspace_backend_state")
+	return err
+}
+
+// createWorkspaceBackendLockTable creates the lock table (TF state lock per backend; is_active for current lock).
+func createWorkspaceBackendLockTable(db *sql.DB) error {
+	driver := detectDriver(db)
+	var query string
+
+	switch driver {
+	case "sqlite":
+		query = `
+		CREATE TABLE workspace_backend_lock (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			backend_id INTEGER NOT NULL,
+			operation VARCHAR(64),
+			info TEXT,
+			who VARCHAR(255),
+			version VARCHAR(64),
+			path VARCHAR(512),
+			is_active INTEGER NOT NULL DEFAULT 1,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (backend_id) REFERENCES workspace_backend(id) ON DELETE CASCADE
+		)`
+	case "postgres":
+		query = `
+		CREATE TABLE workspace_backend_lock (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			backend_id UUID NOT NULL REFERENCES workspace_backend(id) ON DELETE CASCADE,
+			operation VARCHAR(64),
+			info TEXT,
+			who VARCHAR(255),
+			version VARCHAR(64),
+			path VARCHAR(512),
+			is_active BOOLEAN NOT NULL DEFAULT true,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		);
+		CREATE INDEX idx_workspace_backend_lock_backend_id ON workspace_backend_lock(backend_id);
+		CREATE INDEX idx_workspace_backend_lock_is_active ON workspace_backend_lock(is_active)`
+	default:
+		return fmt.Errorf("unsupported database driver: %s", driver)
+	}
+
+	_, err := db.Exec(query)
+	return err
+}
+
+// dropWorkspaceBackendLockTable drops the lock table.
+func dropWorkspaceBackendLockTable(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE IF EXISTS workspace_backend_lock")
+	return err
+}
+
+func addLockIDToWorkspaceBackendLock(db *sql.DB) error {
+	driver := detectDriver(db)
+	var query string
+	switch driver {
+	case "sqlite":
+		query = `ALTER TABLE workspace_backend_lock ADD COLUMN lock_id VARCHAR(128)`
+	case "postgres":
+		query = `ALTER TABLE workspace_backend_lock ADD COLUMN lock_id VARCHAR(128)`
+	default:
+		return fmt.Errorf("unsupported database driver: %s", driver)
+	}
+	_, err := db.Exec(query)
+	return err
+}
+
+func dropLockIDFromWorkspaceBackendLock(db *sql.DB) error {
+	driver := detectDriver(db)
+	switch driver {
+	case "sqlite":
+		// SQLite does not support DROP COLUMN in older versions; leave as no-op for safety
+		return nil
+	case "postgres":
+		_, err := db.Exec(`ALTER TABLE workspace_backend_lock DROP COLUMN IF EXISTS lock_id`)
+		return err
+	default:
+		return fmt.Errorf("unsupported database driver: %s", driver)
+	}
 }

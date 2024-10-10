@@ -9,8 +9,9 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/clivern/finn/runner"
-	"github.com/clivern/finn/service"
+	"github.com/clivern/finn/locale"
+	"github.com/clivern/finn/service/runner"
+	"github.com/clivern/finn/service/util"
 
 	"github.com/rs/zerolog/log"
 )
@@ -19,31 +20,31 @@ import (
 func NewPingHandler(deps *runner.Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
-			service.WriteJSON(w, http.StatusMethodNotAllowed, map[string]interface{}{
-				"errorMessage": "method not allowed",
+			util.WriteJSON(w, http.StatusMethodNotAllowed, map[string]interface{}{
+				"errorMessage": locale.TR(r, "methodNotAllowed"),
 			})
 			return
 		}
 
 		if deps == nil || deps.Encrypter == nil {
-			service.WriteJSON(w, http.StatusServiceUnavailable, map[string]interface{}{
-				"errorMessage": "runner identity unavailable",
+			util.WriteJSON(w, http.StatusServiceUnavailable, map[string]interface{}{
+				"errorMessage": locale.TR(r, "runnerIdentityUnavailable"),
 			})
 			return
 		}
 
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
-			service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-				"errorMessage": "failed to read body",
+			util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+				"errorMessage": locale.TR(r, "failedToReadBody"),
 			})
 			return
 		}
 
 		ciphertext, err := base64.StdEncoding.DecodeString(string(body))
 		if err != nil {
-			service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-				"errorMessage": "body must be base64-encoded ciphertext",
+			util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+				"errorMessage": locale.TR(r, "bodyMustBeBase64Ciphertext"),
 			})
 			return
 		}
@@ -51,22 +52,22 @@ func NewPingHandler(deps *runner.Deps) http.HandlerFunc {
 		plaintext, err := deps.Encrypter.DecryptString(ciphertext)
 		if err != nil {
 			log.Info().Err(err).Msg("Ping: decrypt failed")
-			service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-				"errorMessage": "decryption failed",
+			util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+				"errorMessage": locale.TR(r, "decryptionFailed"),
 			})
 			return
 		}
 
 		if plaintext != "PONG" {
 			log.Info().Str("plaintext", plaintext).Msg("Ping: payload must decrypt to PONG")
-			service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-				"errorMessage": "payload must decrypt to PONG",
+			util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+				"errorMessage": locale.TR(r, "payloadMustDecryptToPONG"),
 			})
 			return
 		}
 
 		log.Info().Msg("Ping: PONG verified successfully")
-		service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 			"status": "ok",
 		})
 	}

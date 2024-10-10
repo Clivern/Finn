@@ -11,9 +11,10 @@ import (
 	"time"
 
 	"github.com/clivern/finn/db"
+	"github.com/clivern/finn/locale"
 	"github.com/clivern/finn/middleware"
 	"github.com/clivern/finn/module"
-	"github.com/clivern/finn/service"
+	"github.com/clivern/finn/service/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )
@@ -41,23 +42,23 @@ func CreateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Create workspace git credential endpoint called")
 
 	var req CreateWorkspaceGitCredRequest
-	if err := service.DecodeAndValidate(r, &req); err != nil {
-		service.WriteValidationError(w, err)
+	if err := util.DecodeAndValidate(r, &req); err != nil {
+		util.WriteValidationError(w, err)
 		return
 	}
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Not authenticated",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "notAuthenticated"),
 		})
 		return
 	}
 
 	workspaceIDStr := chi.URLParam(r, "workspaceID")
 	if workspaceIDStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid workspace ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidWorkspaceID"),
 		})
 		return
 	}
@@ -66,14 +67,14 @@ func CreateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	workspace, err := wsModule.GetWorkspace(db.ID(workspaceIDStr))
 	if err != nil {
 		if errors.Is(err, module.ErrWorkspaceNotFound) {
-			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-				"errorMessage": "Workspace not found",
+			util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+				"errorMessage": locale.TR(r, "workspaceNotFound"),
 			})
 			return
 		}
 		log.Error().Err(err).Msg("Failed to get workspace")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get workspace",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetWorkspace"),
 		})
 		return
 	}
@@ -86,14 +87,14 @@ func CreateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to check access",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCheckAccess"),
 		})
 		return
 	}
 	if !allowed {
-		service.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
-			"errorMessage": "Access denied to this workspace",
+		util.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
+			"errorMessage": locale.TR(r, "accessDeniedToWorkspace"),
 		})
 		return
 	}
@@ -111,13 +112,13 @@ func CreateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	repo := db.NewWorkspaceGitCredRepository(db.GetDB())
 	if err := repo.Create(cred); err != nil {
 		log.Error().Err(err).Msg("Failed to create workspace git credentials")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to create git credentials",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCreateGitCredentials"),
 		})
 		return
 	}
 
-	service.WriteJSON(w, http.StatusCreated, map[string]interface{}{
+	util.WriteJSON(w, http.StatusCreated, map[string]interface{}{
 		"id":             cred.ID,
 		"workspaceId":    cred.WorkspaceID,
 		"name":           cred.Name,
@@ -135,16 +136,16 @@ func ListWorkspaceGitCredsAction(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Not authenticated",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "notAuthenticated"),
 		})
 		return
 	}
 
 	workspaceIDStr := chi.URLParam(r, "workspaceID")
 	if workspaceIDStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid workspace ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidWorkspaceID"),
 		})
 		return
 	}
@@ -153,14 +154,14 @@ func ListWorkspaceGitCredsAction(w http.ResponseWriter, r *http.Request) {
 	workspace, err := wsModule.GetWorkspace(db.ID(workspaceIDStr))
 	if err != nil {
 		if errors.Is(err, module.ErrWorkspaceNotFound) {
-			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-				"errorMessage": "Workspace not found",
+			util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+				"errorMessage": locale.TR(r, "workspaceNotFound"),
 			})
 			return
 		}
 		log.Error().Err(err).Msg("Failed to get workspace")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get workspace",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetWorkspace"),
 		})
 		return
 	}
@@ -173,14 +174,14 @@ func ListWorkspaceGitCredsAction(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to check access",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCheckAccess"),
 		})
 		return
 	}
 	if !allowed {
-		service.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
-			"errorMessage": "Access denied to this workspace",
+		util.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
+			"errorMessage": locale.TR(r, "accessDeniedToWorkspace"),
 		})
 		return
 	}
@@ -200,8 +201,8 @@ func ListWorkspaceGitCredsAction(w http.ResponseWriter, r *http.Request) {
 	list, err := repo.ListByWorkspaceID(workspace.ID, limit, offset)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to list workspace git credentials")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to list git credentials",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedListGitCredentials"),
 		})
 		return
 	}
@@ -219,7 +220,7 @@ func ListWorkspaceGitCredsAction(w http.ResponseWriter, r *http.Request) {
 			"updatedAt":      c.UpdatedAt.UTC().Format(time.RFC3339),
 		})
 	}
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"credentials": items,
 		"_meta": map[string]interface{}{
 			"limit":  limit,
@@ -235,16 +236,16 @@ func GetWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Not authenticated",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "notAuthenticated"),
 		})
 		return
 	}
 
 	workspaceIDStr := chi.URLParam(r, "workspaceID")
 	if workspaceIDStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid workspace ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidWorkspaceID"),
 		})
 		return
 	}
@@ -253,22 +254,22 @@ func GetWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	workspace, err := wsModule.GetWorkspace(db.ID(workspaceIDStr))
 	if err != nil {
 		if errors.Is(err, module.ErrWorkspaceNotFound) {
-			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-				"errorMessage": "Workspace not found",
+			util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+				"errorMessage": locale.TR(r, "workspaceNotFound"),
 			})
 			return
 		}
 		log.Error().Err(err).Msg("Failed to get workspace")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get workspace",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetWorkspace"),
 		})
 		return
 	}
 
 	idStr := chi.URLParam(r, "id")
 	if idStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid git credentials ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidGitCredentialsID"),
 		})
 		return
 	}
@@ -277,14 +278,14 @@ func GetWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	c, err := repo.GetByIDAndWorkspace(db.ID(idStr), workspace.ID)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get workspace git credentials")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get git credentials",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetGitCredentials"),
 		})
 		return
 	}
 	if c == nil {
-		service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-			"errorMessage": "Git credentials not found",
+		util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+			"errorMessage": locale.TR(r, "gitCredentialsNotFound"),
 		})
 		return
 	}
@@ -297,19 +298,19 @@ func GetWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to check access",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCheckAccess"),
 		})
 		return
 	}
 	if !allowed {
-		service.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
-			"errorMessage": "Access denied to this workspace",
+		util.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
+			"errorMessage": locale.TR(r, "accessDeniedToWorkspace"),
 		})
 		return
 	}
 
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"id":             c.ID,
 		"workspaceId":    c.WorkspaceID,
 		"name":           c.Name,
@@ -326,23 +327,23 @@ func UpdateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Update workspace git credential endpoint called")
 
 	var req UpdateWorkspaceGitCredRequest
-	if err := service.DecodeAndValidate(r, &req); err != nil {
-		service.WriteValidationError(w, err)
+	if err := util.DecodeAndValidate(r, &req); err != nil {
+		util.WriteValidationError(w, err)
 		return
 	}
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Not authenticated",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "notAuthenticated"),
 		})
 		return
 	}
 
 	workspaceIDStr := chi.URLParam(r, "workspaceID")
 	if workspaceIDStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid workspace ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidWorkspaceID"),
 		})
 		return
 	}
@@ -351,22 +352,22 @@ func UpdateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	workspace, err := wsModule.GetWorkspace(db.ID(workspaceIDStr))
 	if err != nil {
 		if errors.Is(err, module.ErrWorkspaceNotFound) {
-			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-				"errorMessage": "Workspace not found",
+			util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+				"errorMessage": locale.TR(r, "workspaceNotFound"),
 			})
 			return
 		}
 		log.Error().Err(err).Msg("Failed to get workspace")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get workspace",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetWorkspace"),
 		})
 		return
 	}
 
 	idStr := chi.URLParam(r, "id")
 	if idStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid git credentials ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidGitCredentialsID"),
 		})
 		return
 	}
@@ -374,8 +375,8 @@ func UpdateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	repo := db.NewWorkspaceGitCredRepository(db.GetDB())
 	c, err := repo.GetByIDAndWorkspace(db.ID(idStr), workspace.ID)
 	if err != nil || c == nil {
-		service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-			"errorMessage": "Git credentials not found",
+		util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+			"errorMessage": locale.TR(r, "gitCredentialsNotFound"),
 		})
 		return
 	}
@@ -388,14 +389,14 @@ func UpdateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to check access",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCheckAccess"),
 		})
 		return
 	}
 	if !allowed {
-		service.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
-			"errorMessage": "Access denied to this workspace",
+		util.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
+			"errorMessage": locale.TR(r, "accessDeniedToWorkspace"),
 		})
 		return
 	}
@@ -413,13 +414,13 @@ func UpdateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := repo.Update(c); err != nil {
 		log.Error().Err(err).Msg("Failed to update workspace git credentials")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to update git credentials",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedUpdateGitCredentials"),
 		})
 		return
 	}
 
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"id":             c.ID,
 		"workspaceId":    c.WorkspaceID,
 		"name":           c.Name,
@@ -437,16 +438,16 @@ func DeleteWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Not authenticated",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "notAuthenticated"),
 		})
 		return
 	}
 
 	workspaceIDStr := chi.URLParam(r, "workspaceID")
 	if workspaceIDStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid workspace ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidWorkspaceID"),
 		})
 		return
 	}
@@ -455,22 +456,22 @@ func DeleteWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	workspace, err := wsModule.GetWorkspace(db.ID(workspaceIDStr))
 	if err != nil {
 		if errors.Is(err, module.ErrWorkspaceNotFound) {
-			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-				"errorMessage": "Workspace not found",
+			util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+				"errorMessage": locale.TR(r, "workspaceNotFound"),
 			})
 			return
 		}
 		log.Error().Err(err).Msg("Failed to get workspace")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get workspace",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetWorkspace"),
 		})
 		return
 	}
 
 	idStr := chi.URLParam(r, "id")
 	if idStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid git credentials ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidGitCredentialsID"),
 		})
 		return
 	}
@@ -478,8 +479,8 @@ func DeleteWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	repo := db.NewWorkspaceGitCredRepository(db.GetDB())
 	c, err := repo.GetByIDAndWorkspace(db.ID(idStr), workspace.ID)
 	if err != nil || c == nil {
-		service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-			"errorMessage": "Git credentials not found",
+		util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+			"errorMessage": locale.TR(r, "gitCredentialsNotFound"),
 		})
 		return
 	}
@@ -492,26 +493,26 @@ func DeleteWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to check access",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCheckAccess"),
 		})
 		return
 	}
 	if !allowed {
-		service.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
-			"errorMessage": "Access denied to this workspace",
+		util.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
+			"errorMessage": locale.TR(r, "accessDeniedToWorkspace"),
 		})
 		return
 	}
 
 	if err := repo.Delete(c.ID); err != nil {
 		log.Error().Err(err).Msg("Failed to delete workspace git credentials")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to delete git credentials",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedDeleteGitCredentials"),
 		})
 		return
 	}
 
 	log.Info().Str("gitCredID", idStr).Msg("Git credentials deleted successfully")
-	service.WriteJSON(w, http.StatusNoContent, map[string]interface{}{})
+	util.WriteJSON(w, http.StatusNoContent, map[string]interface{}{})
 }

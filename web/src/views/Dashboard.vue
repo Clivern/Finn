@@ -7,13 +7,13 @@
       <!-- Page Header -->
       <header class="mb-8">
         <h1 class="text-2xl sm:text-3xl font-semibold text-theme-text tracking-tight">
-          Dashboard
+          {{ $t('dashboard.title') }}
         </h1>
         <p class="mt-1 text-sm text-theme-textLight">
-          Overview of your platform status and quick actions
+          {{ $t('dashboard.subtitle') }}
         </p>
         <p v-if="user?.email" class="mt-2 text-sm text-theme-text">
-          Welcome back, <span class="font-medium">{{ user.email }}</span>
+          {{ $t('dashboard.welcomeBack') }} <span class="font-medium">{{ user.email }}</span>
         </p>
       </header>
 
@@ -23,7 +23,7 @@
           <div class="stat-card group">
             <div class="flex items-start justify-between">
               <div>
-                <p class="stat-label">Status</p>
+                <p class="stat-label">{{ $t('dashboard.status') }}</p>
                 <p class="stat-value mt-1 flex items-center gap-2">
                   <span class="inline-block h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-emerald-500/30" aria-hidden="true"></span>
                   {{ stats.status }}
@@ -33,13 +33,13 @@
           </div>
           <div class="stat-card group">
             <div>
-              <p class="stat-label">Total Requests</p>
+              <p class="stat-label">{{ $t('dashboard.totalRequests') }}</p>
               <p class="stat-value mt-1">{{ stats.totalRequests.toLocaleString() }}</p>
             </div>
           </div>
           <div class="stat-card group">
             <div>
-              <p class="stat-label">Avg Response</p>
+              <p class="stat-label">{{ $t('dashboard.avgResponse') }}</p>
               <p class="stat-value mt-1">{{ stats.avgResponse }}ms</p>
             </div>
           </div>
@@ -49,43 +49,43 @@
       <!-- Content Grid -->
       <section class="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-8" aria-label="Overview and system info">
         <div class="section">
-          <h2 class="section-title">Overview</h2>
+          <h2 class="section-title">{{ $t('dashboard.overview') }}</h2>
           <p class="text-sm text-theme-textLight leading-relaxed">
-            Your platform is running with users and sessions. Use the links below to manage users, adjust settings, or explore the API.
+            {{ $t('dashboard.overviewDescription') }}
           </p>
           <ul class="mt-4 space-y-2 text-sm">
             <li class="flex items-center gap-2 text-theme-text">
               <span class="text-theme-textLight">•</span>
-              User management and roles
+              {{ $t('dashboard.userManagement') }}
             </li>
             <li class="flex items-center gap-2 text-theme-text">
               <span class="text-theme-textLight">•</span>
-              Session-based authentication
+              {{ $t('dashboardPage.sessionAuth') }}
             </li>
             <li class="flex items-center gap-2 text-theme-text">
               <span class="text-theme-textLight">•</span>
-              Extend from here with your own features
+              {{ $t('dashboardPage.extendFromHere') }}
             </li>
           </ul>
         </div>
 
         <div class="section">
-          <h2 class="section-title">System Information</h2>
+          <h2 class="section-title">{{ $t('dashboardPage.systemInfo') }}</h2>
           <dl class="space-y-0">
             <div class="flex justify-between py-3 border-b border-theme-border">
-              <dt class="text-sm text-theme-textLight">Version</dt>
+              <dt class="text-sm text-theme-textLight">{{ $t('dashboardPage.version') }}</dt>
               <dd class="text-sm font-medium text-theme-text">v0.4.0</dd>
             </div>
             <div class="flex justify-between py-3 border-b border-theme-border">
-              <dt class="text-sm text-theme-textLight">Uptime</dt>
+              <dt class="text-sm text-theme-textLight">{{ $t('dashboardPage.uptime') }}</dt>
               <dd class="text-sm font-medium text-theme-text">{{ systemInfo.uptime }}</dd>
             </div>
             <div class="flex justify-between py-3 border-b border-theme-border">
-              <dt class="text-sm text-theme-textLight">Memory Usage</dt>
+              <dt class="text-sm text-theme-textLight">{{ $t('dashboardPage.memoryUsage') }}</dt>
               <dd class="text-sm font-medium text-theme-text">{{ systemInfo.memory }}</dd>
             </div>
             <div class="flex justify-between py-3">
-              <dt class="text-sm text-theme-textLight">CPU Usage</dt>
+              <dt class="text-sm text-theme-textLight">{{ $t('dashboardPage.cpuUsage') }}</dt>
               <dd class="text-sm font-medium text-theme-text">{{ systemInfo.cpu }}</dd>
             </div>
           </dl>
@@ -96,15 +96,15 @@
       <section v-if="user?.role === 'admin'" aria-label="Pending invites" class="mb-8">
         <div class="section">
           <div class="flex items-center justify-between mb-4">
-            <h2 class="section-title">Pending invites</h2>
-            <router-link to="/invites" class="text-sm font-medium text-primary-600 hover:text-primary-800">View all</router-link>
+            <h2 class="section-title">{{ $t('dashboardPage.pendingInvites') }}</h2>
+            <router-link to="/invites" class="text-sm font-medium text-primary-600 hover:text-primary-800">{{ $t('dashboardPage.viewAll') }}</router-link>
           </div>
           <p class="text-sm text-theme-textLight mb-4">
-            Invites send an email to the recipient when SMTP is configured. You can also copy and share the invite link below.
+            {{ $t('dashboardPage.invitesDescription') }}
           </p>
-          <div v-if="pendingInvitesLoading" class="text-sm text-theme-textLight">Loading…</div>
+          <div v-if="pendingInvitesLoading" class="text-sm text-theme-textLight">{{ $t('dashboardPage.loading') }}</div>
           <div v-else-if="pendingInvites.length === 0" class="text-sm text-theme-textLight">
-            No pending invites. <router-link to="/invites" class="text-primary-600 hover:text-primary-800">Create an invite</router-link>.
+            {{ $t('dashboardPage.noPendingInvites') }} <router-link to="/invites" class="text-primary-600 hover:text-primary-800">{{ $t('dashboardPage.createInviteLink') }}</router-link>.
           </div>
           <ul v-else class="space-y-3">
             <li
@@ -119,7 +119,7 @@
                 @click="copyInviteLink(invite)"
                 class="text-sm text-primary-600 hover:text-primary-800"
               >
-                {{ copyFeedback === invite.id ? 'Copied!' : 'Copy invite link' }}
+                {{ copyFeedback === invite.id ? $t('dashboardPage.copied') : $t('dashboardPage.copyInviteLink') }}
               </button>
             </li>
           </ul>
@@ -129,11 +129,11 @@
       <!-- Quick Actions -->
       <section aria-label="Quick actions">
         <div class="section">
-          <h2 class="section-title">Quick Actions</h2>
+          <h2 class="section-title">{{ $t('dashboardPage.quickActions') }}</h2>
           <div class="flex flex-wrap gap-3">
-            <router-link to="/users" class="btn-primary">Manage Users</router-link>
-            <router-link to="/invites" class="btn-secondary">Invites</router-link>
-            <router-link to="/manage" class="btn-secondary">Manage</router-link>
+            <router-link to="/users" class="btn-primary">{{ $t('dashboardPage.manageUsers') }}</router-link>
+            <router-link to="/invites" class="btn-secondary">{{ $t('nav.invites') }}</router-link>
+            <router-link to="/manage" class="btn-secondary">{{ $t('nav.manage') }}</router-link>
           </div>
         </div>
       </section>

@@ -11,8 +11,9 @@ import (
 	"time"
 
 	"github.com/clivern/finn/db"
+	"github.com/clivern/finn/locale"
 	"github.com/clivern/finn/module"
-	"github.com/clivern/finn/service"
+	"github.com/clivern/finn/service/util"
 	"github.com/google/uuid"
 
 	"github.com/rs/zerolog/log"
@@ -34,8 +35,8 @@ func ForgotPasswordAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Forgot password endpoint called")
 
 	var req ForgotPasswordRequest
-	if err := service.DecodeAndValidate(r, &req); err != nil {
-		service.WriteValidationError(w, err)
+	if err := util.DecodeAndValidate(r, &req); err != nil {
+		util.WriteValidationError(w, err)
 		return
 	}
 
@@ -43,14 +44,14 @@ func ForgotPasswordAction(w http.ResponseWriter, r *http.Request) {
 	user, err := userRepo.GetByEmail(req.Email)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to look up user for forgot password")
-		service.WriteJSON(w, http.StatusOK, map[string]interface{}{
-			"successMessage": "If an account exists for this email, you will receive a password reset link shortly.",
+		util.WriteJSON(w, http.StatusOK, map[string]interface{}{
+			"successMessage": locale.TR(r, "forgotPasswordSuccess"),
 		})
 		return
 	}
 	if user == nil {
-		service.WriteJSON(w, http.StatusOK, map[string]interface{}{
-			"successMessage": "If an account exists for this email, you will receive a password reset link shortly.",
+		util.WriteJSON(w, http.StatusOK, map[string]interface{}{
+			"successMessage": locale.TR(r, "forgotPasswordSuccess"),
 		})
 		return
 	}
@@ -67,8 +68,8 @@ func ForgotPasswordAction(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := resetRepo.Create(resetToken); err != nil {
 		log.Error().Err(err).Msg("Failed to create password reset token")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to process request",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedProcessRequest"),
 		})
 		return
 	}
@@ -82,7 +83,7 @@ func ForgotPasswordAction(w http.ResponseWriter, r *http.Request) {
 		platformName = strings.TrimSpace(o.Value)
 	}
 	resetLink := strings.TrimSuffix(platformURL, "/") + "/reset-password/" + url.PathEscape(token)
-	mailer := service.NewMailer(optRepo)
+	mailer := util.NewMailer(optRepo)
 
 	if err := mailer.SendPasswordResetEmail(user.Email, resetLink, platformName); err != nil {
 		log.Warn().Err(err).Str("email", user.Email).Msg("Failed to send password reset email; token was created")
@@ -93,8 +94,8 @@ func ForgotPasswordAction(w http.ResponseWriter, r *http.Request) {
 		Str("email", user.Email).
 		Msg("Password reset token created")
 
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"successMessage": "If an account exists for this email, you will receive a password reset link shortly.",
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"successMessage": locale.TR(r, "forgotPasswordSuccess"),
 	})
 }
 
@@ -103,8 +104,8 @@ func ResetPasswordAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Reset password endpoint called")
 
 	var req ResetPasswordRequest
-	if err := service.DecodeAndValidate(r, &req); err != nil {
-		service.WriteValidationError(w, err)
+	if err := util.DecodeAndValidate(r, &req); err != nil {
+		util.WriteValidationError(w, err)
 		return
 	}
 
@@ -112,14 +113,14 @@ func ResetPasswordAction(w http.ResponseWriter, r *http.Request) {
 	tok, err := resetRepo.GetByToken(req.Token)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to look up password reset token")
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "This reset link is invalid or has expired.",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "resetLinkInvalidOrExpired"),
 		})
 		return
 	}
 	if tok == nil || time.Now().UTC().After(tok.ExpiresAt) {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "This reset link is invalid or has expired.",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "resetLinkInvalidOrExpired"),
 		})
 		return
 	}
@@ -127,8 +128,8 @@ func ResetPasswordAction(w http.ResponseWriter, r *http.Request) {
 	userRepo := db.NewUserRepository(db.GetDB())
 	user, err := userRepo.GetByID(tok.UserID)
 	if err != nil || user == nil {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "This reset link is invalid or has expired.",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "resetLinkInvalidOrExpired"),
 		})
 		return
 	}
@@ -144,8 +145,8 @@ func ResetPasswordAction(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to update password on reset")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to reset password",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedResetPassword"),
 		})
 		return
 	}
@@ -155,7 +156,7 @@ func ResetPasswordAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Info().Str("userID", tok.UserID.String()).Msg("Password reset successfully")
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"successMessage": "Your password has been reset successfully.",
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"successMessage": locale.TR(r, "passwordResetSuccess"),
 	})
 }

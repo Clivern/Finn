@@ -5,14 +5,14 @@
     <main class="w-full py-8 px-4 sm:px-6 lg:px-8">
       <div class="mb-8 flex justify-between items-center">
         <div>
-          <h1 class="text-3xl font-semibold text-theme-text">Invites</h1>
-          <p class="text-theme-textLight mt-2">Create and manage user invites</p>
+          <h1 class="text-3xl font-semibold text-theme-text">{{ $t('invites.title') }}</h1>
+          <p class="text-theme-textLight mt-2">{{ $t('invitesPage.subtitle') }}</p>
         </div>
         <button
           @click="openCreateModal"
           class="btn-primary"
         >
-          Create invite
+          {{ $t('invitesPage.createInvite') }}
         </button>
       </div>
 
@@ -20,8 +20,8 @@
         <p class="text-sm text-green-800">{{ successMessage }}</p>
       </div>
       <div v-if="createdInviteLink" class="mb-6 rounded-lg border border-primary-200 bg-primary-50 p-4">
-        <p class="text-sm font-medium text-primary-900 mb-1">Invite created</p>
-        <p class="text-xs text-primary-800 mb-2">An email will be sent to the recipient. You can also share the invite link below.</p>
+        <p class="text-sm font-medium text-primary-900 mb-1">{{ $t('invitesPage.inviteCreated') }}</p>
+        <p class="text-xs text-primary-800 mb-2">{{ $t('invitesPage.inviteCreatedHint') }}</p>
         <div class="flex flex-wrap items-center gap-2">
           <code class="flex-1 min-w-0 text-xs text-primary-900 bg-white/80 px-2 py-1.5 rounded border border-primary-200 truncate">{{ createdInviteLink }}</code>
           <button
@@ -29,14 +29,14 @@
             @click="copyCreatedInviteLink"
             class="btn-secondary text-sm shrink-0"
           >
-            Copy link
+            {{ $t('invitesPage.copyLink') }}
           </button>
           <button
             type="button"
             @click="dismissInviteLinkCard"
             class="text-sm text-primary-700 hover:text-primary-900 shrink-0"
           >
-            Dismiss
+            {{ $t('invitesPage.dismiss') }}
           </button>
         </div>
       </div>
@@ -50,34 +50,34 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
-          <p class="text-theme-textLight mt-2">Loading invites...</p>
+          <p class="text-theme-textLight mt-2">{{ $t('invitesPage.loading') }}</p>
         </div>
 
         <div v-else-if="invites.length === 0" class="p-8 text-center">
-          <p class="text-theme-textLight">No invites yet</p>
-          <p class="text-sm text-theme-textLight mt-1">Create an invite to let someone join the platform.</p>
+          <p class="text-theme-textLight">{{ $t('invitesPage.noInvites') }}</p>
+          <p class="text-sm text-theme-textLight mt-1">{{ $t('invitesPage.noInvitesHint') }}</p>
         </div>
 
         <table v-else class="min-w-full divide-y divide-theme-border">
           <thead class="bg-theme-hover">
             <tr>
               <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                User
+                {{ $t('invitesPage.user') }}
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                Role
+                {{ $t('invitesPage.role') }}
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                Status
+                {{ $t('invitesPage.status') }}
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                Expires
+                {{ $t('invitesPage.expires') }}
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                Created
+                {{ $t('invitesPage.created') }}
               </th>
               <th class="px-6 py-3 text-right text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                Actions
+                {{ $t('invitesPage.actions') }}
               </th>
             </tr>
           </thead>
@@ -119,13 +119,13 @@
                   @click="copyInviteLink(invite)"
                   class="text-blue-600 hover:text-blue-900 mr-4"
                 >
-                  Copy link
+                  {{ $t('invitesPage.copyLink') }}
                 </button>
                 <button
                   @click="openDeleteModal(invite)"
                   class="text-red-600 hover:text-red-900"
                 >
-                  Delete
+                  {{ $t('invitesPage.delete') }}
                 </button>
               </td>
             </tr>
@@ -135,7 +135,7 @@
         <!-- Pagination -->
         <div v-if="invites.length > 0" class="bg-white px-6 py-4 border-t border-theme-border flex items-center justify-between">
           <div class="text-sm text-theme-textLight">
-            Showing {{ showingFrom }} to {{ showingTo }} of {{ invites.length }} invites
+            {{ $t('invitesPage.showing', { from: showingFrom, to: showingTo, count: invites.length }) }}
           </div>
           <div class="flex items-center space-x-2">
             <button
@@ -143,14 +143,14 @@
               :disabled="offset === 0"
               class="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Previous
+              {{ $t('invitesPage.previous') }}
             </button>
             <button
               @click="goToPage(offset + limit)"
               :disabled="offset + limit >= invites.length"
               class="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Next
+              {{ $t('invitesPage.next') }}
             </button>
           </div>
         </div>
@@ -165,7 +165,7 @@
           <form @submit.prevent="handleCreate">
             <div class="bg-white px-6 pt-6 pb-4">
               <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-theme-text">Create invite</h3>
+                <h3 class="text-lg font-semibold text-theme-text">{{ $t('invitesPage.createModalTitle') }}</h3>
                 <button
                   type="button"
                   @click="closeCreateModal"
@@ -179,7 +179,7 @@
               <div class="space-y-4">
                 <div>
                   <label for="create-email" class="block text-sm font-medium text-theme-text mb-2">
-                    Email *
+                    {{ $t('invitesPage.emailRequired') }}
                   </label>
                   <input
                     id="create-email"
@@ -192,7 +192,7 @@
                 </div>
                 <div>
                   <label for="create-role" class="block text-sm font-medium text-theme-text mb-2">
-                    Role *
+                    {{ $t('invitesPage.roleRequired') }}
                   </label>
                   <select
                     id="create-role"
@@ -212,20 +212,20 @@
                 @click="closeCreateModal"
                 class="btn-secondary"
               >
-                Cancel
+                {{ $t('invitesPage.cancel') }}
               </button>
               <button
                 type="submit"
                 class="btn-primary"
                 :disabled="createLoading"
               >
-                <span v-if="!createLoading">Create invite</span>
+                <span v-if="!createLoading">{{ $t('invitesPage.createInviteSubmit') }}</span>
                 <span v-else class="inline-flex items-center gap-2">
                   <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Creating…
+                  {{ $t('invitesPage.creating') }}
                 </span>
               </button>
             </div>
@@ -241,7 +241,7 @@
         <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
           <div class="bg-white px-6 pt-6 pb-4">
             <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-semibold text-theme-text">Delete invite</h3>
+              <h3 class="text-lg font-semibold text-theme-text">{{ $t('invitesPage.deleteModalTitle') }}</h3>
               <button
                 type="button"
                 @click="closeDeleteModal"
@@ -253,8 +253,7 @@
               </button>
             </div>
             <p class="text-sm text-theme-textLight">
-              Are you sure you want to delete the invite for <strong class="text-theme-text">{{ inviteToDelete?.email }}</strong>?
-              This action cannot be undone.
+              {{ $t('invitesPage.deleteConfirm', { email: inviteToDelete?.email }) }}
             </p>
           </div>
           <div class="bg-theme-hover px-6 py-4 flex justify-end space-x-3">
@@ -263,20 +262,20 @@
               @click="closeDeleteModal"
               class="btn-secondary"
             >
-              Cancel
+              {{ $t('invitesPage.cancel') }}
             </button>
             <button
               @click="handleDelete"
               class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none transition-all duration-150"
               :disabled="deleteLoading"
             >
-              <span v-if="!deleteLoading">Delete</span>
+              <span v-if="!deleteLoading">{{ $t('common.delete') }}</span>
               <span v-else class="flex items-center">
                 <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                Deleting…
+                {{ $t('invitesPage.deleting') }}
               </span>
             </button>
           </div>
@@ -288,9 +287,12 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { invitesAPI } from '@/api'
 import AppNav from '@/components/AppNav.vue'
 import { formatRelative, formatExpires } from '@/utils/date'
+
+const { t } = useI18n()
 
 const loading = ref(false)
 const invites = ref([])
@@ -328,7 +330,7 @@ const loadInvites = async () => {
     offset.value = 0
   } catch (err) {
     console.error('Failed to load invites:', err)
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to load invites'
+    errorMessage.value = err.response?.data?.errorMessage || t('invitesPage.failedLoad')
   } finally {
     loading.value = false
   }
@@ -347,7 +349,7 @@ const inviteLink = (token) => {
 const copyInviteLink = async (invite) => {
   try {
     await navigator.clipboard.writeText(inviteLink(invite.token))
-    successMessage.value = 'Invite link copied to clipboard'
+    successMessage.value = t('invitesPage.inviteLinkCopied')
     setTimeout(() => { successMessage.value = null }, 3000)
   } catch {
     errorMessage.value = 'Failed to copy link'
@@ -371,7 +373,7 @@ const copyCreatedInviteLink = async () => {
 
   try {
     await navigator.clipboard.writeText(createdInviteLink.value)
-    successMessage.value = 'Invite link copied to clipboard'
+    successMessage.value = t('invitesPage.inviteLinkCopied')
     setTimeout(() => { successMessage.value = null }, 3000)
   } catch {
     errorMessage.value = 'Failed to copy link'
@@ -396,13 +398,13 @@ const handleCreate = async () => {
     })
 
     createdInviteLink.value = inviteLink(res.data.token)
-    successMessage.value = 'Invite created.'
+    successMessage.value = t('invitesPage.inviteCreated')
     closeCreateModal()
     await loadInvites()
     setTimeout(() => { successMessage.value = null }, 5000)
   } catch (err) {
     console.error('Failed to create invite:', err)
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to create invite'
+    errorMessage.value = err.response?.data?.errorMessage || t('invitesPage.failedCreate')
   } finally {
     createLoading.value = false
   }
@@ -425,13 +427,13 @@ const handleDelete = async () => {
 
   try {
     await invitesAPI.delete(inviteToDelete.value.id)
-    successMessage.value = 'Invite deleted'
+    successMessage.value = t('invitesPage.inviteDeleted')
     closeDeleteModal()
     await loadInvites()
     setTimeout(() => { successMessage.value = null }, 3000)
   } catch (err) {
     console.error('Failed to delete invite:', err)
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to delete invite'
+    errorMessage.value = err.response?.data?.errorMessage || t('invitesPage.failedDelete')
   } finally {
     deleteLoading.value = false
   }

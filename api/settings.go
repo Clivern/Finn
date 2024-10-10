@@ -8,8 +8,9 @@ import (
 	"net/http"
 
 	"github.com/clivern/finn/db"
+	"github.com/clivern/finn/locale"
 	"github.com/clivern/finn/module"
-	"github.com/clivern/finn/service"
+	"github.com/clivern/finn/service/util"
 
 	"github.com/rs/zerolog/log"
 )
@@ -33,8 +34,8 @@ func UpdateSettingsAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Update settings endpoint called")
 
 	var req UpdateSettingsRequest
-	if err := service.DecodeAndValidate(r, &req); err != nil {
-		service.WriteValidationError(w, err)
+	if err := util.DecodeAndValidate(r, &req); err != nil {
+		util.WriteValidationError(w, err)
 		return
 	}
 
@@ -55,19 +56,19 @@ func UpdateSettingsAction(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to update settings")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to update settings",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedUpdateSettings"),
 		})
 		return
 	}
 
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"successMessage": "Settings updated successfully",
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"successMessage": locale.TR(r, "settingsUpdatedSuccessfully"),
 	})
 }
 
 // GetSettingsAction handles user settings get requests
-func GetSettingsAction(w http.ResponseWriter, _ *http.Request) {
+func GetSettingsAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Get settings endpoint called")
 
 	settingsModule := module.NewSettings(db.NewOptionRepository(db.GetDB()))
@@ -75,13 +76,13 @@ func GetSettingsAction(w http.ResponseWriter, _ *http.Request) {
 
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get settings")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get settings",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetSettings"),
 		})
 		return
 	}
 
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"settings": settings,
 	})
 }

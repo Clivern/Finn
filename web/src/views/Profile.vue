@@ -5,8 +5,8 @@
     <div class="w-full px-4 sm:px-6 lg:px-8 py-8">
       <main>
         <div class="mb-8">
-          <h1 class="text-2xl font-semibold text-theme-text">Profile</h1>
-          <p class="text-sm text-theme-textLight mt-1">Your account information</p>
+          <h1 class="text-2xl font-semibold text-theme-text">{{ $t('profile.title') }}</h1>
+          <p class="text-sm text-theme-textLight mt-1">{{ $t('profile.subtitle') }}</p>
         </div>
 
         <div v-if="successMessage" class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
@@ -18,8 +18,8 @@
 
         <section class="rounded-xl bg-white border border-theme-border shadow-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-theme-border bg-primary-50/50">
-            <h2 class="text-base font-semibold text-theme-text">Account</h2>
-            <p class="text-xs text-theme-textLight mt-0.5">View and edit your profile</p>
+            <h2 class="text-base font-semibold text-theme-text">{{ $t('profile.account') }}</h2>
+            <p class="text-xs text-theme-textLight mt-0.5">{{ $t('profile.accountSubtitle') }}</p>
           </div>
           <div class="p-6 space-y-6">
             <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6">
@@ -32,25 +32,25 @@
               </div>
               <div class="min-w-0 flex-1 space-y-4">
                 <div>
-                  <label for="profile-name" class="block text-sm font-medium text-theme-text mb-1.5">Display name</label>
+                  <label for="profile-name" class="block text-sm font-medium text-theme-text mb-1.5">{{ $t('profile.displayName') }}</label>
                   <input
                     id="profile-name"
                     v-model="form.name"
                     type="text"
                     class="input-field max-w-md"
-                    placeholder="Your name"
+                    :placeholder="$t('profile.displayNamePlaceholder')"
                     :disabled="loading"
                   >
                 </div>
                 <div>
-                  <label for="profile-email" class="block text-sm font-medium text-theme-text mb-1.5">Email</label>
+                  <label for="profile-email" class="block text-sm font-medium text-theme-text mb-1.5">{{ $t('profile.email') }}</label>
                   <input
                     id="profile-email"
                     v-model="form.email"
                     type="email"
                     required
                     class="input-field max-w-md"
-                    placeholder="you@example.com"
+                    :placeholder="$t('profile.emailPlaceholder')"
                     :disabled="loading"
                   >
                 </div>
@@ -58,46 +58,46 @@
             </div>
 
             <div class="pt-4 border-t border-theme-border space-y-4">
-              <h3 class="text-sm font-semibold text-theme-text">Change password</h3>
-              <p class="text-xs text-theme-textLight">Leave blank to keep your current password. Changing email or password requires your current password.</p>
+              <h3 class="text-sm font-semibold text-theme-text">{{ $t('profile.changePassword') }}</h3>
+              <p class="text-xs text-theme-textLight">{{ $t('profile.changePasswordHint') }}</p>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl">
                 <div>
-                  <label for="profile-current-password" class="block text-sm font-medium text-theme-text mb-1.5">Current password</label>
+                  <label for="profile-current-password" class="block text-sm font-medium text-theme-text mb-1.5">{{ $t('profile.currentPassword') }}</label>
                   <input
                     id="profile-current-password"
                     v-model="form.currentPassword"
                     type="password"
                     autocomplete="current-password"
                     class="input-field"
-                    placeholder="Required when changing email or password"
+                    :placeholder="$t('profile.currentPasswordPlaceholder')"
                     :disabled="loading"
                   >
                 </div>
                 <div class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
-                    <label for="profile-new-password" class="block text-sm font-medium text-theme-text mb-1.5">New password</label>
+                    <label for="profile-new-password" class="block text-sm font-medium text-theme-text mb-1.5">{{ $t('profile.newPassword') }}</label>
                     <input
                       id="profile-new-password"
                       v-model="form.newPassword"
                       type="password"
                       autocomplete="new-password"
                       class="input-field"
-                      placeholder="Min 8 characters"
+                      :placeholder="$t('profile.newPasswordPlaceholder')"
                       :disabled="loading"
                     >
                   </div>
                   <div>
-                    <label for="profile-confirm-password" class="block text-sm font-medium text-theme-text mb-1.5">Confirm new password</label>
+                    <label for="profile-confirm-password" class="block text-sm font-medium text-theme-text mb-1.5">{{ $t('profile.confirmNewPassword') }}</label>
                     <input
                       id="profile-confirm-password"
                       v-model="form.confirmPassword"
                       type="password"
                       autocomplete="new-password"
                       class="input-field"
-                      placeholder="Same as new password"
+                      :placeholder="$t('profile.confirmNewPasswordPlaceholder')"
                       :disabled="loading"
                     >
-                    <p v-if="form.newPassword && form.newPassword !== form.confirmPassword" class="mt-1 text-xs text-red-600">Passwords do not match</p>
+                    <p v-if="form.newPassword && form.newPassword !== form.confirmPassword" class="mt-1 text-xs text-red-600">{{ $t('profile.passwordsDoNotMatch') }}</p>
                   </div>
                 </div>
               </div>
@@ -105,15 +105,15 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-4 border-t border-theme-border">
               <div>
-                <p class="text-xs font-medium text-theme-textLight uppercase tracking-wide mb-1">Role</p>
+                <p class="text-xs font-medium text-theme-textLight uppercase tracking-wide mb-1">{{ $t('profile.role') }}</p>
                 <p class="text-sm text-theme-text capitalize">{{ user?.role }}</p>
               </div>
               <div>
-                <p class="text-xs font-medium text-theme-textLight uppercase tracking-wide mb-1">Last login</p>
+                <p class="text-xs font-medium text-theme-textLight uppercase tracking-wide mb-1">{{ $t('profile.lastLogin') }}</p>
                 <p class="text-sm text-theme-text">{{ formatDate(user.lastLoginAt) }}</p>
               </div>
               <div>
-                <p class="text-xs font-medium text-theme-textLight uppercase tracking-wide mb-1">Member since</p>
+                <p class="text-xs font-medium text-theme-textLight uppercase tracking-wide mb-1">{{ $t('profile.memberSince') }}</p>
                 <p class="text-sm text-theme-text">{{ formatDate(user.createdAt) }}</p>
               </div>
             </div>
@@ -125,13 +125,13 @@
                 :disabled="loading"
                 @click="handleSave"
               >
-                <span v-if="!loading">Save changes</span>
+                <span v-if="!loading">{{ $t('profile.saveChanges') }}</span>
                 <span v-else class="inline-flex items-center gap-2">
                   <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Saving…
+                  {{ $t('profile.saving') }}
                 </span>
               </button>
             </div>
@@ -140,26 +140,26 @@
 
         <section class="rounded-xl bg-white border border-theme-border shadow-sm overflow-hidden mt-8">
           <div class="px-6 py-4 border-b border-theme-border bg-primary-50/50">
-            <h2 class="text-base font-semibold text-theme-text">API keys</h2>
-            <p class="text-xs text-theme-textLight mt-0.5">Create and manage keys for API access. The key value is shown only once when created.</p>
+            <h2 class="text-base font-semibold text-theme-text">{{ $t('profile.apiKeys') }}</h2>
+            <p class="text-xs text-theme-textLight mt-0.5">{{ $t('profile.apiKeysSubtitle') }}</p>
           </div>
           <div class="p-6 space-y-6">
             <div class="space-y-4">
               <div class="flex flex-wrap items-end gap-3">
                 <div class="min-w-0 flex-1" style="min-width: 200px;">
-                  <label for="new-key-name" class="block text-sm font-medium text-theme-text mb-1.5">New key name</label>
+                  <label for="new-key-name" class="block text-sm font-medium text-theme-text mb-1.5">{{ $t('profile.newKeyName') }}</label>
                   <input
                     id="new-key-name"
                     v-model="newKeyName"
                     type="text"
                     class="input-field"
-                    placeholder="e.g. CLI, CI/CD"
+                    :placeholder="$t('profile.newKeyNamePlaceholder')"
                     :disabled="apiKeysLoading || creatingKey"
                     @keydown.enter.prevent="handleCreateKey"
                   >
                 </div>
                 <div class="min-w-0 flex-1" style="min-width: 200px;">
-                  <label for="new-key-expires" class="block text-sm font-medium text-theme-text mb-1.5">Expires at (optional)</label>
+                  <label for="new-key-expires" class="block text-sm font-medium text-theme-text mb-1.5">{{ $t('profile.expiresAtOptional') }}</label>
                   <input
                     id="new-key-expires"
                     v-model="newKeyExpiresAt"
@@ -176,13 +176,13 @@
                   :disabled="apiKeysLoading || creatingKey"
                   @click="handleCreateKey"
                 >
-                <span v-if="!creatingKey">Create key</span>
+                <span v-if="!creatingKey">{{ $t('profile.createKey') }}</span>
                 <span v-else class="inline-flex items-center gap-2">
                   <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Creating…
+                  {{ $t('profile.creating') }}
                 </span>
               </button>
               </div>
@@ -192,7 +192,7 @@
               v-if="newlyCreatedKey"
               class="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-2"
             >
-              <p class="text-sm font-medium text-amber-900">Copy your key now. It won’t be shown again.</p>
+              <p class="text-sm font-medium text-amber-900">{{ $t('profile.copyKeyNow') }}</p>
               <div class="flex flex-wrap items-center gap-2">
                 <code class="flex-1 min-w-0 px-3 py-2 bg-white border border-amber-200 rounded text-sm text-theme-text break-all font-mono">{{ newlyCreatedKey }}</code>
                 <button
@@ -200,7 +200,7 @@
                   class="btn-secondary shrink-0"
                   @click="copyKeyToClipboard"
                 >
-                  {{ keyCopied ? 'Copied' : 'Copy' }}
+                  {{ keyCopied ? $t('profile.copied') : $t('profile.copy') }}
                 </button>
               </div>
               <button
@@ -208,24 +208,24 @@
                 class="text-sm text-amber-800 hover:text-amber-900 font-medium"
                 @click="newlyCreatedKey = null; keyCopied = false"
               >
-                Dismiss
+                {{ $t('profile.dismiss') }}
               </button>
             </div>
 
             <div v-if="apiKeysLoading && apiKeys.length === 0" class="text-sm text-theme-textLight py-4">
-              Loading API keys…
+              {{ $t('profile.loadingApiKeys') }}
             </div>
             <div v-else-if="apiKeys.length === 0" class="text-sm text-theme-textLight py-4">
-              No API keys yet. Create one above to use with the API.
+              {{ $t('profile.noApiKeysYet') }}
             </div>
             <div v-else class="border border-theme-border rounded-lg overflow-hidden">
               <table class="min-w-full divide-y divide-theme-border">
                 <thead class="bg-theme-bg">
                   <tr>
-                    <th scope="col" class="px-4 py-2.5 text-left text-xs font-medium text-theme-textLight uppercase tracking-wide">Name</th>
-                    <th scope="col" class="px-4 py-2.5 text-left text-xs font-medium text-theme-textLight uppercase tracking-wide">Created</th>
-                    <th scope="col" class="px-4 py-2.5 text-left text-xs font-medium text-theme-textLight uppercase tracking-wide">Expires</th>
-                    <th scope="col" class="px-4 py-2.5 text-right text-xs font-medium text-theme-textLight uppercase tracking-wide">Actions</th>
+                    <th scope="col" class="px-4 py-2.5 text-left text-xs font-medium text-theme-textLight uppercase tracking-wide">{{ $t('profile.name') }}</th>
+                    <th scope="col" class="px-4 py-2.5 text-left text-xs font-medium text-theme-textLight uppercase tracking-wide">{{ $t('profile.created') }}</th>
+                    <th scope="col" class="px-4 py-2.5 text-left text-xs font-medium text-theme-textLight uppercase tracking-wide">{{ $t('profile.expires') }}</th>
+                    <th scope="col" class="px-4 py-2.5 text-right text-xs font-medium text-theme-textLight uppercase tracking-wide">{{ $t('profile.actions') }}</th>
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-theme-border">
@@ -237,7 +237,7 @@
                       {{ formatDate(key.createdAt) }}
                     </td>
                     <td class="px-4 py-3 text-sm text-theme-textLight">
-                      {{ key.expiresAt ? formatDateTime(key.expiresAt) : 'Never' }}
+                      {{ key.expiresAt ? formatDateTime(key.expiresAt) : $t('profile.never') }}
                     </td>
                     <td class="px-4 py-3 text-right">
                       <button
@@ -246,7 +246,7 @@
                         :disabled="deletingId === key.id"
                         @click="openRevokeModal(key)"
                       >
-                        {{ deletingId === key.id ? 'Deleting…' : 'Revoke' }}
+                        {{ deletingId === key.id ? $t('profile.revoking') : $t('profile.revoke') }}
                       </button>
                     </td>
                   </tr>
@@ -288,10 +288,10 @@
               class="w-full max-w-md rounded-xl bg-white border border-theme-border shadow-xl p-6"
             >
               <h2 id="revoke-modal-title" class="text-lg font-semibold text-theme-text">
-                Revoke API key
+                {{ $t('profile.revokeTitle') }}
               </h2>
               <p class="mt-2 text-sm text-theme-textLight">
-                Revoke API key <span class="font-medium text-theme-text">"{{ revokeModalKey.name }}"</span>? This cannot be undone and any applications using this key will stop working.
+                {{ $t('profile.revokeConfirm', { name: revokeModalKey.name }) }}
               </p>
               <div class="mt-6 flex flex-row-reverse gap-3">
                 <button
@@ -300,7 +300,7 @@
                   :disabled="deletingId === revokeModalKey?.id"
                   @click="confirmRevokeKey"
                 >
-                  {{ deletingId === revokeModalKey?.id ? 'Revoking…' : 'Revoke' }}
+                  {{ deletingId === revokeModalKey?.id ? $t('profile.revoking') : $t('profile.revoke') }}
                 </button>
                 <button
                   type="button"
@@ -308,7 +308,7 @@
                   :disabled="deletingId === revokeModalKey?.id"
                   @click="closeRevokeModal"
                 >
-                  Cancel
+                  {{ $t('common.cancel') }}
                 </button>
               </div>
             </div>
@@ -321,9 +321,12 @@
 
 <script setup>
 import { ref, reactive, computed, watch, watchEffect, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { apiKeysAPI, authAPI } from '@/api'
 import AppNav from '@/components/AppNav.vue'
 import { user, saveUser } from '@/lib/auth'
+
+const { t } = useI18n()
 const loading = ref(false)
 const successMessage = ref(null)
 const errorMessage = ref(null)
@@ -405,7 +408,7 @@ async function loadApiKeys() {
     const res = await apiKeysAPI.list()
     apiKeys.value = res.data.apiKeys
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to load API keys'
+    errorMessage.value = err.response?.data?.errorMessage || t('profile.failedLoadApiKeys')
   } finally {
     apiKeysLoading.value = false
   }
@@ -418,7 +421,7 @@ async function handleCreateKey() {
   newlyCreatedKey.value = null
 
   if (!name) {
-    errorMessage.value = 'API key name is required'
+    errorMessage.value = t('profile.keyNameRequired')
     return
   }
   creatingKey.value = true
@@ -434,7 +437,7 @@ async function handleCreateKey() {
     newKeyExpiresAt.value = ''
     await loadApiKeys()
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to create API key'
+    errorMessage.value = err.response?.data?.errorMessage || t('profile.failedCreateKey')
   } finally {
     creatingKey.value = false
   }
@@ -467,7 +470,7 @@ async function confirmRevokeKey() {
     newlyCreatedKey.value = null
     revokeModalKey.value = null
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to revoke API key'
+    errorMessage.value = err.response?.data?.errorMessage || t('profile.failedRevokeKey')
   } finally {
     deletingId.value = null
   }
@@ -485,13 +488,13 @@ async function handleSave() {
   try {
     const res = await authAPI.updateProfile(payload)
     saveUser(res.data.user)
-    successMessage.value = 'Profile updated successfully'
+    successMessage.value = t('profile.profileUpdated')
     setTimeout(() => { successMessage.value = null }, 3000)
     form.currentPassword = ''
     form.newPassword = ''
     form.confirmPassword = ''
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || 'Update failed'
+    errorMessage.value = err.response?.data?.errorMessage || t('profile.updateFailed')
   } finally {
     loading.value = false
   }

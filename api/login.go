@@ -10,8 +10,9 @@ import (
 	"time"
 
 	"github.com/clivern/finn/db"
+	"github.com/clivern/finn/locale"
 	"github.com/clivern/finn/module"
-	"github.com/clivern/finn/service"
+	"github.com/clivern/finn/service/util"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -29,8 +30,8 @@ func LoginAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Login endpoint called")
 
 	var req LoginRequest
-	if err := service.DecodeAndValidate(r, &req); err != nil {
-		service.WriteValidationError(w, err)
+	if err := util.DecodeAndValidate(r, &req); err != nil {
+		util.WriteValidationError(w, err)
 		return
 	}
 
@@ -39,15 +40,15 @@ func LoginAction(w http.ResponseWriter, r *http.Request) {
 	authModule := module.NewAuth(userRepo)
 	user, err := authModule.Login(req.Email, req.Password)
 	if err != nil {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Invalid username or password",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidUsernameOrPassword"),
 		})
 		return
 	}
 
 	if !user.IsActive {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Your account is not active. Please contact support.",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "accountNotActive"),
 		})
 		return
 	}
@@ -57,15 +58,15 @@ func LoginAction(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get maintenance_mode option")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to check maintenance status",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCheckMaintenance"),
 		})
 		return
 	}
 
 	if maintenanceOpt != nil && maintenanceOpt.Value == "1" && user.Role != db.UserRoleAdmin {
-		service.WriteJSON(w, http.StatusServiceUnavailable, map[string]interface{}{
-			"errorMessage": "Maintenance mode is enabled. Only administrators can sign in.",
+		util.WriteJSON(w, http.StatusServiceUnavailable, map[string]interface{}{
+			"errorMessage": locale.TR(r, "maintenanceModeEnabled"),
 		})
 		return
 	}
@@ -78,17 +79,17 @@ func LoginAction(w http.ResponseWriter, r *http.Request) {
 		r.UserAgent(),
 	)
 	if err != nil {
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to create session",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCreateSession"),
 		})
 		return
 	}
 
-	var cookieOptions *service.CookieOptions
+	var cookieOptions *util.CookieOptions
 	if viper.GetBool("app.tls.status") || strings.HasPrefix(viper.GetString("app.hostname"), "https://") {
-		cookieOptions = service.SecureCookieOptions()
+		cookieOptions = util.SecureCookieOptions()
 	} else {
-		cookieOptions = service.DefaultCookieOptions()
+		cookieOptions = util.DefaultCookieOptions()
 	}
 	if req.RememberMe {
 		cookieOptions.MaxAge = int((time.Hour * 24 * 30) / time.Second)
@@ -96,16 +97,16 @@ func LoginAction(w http.ResponseWriter, r *http.Request) {
 		cookieOptions.MaxAge = 0
 	}
 
-	service.SetCookie(w, "_finn_session", session.Token, cookieOptions)
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"successMessage": "Login successful",
+	util.SetCookie(w, "_finn_session", session.Token, cookieOptions)
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"successMessage": locale.TR(r, "loginSuccessful"),
 		"user": map[string]interface{}{
 			"id":          user.ID,
 			"email":       user.Email,
 			"role":        user.Role,
 			"isActive":    user.IsActive,
 			"name":        user.Name,
-			"avatar":      service.GravatarURL(user.Email, 80),
+			"avatar":      util.GravatarURL(user.Email, 80),
 			"lastLoginAt": user.LastLoginAt.UTC().Format(time.RFC3339),
 			"createdAt":   user.CreatedAt.UTC().Format(time.RFC3339),
 			"updatedAt":   user.UpdatedAt.UTC().Format(time.RFC3339),

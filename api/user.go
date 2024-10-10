@@ -11,9 +11,10 @@ import (
 	"time"
 
 	"github.com/clivern/finn/db"
+	"github.com/clivern/finn/locale"
 	"github.com/clivern/finn/middleware"
 	"github.com/clivern/finn/module"
-	"github.com/clivern/finn/service"
+	"github.com/clivern/finn/service/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )
@@ -41,8 +42,8 @@ func CreateUserAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Create user endpoint called")
 
 	var req CreateUserRequest
-	if err := service.DecodeAndValidate(r, &req); err != nil {
-		service.WriteValidationError(w, err)
+	if err := util.DecodeAndValidate(r, &req); err != nil {
+		util.WriteValidationError(w, err)
 		return
 	}
 
@@ -57,20 +58,20 @@ func CreateUserAction(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		if errors.Is(err, module.ErrUserEmailAlreadyExists) {
-			service.WriteJSON(w, http.StatusConflict, map[string]interface{}{
-				"errorMessage": "User with this email already exists",
+			util.WriteJSON(w, http.StatusConflict, map[string]interface{}{
+				"errorMessage": locale.TR(r, "userWithEmailExists"),
 			})
 			return
 		}
 		log.Error().Err(err).Msg("Failed to create user")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to create user",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCreateUser"),
 		})
 		return
 	}
 
 	log.Info().Str("userID", user.ID.String()).Msg("User created successfully")
-	service.WriteJSON(w, http.StatusCreated, map[string]interface{}{
+	util.WriteJSON(w, http.StatusCreated, map[string]interface{}{
 		"id":          user.ID,
 		"name":        user.Name,
 		"email":       user.Email,
@@ -88,8 +89,8 @@ func GetUserAction(w http.ResponseWriter, r *http.Request) {
 
 	userIDStr := chi.URLParam(r, "id")
 	if userIDStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid user ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidUserID"),
 		})
 		return
 	}
@@ -98,19 +99,19 @@ func GetUserAction(w http.ResponseWriter, r *http.Request) {
 	user, err := userModule.GetUser(db.ID(userIDStr))
 	if err != nil {
 		if errors.Is(err, module.ErrUserNotFound) {
-			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-				"errorMessage": "User not found",
+			util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+				"errorMessage": locale.TR(r, "userNotFound"),
 			})
 			return
 		}
 		log.Error().Err(err).Msg("Failed to get user")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get user",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetUser"),
 		})
 		return
 	}
 
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"id":          user.ID,
 		"name":        user.Name,
 		"email":       user.Email,
@@ -128,15 +129,15 @@ func UpdateUserAction(w http.ResponseWriter, r *http.Request) {
 
 	userIDStr := chi.URLParam(r, "id")
 	if userIDStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid user ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidUserID"),
 		})
 		return
 	}
 
 	var req UpdateUserRequest
-	if err := service.DecodeAndValidate(r, &req); err != nil {
-		service.WriteValidationError(w, err)
+	if err := util.DecodeAndValidate(r, &req); err != nil {
+		util.WriteValidationError(w, err)
 		return
 	}
 
@@ -152,26 +153,26 @@ func UpdateUserAction(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		if errors.Is(err, module.ErrUserNotFound) {
-			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-				"errorMessage": "User not found",
+			util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+				"errorMessage": locale.TR(r, "userNotFound"),
 			})
 			return
 		}
 		if errors.Is(err, module.ErrUserEmailAlreadyExists) {
-			service.WriteJSON(w, http.StatusConflict, map[string]interface{}{
-				"errorMessage": "User with this email already exists",
+			util.WriteJSON(w, http.StatusConflict, map[string]interface{}{
+				"errorMessage": locale.TR(r, "userWithEmailExists"),
 			})
 			return
 		}
 		log.Error().Err(err).Msg("Failed to update user")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to update user",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedUpdateUser"),
 		})
 		return
 	}
 
 	log.Info().Str("userID", user.ID.String()).Msg("User updated successfully")
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"id":          user.ID,
 		"name":        user.Name,
 		"email":       user.Email,
@@ -213,8 +214,8 @@ func ListUsersAction(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to list users")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to list users",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedListUsers"),
 		})
 		return
 	}
@@ -233,7 +234,7 @@ func ListUsersAction(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"users": userList,
 		"_meta": map[string]interface{}{
 			"limit":  limit,
@@ -251,16 +252,16 @@ func DeleteUserAction(w http.ResponseWriter, r *http.Request) {
 
 	userIDStr := chi.URLParam(r, "id")
 	if userIDStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid user ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidUserID"),
 		})
 		return
 	}
 	userID := db.ID(userIDStr)
 
 	if currentUser.ID == userID {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "You cannot delete your own account",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "cannotDeleteOwnAccount"),
 		})
 		return
 	}
@@ -270,18 +271,18 @@ func DeleteUserAction(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		if errors.Is(err, module.ErrUserNotFound) {
-			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-				"errorMessage": "User not found",
+			util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+				"errorMessage": locale.TR(r, "userNotFound"),
 			})
 			return
 		}
 		log.Error().Err(err).Msg("Failed to delete user")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to delete user",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedDeleteUser"),
 		})
 		return
 	}
 
 	log.Info().Str("userID", userID.String()).Msg("User deleted successfully")
-	service.WriteJSON(w, http.StatusNoContent, map[string]interface{}{})
+	util.WriteJSON(w, http.StatusNoContent, map[string]interface{}{})
 }

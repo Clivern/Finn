@@ -9,14 +9,14 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
-          <p class="text-theme-textLight mt-3">Loading workspace…</p>
+          <p class="text-theme-textLight mt-3">{{ $t('common.loading') }}</p>
         </div>
       </div>
 
       <template v-else>
         <div class="mb-8">
-          <h1 class="text-3xl font-semibold text-theme-text">Workspace settings</h1>
-          <p class="text-theme-textLight mt-2">Manage name, members, and delete this workspace</p>
+          <h1 class="text-3xl font-semibold text-theme-text">{{ $t('workspacePage.title') }}</h1>
+          <p class="text-theme-textLight mt-2">{{ $t('workspacePage.subtitle') }}</p>
         </div>
 
         <div v-if="successMessage" class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
@@ -31,12 +31,12 @@
             <section class="rounded-xl bg-white border border-theme-border shadow-sm overflow-hidden">
               <form @submit.prevent="saveName" class="block">
                 <div class="px-6 py-4 border-b border-theme-border bg-primary-50/50">
-                  <h2 class="text-base font-semibold text-theme-text">Workspace name</h2>
-                  <p class="text-xs text-theme-textLight mt-0.5">Update the display name of this workspace.</p>
+                  <h2 class="text-base font-semibold text-theme-text">{{ $t('workspacePage.workspaceName') }}</h2>
+                  <p class="text-xs text-theme-textLight mt-0.5">{{ $t('workspacePage.workspaceNameDesc') }}</p>
                 </div>
                 <div class="p-6 space-y-5">
                   <div>
-                    <label for="workspace-name" class="block text-sm font-medium text-theme-text mb-1.5">Name</label>
+                    <label for="workspace-name" class="block text-sm font-medium text-theme-text mb-1.5">{{ $t('workspacePage.name') }}</label>
                     <input
                       id="workspace-name"
                       v-model="editName"
@@ -53,7 +53,7 @@
                     class="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                     :disabled="nameSaving || !editName.trim() || editName.trim() === workspace.name"
                   >
-                    {{ nameSaving ? 'Saving…' : 'Save' }}
+                    {{ nameSaving ? $t('workspacePage.saving') : $t('common.save') }}
                   </button>
                 </div>
               </form>
@@ -62,8 +62,8 @@
             <!-- Danger zone: delete workspace -->
             <section v-if="canManageWorkspace" class="rounded-xl border border-red-200 bg-red-50/30 overflow-hidden">
               <div class="px-6 py-4 border-b border-red-200">
-                <h2 class="text-lg font-semibold text-red-800">Delete workspace</h2>
-                <p class="text-sm text-red-700/90 mt-0.5">Permanently delete this workspace and all its data. This cannot be undone.</p>
+                <h2 class="text-lg font-semibold text-red-800">{{ $t('workspacePage.deleteWorkspace') }}</h2>
+                <p class="text-sm text-red-700/90 mt-0.5">{{ $t('workspacePage.deleteWorkspaceDesc') }}</p>
               </div>
               <div class="px-6 py-4">
                 <button
@@ -71,7 +71,7 @@
                   @click="openDeleteModal"
                   class="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1"
                 >
-                  Delete workspace
+                  {{ $t('workspacePage.deleteWorkspaceButton') }}
                 </button>
               </div>
             </section>
@@ -81,18 +81,18 @@
           <section v-if="canManageWorkspace" class="xl:col-span-2 rounded-xl border border-theme-border bg-white shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-theme-border flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 class="text-lg font-semibold text-theme-text">Members</h2>
-                <p class="text-sm text-theme-textLight mt-0.5">Add, edit roles, or remove workspace users</p>
+                <h2 class="text-lg font-semibold text-theme-text">{{ $t('workspacePage.members') }}</h2>
+                <p class="text-sm text-theme-textLight mt-0.5">{{ $t('workspacePage.membersDesc') }}</p>
               </div>
               <button type="button" @click="openAddUserModal" class="btn-primary text-sm inline-flex items-center gap-2">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
-                Add member
+                {{ $t('workspacePage.addMember') }}
               </button>
             </div>
-            <div v-if="usersLoading" class="p-8 text-center text-theme-textLight text-sm">Loading members…</div>
-            <div v-else-if="workspaceUsers.length === 0" class="p-8 text-center text-theme-textLight text-sm">No members yet. Add someone above.</div>
+            <div v-if="usersLoading" class="p-8 text-center text-theme-textLight text-sm">{{ $t('workspacePage.loadingMembers') }}</div>
+            <div v-else-if="workspaceUsers.length === 0" class="p-8 text-center text-theme-textLight text-sm">{{ $t('workspacePage.noMembers') }}</div>
             <template v-else>
               <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-theme-border">

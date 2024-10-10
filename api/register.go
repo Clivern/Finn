@@ -9,7 +9,8 @@ import (
 	"time"
 
 	"github.com/clivern/finn/db"
-	"github.com/clivern/finn/service"
+	"github.com/clivern/finn/locale"
+	"github.com/clivern/finn/service/util"
 
 	"github.com/rs/zerolog/log"
 )
@@ -28,8 +29,8 @@ func RegisterAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Register endpoint called")
 
 	var req RegisterRequest
-	if err := service.DecodeAndValidate(r, &req); err != nil {
-		service.WriteValidationError(w, err)
+	if err := util.DecodeAndValidate(r, &req); err != nil {
+		util.WriteValidationError(w, err)
 		return
 	}
 
@@ -37,28 +38,28 @@ func RegisterAction(w http.ResponseWriter, r *http.Request) {
 	invite, err := repo.GetByToken(req.Token)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get user invite by token")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to complete registration",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCompleteRegistration"),
 		})
 		return
 	}
 	if invite == nil {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid or expired invite token",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidOrExpiredInviteToken"),
 		})
 		return
 	}
 
 	if invite.Status != inviteStatusPending {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invite is no longer valid",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "inviteNoLongerValid"),
 		})
 		return
 	}
 	if time.Now().UTC().After(invite.ExpiresAt) {
 		repo.MarkExpiredAsExpired()
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invite has expired",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "inviteExpired"),
 		})
 		return
 	}
@@ -67,23 +68,23 @@ func RegisterAction(w http.ResponseWriter, r *http.Request) {
 	existing, err := userRepo.GetByEmail(invite.Email)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check existing user")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to complete registration",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCompleteRegistration"),
 		})
 		return
 	}
 	if existing != nil {
-		service.WriteJSON(w, http.StatusConflict, map[string]interface{}{
-			"errorMessage": "An account with this email already exists",
+		util.WriteJSON(w, http.StatusConflict, map[string]interface{}{
+			"errorMessage": locale.TR(r, "accountWithEmailAlreadyExists"),
 		})
 		return
 	}
 
-	hashedPassword, err := service.HashPassword(req.Password)
+	hashedPassword, err := util.HashPassword(req.Password)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to hash password")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to complete registration",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCompleteRegistration"),
 		})
 		return
 	}
@@ -101,8 +102,8 @@ func RegisterAction(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := userRepo.Create(user); err != nil {
 		log.Error().Err(err).Msg("Failed to create user")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to complete registration",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCompleteRegistration"),
 		})
 		return
 	}
@@ -117,7 +118,7 @@ func RegisterAction(w http.ResponseWriter, r *http.Request) {
 		Str("email", user.Email).
 		Msg("User registered successfully")
 
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"successMessage": "Registration successful. Please sign in.",
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"successMessage": locale.TR(r, "registrationSuccessful"),
 	})
 }

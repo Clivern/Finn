@@ -6,6 +6,16 @@ const api = axios.create({
   timeout: 10000,
 })
 
+api.interceptors.request.use((config) => {
+  try {
+    const locale = typeof localStorage !== 'undefined' && localStorage.getItem('finn-locale')
+    if (locale === 'en' || locale === 'fr') {
+      config.headers['Accept-Language'] = locale
+    }
+  } catch (_) {}
+  return config
+})
+
 // Response interceptor
 api.interceptors.response.use(
   (response) => response,
@@ -150,4 +160,14 @@ export const credentialsAPI = {
   create: (workspaceId, data) => api.post(`/workspaces/${workspaceId}/credentials`, data),
   update: (workspaceId, id, data) => api.put(`/workspaces/${workspaceId}/credentials/${id}`, data),
   delete: (workspaceId, id) => api.delete(`/workspaces/${workspaceId}/credentials/${id}`),
+}
+
+// API endpoints for workspace backends (Terraform state backends)
+export const backendsAPI = {
+  list: (workspaceId, params = {}) => api.get(`/workspaces/${workspaceId}/backends`, { params }),
+  get: (workspaceId, id) => api.get(`/workspaces/${workspaceId}/backends/${id}`),
+  create: (workspaceId, data) => api.post(`/workspaces/${workspaceId}/backends`, data),
+  update: (workspaceId, id, data) => api.put(`/workspaces/${workspaceId}/backends/${id}`, data),
+  delete: (workspaceId, id) => api.delete(`/workspaces/${workspaceId}/backends/${id}`),
+  revealPassword: (workspaceId, id) => api.get(`/workspaces/${workspaceId}/backends/${id}/password`),
 }

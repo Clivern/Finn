@@ -4,17 +4,17 @@
       <div class="text-center mb-10">
         <div class="flex justify-center mb-8">
           <router-link to="/">
-            <img src="/logo.png" alt="Finn Logo" class="h-24 w-auto">
+            <img src="/logo.png" :alt="$t('common.logoAlt')" class="h-24 w-auto">
           </router-link>
         </div>
       </div>
 
       <div class="bg-white rounded-lg border border-theme-border p-8 shadow-sm">
-        <h2 class="text-2xl font-semibold text-theme-text mb-6 text-center">Welcome back</h2>
+        <h2 class="text-2xl font-semibold text-theme-text mb-6 text-center">{{ $t('login.title') }}</h2>
         <form class="space-y-5" @submit.prevent="handleLogin">
           <div>
             <label for="email" class="block text-sm font-medium text-theme-text mb-2">
-              Email
+              {{ $t('login.email') }}
             </label>
             <input
               id="email"
@@ -22,14 +22,14 @@
               type="email"
               required
               class="input-field"
-              placeholder="Enter your email"
+              :placeholder="$t('login.emailPlaceholder')"
               :disabled="loading"
             >
           </div>
 
           <div>
             <label for="password" class="block text-sm font-medium text-theme-text mb-2">
-              Password
+              {{ $t('login.password') }}
             </label>
             <input
               id="password"
@@ -37,7 +37,7 @@
               type="password"
               required
               class="input-field"
-              placeholder="Enter your password"
+              :placeholder="$t('login.passwordPlaceholder')"
               :disabled="loading"
             >
           </div>
@@ -51,11 +51,11 @@
                 class="h-4 w-4 rounded text-theme-text focus:ring-theme-text border-theme-border"
               >
               <label for="remember-me" class="ml-2 block text-sm text-theme-textLight">
-                Remember me
+                {{ $t('login.rememberMe') }}
               </label>
             </div>
             <router-link to="/forgot-password" class="text-sm text-primary-800 hover:text-primary-900 font-medium">
-              Forgot password?
+              {{ $t('login.forgotPassword') }}
             </router-link>
           </div>
 
@@ -71,25 +71,25 @@
               class="w-full btn-primary py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
               :disabled="loading"
             >
-              <span v-if="!loading">Sign in</span>
+              <span v-if="!loading">{{ $t('login.submit') }}</span>
               <span v-else class="flex items-center justify-center">
                 <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                Signing in...
+                {{ $t('login.submitting') }}
               </span>
             </button>
             <p class="text-center text-sm text-theme-textLight">
-              Don't have an account?
-              <router-link to="/register" class="font-medium text-primary-800 hover:text-primary-900">Register</router-link>
+              {{ $t('login.noAccount') }}
+              <router-link to="/register" class="font-medium text-primary-800 hover:text-primary-900">{{ $t('login.register') }}</router-link>
             </p>
           </div>
         </form>
       </div>
 
       <p class="text-center text-xs text-theme-textLight mt-8">
-        Copyright © 2025 Finn. All rights reserved.
+        {{ $t('common.copyright') }}
       </p>
     </div>
   </div>
@@ -98,9 +98,11 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { authAPI } from '@/api'
 import { saveUser } from '@/lib/auth'
 
+const { t } = useI18n()
 const router = useRouter()
 const form = reactive({
   email: '',
@@ -125,7 +127,7 @@ const handleLogin = async () => {
     saveUser(response.data?.user)
     router.push('/select-workspace')
   } catch (err) {
-    error.value = err.response?.data?.errorMessage || 'Login failed. Please try again.'
+    error.value = err.response?.data?.errorMessage || t('login.errorDefault')
   } finally {
     loading.value = false
   }

@@ -8,9 +8,10 @@ import (
 	"net/http"
 
 	"github.com/clivern/finn/db"
+	"github.com/clivern/finn/locale"
 	"github.com/clivern/finn/middleware"
 	"github.com/clivern/finn/module"
-	"github.com/clivern/finn/service"
+	"github.com/clivern/finn/service/util"
 
 	"github.com/rs/zerolog/log"
 )
@@ -19,12 +20,12 @@ import (
 func LogoutAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Logout endpoint called")
 
-	service.DeleteCookie(w, "_finn_session")
+	util.DeleteCookie(w, "_finn_session")
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
-		service.WriteJSON(w, http.StatusOK, map[string]interface{}{
-			"successMessage": "Logout successful",
+		util.WriteJSON(w, http.StatusOK, map[string]interface{}{
+			"successMessage": locale.TR(r, "logoutSuccessful"),
 		})
 		return
 	}
@@ -38,7 +39,7 @@ func LogoutAction(w http.ResponseWriter, r *http.Request) {
 	if err := sessionManager.RevokeUserSessions(user.ID); err != nil {
 		log.Error().Err(err).Msg("Failed to revoke session")
 	}
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"successMessage": "Logout successful",
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"successMessage": locale.TR(r, "logoutSuccessful"),
 	})
 }

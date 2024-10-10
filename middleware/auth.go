@@ -11,7 +11,7 @@ import (
 
 	"github.com/clivern/finn/db"
 	"github.com/clivern/finn/module"
-	"github.com/clivern/finn/service"
+	"github.com/clivern/finn/service/util"
 
 	"github.com/rs/zerolog/log"
 )
@@ -36,7 +36,7 @@ func SessionAuth() func(http.Handler) http.Handler {
 				user, err := db.NewUserRepository(db.GetDB()).GetByAPIKey(apiKey)
 				if err != nil {
 					log.Info().Err(err).Str("path", r.URL.Path).Msg("API key validation failed")
-					service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+					util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
 						"errorMessage": "Invalid API key",
 					})
 					return
@@ -47,10 +47,10 @@ func SessionAuth() func(http.Handler) http.Handler {
 				return
 			}
 
-			sessionToken := service.GetCookie(r, "_finn_session")
+			sessionToken := util.GetCookie(r, "_finn_session")
 			if sessionToken == "" {
 				log.Info().Str("path", r.URL.Path).Msg("No session cookie found")
-				service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+				util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
 					"errorMessage": "Not authenticated",
 				})
 				return
@@ -63,10 +63,10 @@ func SessionAuth() func(http.Handler) http.Handler {
 
 			user, _, err := sessionManager.ValidateSession(sessionToken)
 			if err != nil {
-				service.DeleteCookie(w, "_finn_session")
+				util.DeleteCookie(w, "_finn_session")
 				sessionManager.RevokeUserSessions(user.ID)
 				log.Info().Err(err).Str("path", r.URL.Path).Msg("Session validation failed")
-				service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+				util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
 					"errorMessage": "Invalid or expired session",
 				})
 				return

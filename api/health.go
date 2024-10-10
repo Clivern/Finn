@@ -7,7 +7,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/clivern/finn/service"
+	"github.com/clivern/finn/service/util"
 
 	"github.com/rs/zerolog/log"
 )
@@ -16,7 +16,7 @@ import (
 func HealthAction(w http.ResponseWriter, _ *http.Request) {
 	log.Debug().Msg("Health check endpoint called")
 
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"status": "ok",
 	})
 }

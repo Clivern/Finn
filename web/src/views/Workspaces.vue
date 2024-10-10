@@ -4,8 +4,8 @@
 
     <main class="w-full py-8 px-4 sm:px-6 lg:px-8">
       <div class="mb-8">
-        <h1 class="text-3xl font-semibold text-theme-text">Workspaces</h1>
-        <p class="text-theme-textLight mt-2">Manage all platform workspaces</p>
+        <h1 class="text-3xl font-semibold text-theme-text">{{ $t('workspaces.title') }}</h1>
+        <p class="text-theme-textLight mt-2">{{ $t('workspacesPage.subtitle') }}</p>
       </div>
 
       <div v-if="successMessage" class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
@@ -21,7 +21,7 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
-          <p class="text-theme-textLight mt-3">Loading workspaces…</p>
+          <p class="text-theme-textLight mt-3">{{ $t('workspacesPage.loading') }}</p>
         </div>
 
         <div v-else-if="workspaces.length === 0" class="p-12 text-center">
@@ -32,24 +32,24 @@
               </svg>
             </div>
           </div>
-          <p class="text-theme-textLight">No workspaces yet</p>
-          <p class="text-sm text-theme-textLight mt-1">Workspaces are created by users when they switch workspaces.</p>
+          <p class="text-theme-textLight">{{ $t('workspacesPage.noWorkspaces') }}</p>
+          <p class="text-sm text-theme-textLight mt-1">{{ $t('workspacesPage.noWorkspacesHint') }}</p>
         </div>
 
         <table v-else class="min-w-full divide-y divide-theme-border">
           <thead class="bg-theme-hover">
             <tr>
               <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                Name
+                {{ $t('workspacesPage.name') }}
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                Created
+                {{ $t('workspacesPage.created') }}
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                Members
+                {{ $t('workspacesPage.members') }}
               </th>
               <th class="px-6 py-3 text-right text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                Actions
+                {{ $t('workspacesPage.actions') }}
               </th>
             </tr>
           </thead>
@@ -71,7 +71,7 @@
                     v-if="isCurrent(workspace)"
                     class="text-xs text-theme-textLight"
                   >
-                    (current)
+                    {{ $t('workspacesPage.current') }}
                   </span>
                 </div>
               </td>
@@ -90,25 +90,25 @@
                     :disabled="switchLoadingId === workspace.id"
                     title="Switch into this workspace"
                   >
-                    {{ switchLoadingId === workspace.id ? 'Switching…' : 'Switch into' }}
+                    {{ switchLoadingId === workspace.id ? $t('workspacesPage.switching') : $t('workspacesPage.switchInto') }}
                   </button>
                   <button
                     type="button"
                     @click="openEditModal(workspace)"
                     class="text-primary-600 hover:text-primary-700 hover:underline disabled:opacity-50"
                     :disabled="updateLoadingId === workspace.id"
-                    title="Edit workspace name"
+                    :title="$t('workspacesPage.editTitle')"
                   >
-                    {{ updateLoadingId === workspace.id ? 'Saving…' : 'Edit' }}
+                    {{ updateLoadingId === workspace.id ? $t('workspacesPage.saving') : $t('workspacesPage.edit') }}
                   </button>
                   <button
                     type="button"
                     @click="openDeleteModal(workspace)"
                     class="text-red-600 hover:text-red-700 hover:underline disabled:opacity-50"
                     :disabled="deletingId === workspace.id"
-                    title="Delete workspace"
+                    :title="$t('workspacesPage.deleteTitle')"
                   >
-                    {{ deletingId === workspace.id ? 'Deleting…' : 'Delete' }}
+                    {{ deletingId === workspace.id ? $t('workspacesPage.deleting') : $t('workspacesPage.delete') }}
                   </button>
                 </span>
               </td>
@@ -122,7 +122,7 @@
           class="bg-white px-6 py-4 border-t border-theme-border flex items-center justify-between"
         >
           <div class="text-sm text-theme-textLight">
-            Showing {{ offset + 1 }} to {{ Math.min(offset + limit, total) }} of {{ total }} workspaces
+            {{ $t('workspacesPage.showing', { from: offset + 1, to: Math.min(offset + limit, total), total }) }}
           </div>
           <div class="flex items-center gap-2">
             <button
@@ -131,7 +131,7 @@
               :disabled="offset === 0"
               class="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Previous
+              {{ $t('workspacesPage.previous') }}
             </button>
             <button
               type="button"
@@ -139,7 +139,7 @@
               :disabled="offset + limit >= total"
               class="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Next
+              {{ $t('workspacesPage.next') }}
             </button>
           </div>
         </div>
@@ -159,14 +159,14 @@
         >
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-sm p-6">
             <h2 id="edit-workspace-title" class="text-lg font-semibold text-theme-text">
-              Edit Workspace Name
+              {{ $t('workspacesPage.editTitle') }}
             </h2>
             <p class="mt-1 text-sm text-theme-textLight">
-              Change the name of this workspace
+              {{ $t('workspacesPage.editDesc') }}
             </p>
             <form @submit.prevent="handleUpdate" class="mt-4 space-y-4">
               <div>
-                <label for="edit-workspace-name" class="form-label">Name</label>
+                <label for="edit-workspace-name" class="form-label">{{ $t('workspacesPage.name') }}</label>
                 <input
                   id="edit-workspace-name"
                   v-model="editWorkspaceName"
@@ -184,14 +184,14 @@
                   class="btn-secondary"
                   :disabled="updateLoadingId"
                 >
-                  Cancel
+                  {{ $t('common.cancel') }}
                 </button>
                 <button
                   type="submit"
                   :disabled="updateLoadingId || !editWorkspaceName.trim() || editWorkspaceName.trim() === editModalWorkspace?.name"
                   class="btn-primary"
                 >
-                  {{ updateLoadingId ? 'Saving…' : 'Save' }}
+                  {{ updateLoadingId ? $t('workspacesPage.saving') : $t('common.save') }}
                 </button>
               </div>
             </form>
@@ -212,14 +212,14 @@
         >
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-sm p-6">
             <h2 id="delete-workspace-title" class="text-lg font-semibold text-theme-text">
-              Delete Workspace
+              {{ $t('workspacesPage.deleteTitle') }}
             </h2>
             <p class="mt-2 text-sm text-theme-textLight">
-              Delete workspace <span class="font-medium text-theme-text">"{{ deleteModalWorkspace?.name }}"</span>? This cannot be undone.
+              {{ $t('workspacesPage.deleteConfirm', { name: deleteModalWorkspace?.name }) }}
             </p>
             <div class="mt-4">
               <label for="delete-confirm-name" class="block text-sm font-medium text-theme-text mb-1.5">
-                Type <span class="font-mono">{{ deleteModalWorkspace?.name }}</span> to confirm
+                {{ $t('workspacesPage.typeToConfirm', { name: deleteModalWorkspace?.name }) }}
               </label>
               <input
                 id="delete-confirm-name"
@@ -238,7 +238,7 @@
                 class="btn-secondary"
                 :disabled="deleting"
               >
-                Cancel
+                {{ $t('common.cancel') }}
               </button>
               <button
                 type="button"
@@ -246,7 +246,7 @@
                 class="btn-primary bg-red-600 hover:bg-red-700 focus:ring-red-500"
                 :disabled="deleting || !canConfirmDelete"
               >
-                {{ deleting ? 'Deleting…' : 'Delete' }}
+                {{ deleting ? $t('workspacesPage.deleting') : $t('workspacesPage.delete') }}
               </button>
             </div>
           </div>
@@ -259,10 +259,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import AppNav from '@/components/AppNav.vue'
 import { workspaceAPI } from '@/api'
 import { loadWorkspaceFromStorage, saveWorkspaceToStorage, removeWorkspaceFromStorage } from '@/utils/storage'
 
+const { t } = useI18n()
 const router = useRouter()
 const workspaces = ref([])
 const loading = ref(false)
@@ -291,7 +293,7 @@ async function switchToWorkspace(workspace) {
     saveWorkspaceToStorage({ ...workspace, ...res.data, role: res.data.role })
     router.push('/dashboard')
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to switch into workspace'
+    errorMessage.value = err.response?.data?.errorMessage || t('workspacesPage.failedSwitch')
   } finally {
     switchLoadingId.value = null
   }
@@ -318,9 +320,9 @@ async function handleUpdate() {
     editModalWorkspace.value = null
     editWorkspaceName.value = ''
     await loadPage()
-    successMessage.value = 'Workspace name updated.'
+    successMessage.value = t('workspacesPage.workspaceUpdated')
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to update workspace name'
+    errorMessage.value = err.response?.data?.errorMessage || t('workspacesPage.failedUpdate')
   } finally {
     updateLoadingId.value = null
   }
@@ -358,7 +360,7 @@ async function loadPage() {
     workspaces.value = res.data.workspaces
     total.value = res.data._meta.total
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to load workspaces'
+    errorMessage.value = err.response?.data?.errorMessage || t('workspacesPage.failedLoad')
     workspaces.value = []
   } finally {
     loading.value = false
@@ -400,9 +402,9 @@ async function confirmDelete() {
     deleteModalWorkspace.value = null
     deleteConfirmName.value = ''
     await loadPage()
-    successMessage.value = 'Workspace deleted successfully.'
+    successMessage.value = t('workspacesPage.workspaceDeleted')
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to delete workspace'
+    errorMessage.value = err.response?.data?.errorMessage || t('workspacesPage.failedDelete')
   } finally {
     deleting.value = false
     deletingId.value = null

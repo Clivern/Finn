@@ -5,22 +5,21 @@
     <main class="w-full px-4 sm:px-6 lg:px-8 py-8">
       <header class="mb-8">
         <h1 class="text-2xl sm:text-3xl font-semibold text-theme-text tracking-tight">
-          Environment
+          {{ $t('environmentPage.title') }}
         </h1>
         <p class="mt-1 text-sm text-theme-textLight">
-          Configure environment variables and settings for your workspace
+          {{ $t('environmentPage.subtitle') }}
         </p>
       </header>
 
-      <section class="section" aria-label="Environment overview">
-        <h2 class="section-title">Overview</h2>
+      <section class="section" :aria-label="$t('environmentPage.overview')">
+        <h2 class="section-title">{{ $t('environmentPage.overview') }}</h2>
         <p class="text-sm text-theme-textLight leading-relaxed mb-4">
-          Environment configuration controls variables, secrets, and runtime settings applied to runs.
-          Use different environments for development, staging, and production.
+          {{ $t('environmentPage.overviewDescription') }}
         </p>
         <div class="rounded-lg border border-theme-border border-dashed bg-theme-hover/30 p-8 text-center">
-          <p class="text-sm text-theme-textLight">No environment variables configured</p>
-          <p class="mt-1 text-xs text-theme-textLight">Add variables to customize your runs</p>
+          <p class="text-sm text-theme-textLight">{{ $t('environmentPage.empty') }}</p>
+          <p class="mt-1 text-xs text-theme-textLight">{{ $t('environmentPage.emptyHint') }}</p>
         </div>
       </section>
     </main>

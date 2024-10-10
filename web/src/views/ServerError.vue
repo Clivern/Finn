@@ -7,16 +7,16 @@
         </router-link>
       </div>
       <p class="text-6xl font-semibold text-theme-textLight mb-2">500</p>
-      <h1 class="text-xl font-semibold text-theme-text mb-2">Something went wrong</h1>
+      <h1 class="text-xl font-semibold text-theme-text mb-2">{{ $t('serverErrorPage.title') }}</h1>
       <p class="text-sm text-theme-textLight mb-6">
-        We're sorry, but something went wrong on our end. Please try again later.
+        {{ $t('serverErrorPage.description') }}
       </p>
       <div class="flex flex-col sm:flex-row gap-3 justify-center">
         <button type="button" class="btn-primary" @click="retry">
-          Try again
+          {{ $t('serverErrorPage.tryAgain') }}
         </button>
         <router-link to="/dashboard" class="btn-secondary">
-          Go to Dashboard
+          {{ $t('serverErrorPage.goToDashboard') }}
         </router-link>
       </div>
     </div>

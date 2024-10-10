@@ -8,8 +8,9 @@ import (
 	"net/http"
 
 	"github.com/clivern/finn/db"
+	"github.com/clivern/finn/locale"
 	"github.com/clivern/finn/module"
-	"github.com/clivern/finn/service"
+	"github.com/clivern/finn/service/util"
 
 	"github.com/rs/zerolog/log"
 )
@@ -27,8 +28,8 @@ type SetupRequest struct {
 func SetupAction(w http.ResponseWriter, r *http.Request) {
 	var req SetupRequest
 
-	if err := service.DecodeAndValidate(r, &req); err != nil {
-		service.WriteValidationError(w, err)
+	if err := util.DecodeAndValidate(r, &req); err != nil {
+		util.WriteValidationError(w, err)
 		return
 	}
 
@@ -39,8 +40,8 @@ func SetupAction(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if setupModule.IsInstalled() {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Platform is already installed",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "platformAlreadyInstalled"),
 		})
 		return
 	}
@@ -55,15 +56,15 @@ func SetupAction(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to complete setup")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to complete setup",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCompleteSetup"),
 		})
 		return
 	}
 
 	log.Info().Msg("Platform setup completed successfully")
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"successMessage": "Platform setup completed successfully",
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"successMessage": locale.TR(r, "setupCompletedSuccessfully"),
 	})
 }
 
@@ -74,7 +75,7 @@ func SetupStatusAction(w http.ResponseWriter, _ *http.Request) {
 		db.NewUserRepository(db.GetDB()),
 		db.NewSystemEventRepository(db.GetDB()),
 	)
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"installed": setupModule.IsInstalled(),
 	})
 }

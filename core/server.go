@@ -56,6 +56,10 @@ func SetupServer(Static embed.FS) http.Handler {
 		r.Post("/api/v1/public/action/reset-password", api.ResetPasswordAction)
 		r.Get("/api/v1/public/action/invite/token/{token}", api.GetUserInviteByTokenAction)
 		r.Post("/api/v1/public/action/register", api.RegisterAction)
+		r.Post("/client/{slug}/state", api.CreateBackendStateAction)
+		r.Get("/client/{slug}/state", api.GetBackendStateAction)
+		r.Post("/client/{slug}/lock", api.LockBackendStateAction)
+		r.Post("/client/{slug}/unlock", api.UnlockBackendStateAction)
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))
@@ -138,6 +142,15 @@ func SetupServer(Static embed.FS) http.Handler {
 		r.Get("/api/v1/workspaces/{workspaceID}/credentials/{id}", api.GetWorkspaceGitCredAction)
 		r.Put("/api/v1/workspaces/{workspaceID}/credentials/{id}", api.UpdateWorkspaceGitCredAction)
 		r.Delete("/api/v1/workspaces/{workspaceID}/credentials/{id}", api.DeleteWorkspaceGitCredAction)
+	})
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))
+		r.Post("/api/v1/workspaces/{workspaceID}/backends", api.CreateWorkspaceBackendAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/backends", api.ListWorkspaceBackendsAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/backends/{id}", api.GetWorkspaceBackendAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/backends/{id}/password", api.RevealWorkspaceBackendPasswordAction)
+		r.Put("/api/v1/workspaces/{workspaceID}/backends/{id}", api.UpdateWorkspaceBackendAction)
+		r.Delete("/api/v1/workspaces/{workspaceID}/backends/{id}", api.DeleteWorkspaceBackendAction)
 	})
 
 	r.With(middleware.BasicAuth(

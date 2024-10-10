@@ -5,14 +5,14 @@
     <main class="w-full py-8 px-4 sm:px-6 lg:px-8">
       <div class="mb-8 flex justify-between items-center">
         <div>
-          <h1 class="text-3xl font-semibold text-theme-text">Runners</h1>
-          <p class="text-theme-textLight mt-2">Manage runners that execute your tasks and workflows</p>
+          <h1 class="text-3xl font-semibold text-theme-text">{{ $t('runners.title') }}</h1>
+          <p class="text-theme-textLight mt-2">{{ $t('runnersPage.subtitle') }}</p>
         </div>
         <button
           @click="openCreateModal"
           class="btn-primary"
         >
-          Create runner
+          {{ $t('runnersPage.createRunner') }}
         </button>
       </div>
 
@@ -29,37 +29,37 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
-          <p class="text-theme-textLight mt-2">Loading runners...</p>
+          <p class="text-theme-textLight mt-2">{{ $t('runnersPage.loading') }}</p>
         </div>
 
         <div v-else-if="runners.length === 0" class="p-8 text-center">
-          <p class="text-theme-textLight">No runners registered</p>
-          <p class="text-sm text-theme-textLight mt-1">Set up a runner and register it to execute jobs.</p>
+          <p class="text-theme-textLight">{{ $t('runnersPage.noRunners') }}</p>
+          <p class="text-sm text-theme-textLight mt-1">{{ $t('runnersPage.noRunnersHint') }}</p>
         </div>
 
         <table v-else class="min-w-full divide-y divide-theme-border">
           <thead class="bg-theme-hover">
             <tr>
               <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                Name
+                {{ $t('runnersPage.name') }}
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                Token
+                {{ $t('runnersPage.token') }}
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                Tags
+                {{ $t('runnersPage.tags') }}
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                Status
+                {{ $t('runnersPage.status') }}
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                Connection
+                {{ $t('runnersPage.connection') }}
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                Created
+                {{ $t('runnersPage.created') }}
               </th>
               <th class="px-6 py-3 text-right text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                Actions
+                {{ $t('runnersPage.actions') }}
               </th>
             </tr>
           </thead>
@@ -91,15 +91,15 @@
                   title="Checking connection…"
                 >
                   <span class="inline-block w-2.5 h-2.5 rounded-full bg-theme-textLight/40 animate-pulse" aria-hidden="true" />
-                  <span class="text-xs">Checking…</span>
+                  <span class="text-xs">{{ $t('runnersPage.checking') }}</span>
                 </span>
                 <span
                   v-else-if="connectionStatus(runner.id) === 'ok'"
                   class="inline-flex items-center gap-1.5"
-                  title="Runner is reachable"
+                  :title="$t('runnersPage.connected')"
                 >
                   <span class="inline-block w-2.5 h-2.5 rounded-full bg-green-500" aria-hidden="true" />
-                  <span class="text-xs text-green-700">Connected</span>
+                  <span class="text-xs text-green-700">{{ $t('runnersPage.connected') }}</span>
                 </span>
                 <span
                   v-else-if="connectionStatus(runner.id)?.failed"
@@ -107,7 +107,7 @@
                   :title="connectionStatus(runner.id).error"
                 >
                   <span class="inline-block w-2.5 h-2.5 rounded-full bg-red-500" aria-hidden="true" />
-                  <span class="text-xs text-red-700">Failed</span>
+                  <span class="text-xs text-red-700">{{ $t('runnersPage.failed') }}</span>
                 </span>
                 <span v-else class="text-sm text-theme-textLight">—</span>
               </td>
@@ -119,13 +119,13 @@
                   @click="openEditModal(runner)"
                   class="text-blue-600 hover:text-blue-900 mr-4"
                 >
-                  Edit
+                  {{ $t('common.edit') }}
                 </button>
                 <button
                   @click="openDeleteModal(runner)"
                   class="text-red-600 hover:text-red-900"
                 >
-                  Delete
+                  {{ $t('common.delete') }}
                 </button>
               </td>
             </tr>
@@ -134,7 +134,7 @@
 
         <div v-if="runners.length > 0" class="bg-white px-6 py-4 border-t border-theme-border flex items-center justify-between">
           <div class="text-sm text-theme-textLight">
-            Showing {{ showingFrom }} to {{ showingTo }} of {{ total }} runners
+            {{ $t('runnersPage.showing', { from: showingFrom, to: showingTo, total }) }}
           </div>
           <div class="flex items-center space-x-2">
             <button
@@ -142,14 +142,14 @@
               :disabled="offset === 0"
               class="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Previous
+              {{ $t('runnersPage.previous') }}
             </button>
             <button
               @click="goToPage(offset + limit)"
               :disabled="offset + limit >= total"
               class="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Next
+              {{ $t('runnersPage.next') }}
             </button>
           </div>
         </div>
@@ -337,10 +337,12 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { runnersAPI } from '@/api'
 import AppNav from '@/components/AppNav.vue'
 import { formatRelative } from '@/utils/date'
 
+const { t } = useI18n()
 const loading = ref(false)
 const runners = ref([])
 const total = ref(0)
@@ -446,7 +448,7 @@ async function loadRunners(overrideOffset) {
     loadConnectionStatuses()
   } catch (err) {
     console.error('Failed to load runners:', err)
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to load runners'
+    errorMessage.value = err.response?.data?.errorMessage || t('runnersPage.failedLoad')
   } finally {
     loading.value = false
   }
@@ -515,13 +517,13 @@ async function handleCreate() {
       url: createForm.url,
       publicKey: createForm.publicKey || undefined
     })
-    successMessage.value = 'Runner created.'
+    successMessage.value = t('runnersPage.runnerCreated')
     closeCreateModal()
     await loadRunners()
     setTimeout(() => { successMessage.value = null }, 5000)
   } catch (err) {
     console.error('Failed to create runner:', err)
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to create runner'
+    errorMessage.value = err.response?.data?.errorMessage || t('runnersPage.failedCreate')
   } finally {
     createLoading.value = false
   }
@@ -542,13 +544,13 @@ async function handleUpdate() {
       url: editForm.url || null,
       publicKey: editForm.publicKey || null
     })
-    successMessage.value = 'Runner updated'
+    successMessage.value = t('runnersPage.runnerUpdated')
     closeEditModal()
     await loadRunners()
     setTimeout(() => { successMessage.value = null }, 3000)
   } catch (err) {
     console.error('Failed to update runner:', err)
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to update runner'
+    errorMessage.value = err.response?.data?.errorMessage || t('runnersPage.failedUpdate')
   } finally {
     updateLoading.value = false
   }
@@ -561,13 +563,13 @@ async function handleDelete() {
 
   try {
     await runnersAPI.delete(runnerToDelete.value.id)
-    successMessage.value = 'Runner deleted'
+    successMessage.value = t('runnersPage.runnerDeleted')
     closeDeleteModal()
     await loadRunners()
     setTimeout(() => { successMessage.value = null }, 3000)
   } catch (err) {
     console.error('Failed to delete runner:', err)
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to delete runner'
+    errorMessage.value = err.response?.data?.errorMessage || t('runnersPage.failedDelete')
   } finally {
     deleteLoading.value = false
   }

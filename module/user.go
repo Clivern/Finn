@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/clivern/finn/db"
-	"github.com/clivern/finn/service"
+	"github.com/clivern/finn/service/util"
 )
 
 var (
@@ -46,7 +46,7 @@ func (u *User) CreateUser(options *CreateUserOptions) (*db.User, error) {
 		return nil, ErrUserEmailAlreadyExists
 	}
 
-	hashedPassword, err := service.HashPassword(options.Password)
+	hashedPassword, err := util.HashPassword(options.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (u *User) UpdateUser(options *UpdateUserOptions) (*db.User, error) {
 	user.IsActive = options.IsActive
 
 	if options.Password != "" {
-		hashedPassword, err := service.HashPassword(options.Password)
+		hashedPassword, err := util.HashPassword(options.Password)
 		if err != nil {
 			return nil, err
 		}

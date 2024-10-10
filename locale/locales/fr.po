@@ -1,0 +1,371 @@
+# API messages for Finn - French
+msgid ""
+msgstr ""
+"Project-Id-Version: Finn API\n"
+"POT-Creation-Date: 2025-02-18 00:00+0000\n"
+"PO-Revision-Date: 2026-02-22 13:43+0100\n"
+"Last-Translator: \n"
+"Language-Team: French\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 3.8\n"
+
+msgid "accessDeniedToWorkspace"
+msgstr "Accès refusé à cet espace de travail"
+
+msgid "accountNotActive"
+msgstr "Votre compte n'est pas actif. Veuillez contacter le support."
+
+msgid "accountWithEmailAlreadyExists"
+msgstr "Un compte avec cette adresse e-mail existe déjà"
+
+msgid "accountWithEmailExists"
+msgstr "Un compte avec cette adresse e-mail existe déjà"
+
+msgid "apiKeyNotFound"
+msgstr "Clé API introuvable"
+
+msgid "bodyMustBeBase64Ciphertext"
+msgstr "le corps doit être un chiffré encodé en base64"
+
+msgid "cannotDeleteOwnAccount"
+msgstr "Vous ne pouvez pas supprimer votre propre compte"
+
+msgid "currentPasswordIncorrect"
+msgstr "Le mot de passe actuel est incorrect"
+
+msgid "currentPasswordRequired"
+msgstr "Le mot de passe actuel est requis pour modifier l'e-mail ou le mot de passe"
+
+msgid "decryptionFailed"
+msgstr "échec du déchiffrement"
+
+msgid "failedAddUserToWorkspace"
+msgstr "Échec de l'ajout de l'utilisateur à l'espace de travail"
+
+msgid "failedCheckAccess"
+msgstr "Échec de la vérification des accès"
+
+msgid "failedCheckMaintenance"
+msgstr "Échec de la vérification du mode maintenance"
+
+msgid "failedCompleteRegistration"
+msgstr "Échec de l'inscription"
+
+msgid "failedCompleteSetup"
+msgstr "Échec de la configuration"
+
+msgid "failedCreateApiKey"
+msgstr "Échec de la création de la clé API"
+
+msgid "failedCreateGitCredentials"
+msgstr "Échec de la création des identifiants git"
+
+msgid "failedCreateInvite"
+msgstr "Échec de la création de l'invitation"
+
+msgid "failedCreateRepository"
+msgstr "Échec de la création du dépôt"
+
+msgid "failedCreateRunner"
+msgstr "Échec de la création du runner"
+
+msgid "failedCreateSession"
+msgstr "Échec de la création de la session"
+
+msgid "failedCreateSshKey"
+msgstr "Échec de la création de la clé SSH"
+
+msgid "failedCreateUser"
+msgstr "Échec de la création de l'utilisateur"
+
+msgid "failedCreateWorkspace"
+msgstr "Échec de la création de l'espace de travail"
+
+msgid "failedDeleteApiKey"
+msgstr "Échec de la suppression de la clé API"
+
+msgid "failedDeleteGitCredentials"
+msgstr "Échec de la suppression des identifiants git"
+
+msgid "failedDeleteInvite"
+msgstr "Échec de la suppression de l'invitation"
+
+msgid "failedDeleteRepository"
+msgstr "Échec de la suppression du dépôt"
+
+msgid "failedDeleteRunner"
+msgstr "Échec de la suppression du runner"
+
+msgid "failedDeleteSshKey"
+msgstr "Échec de la suppression de la clé SSH"
+
+msgid "failedDeleteUser"
+msgstr "Échec de la suppression de l'utilisateur"
+
+msgid "failedDeleteWorkspace"
+msgstr "Échec de la suppression de l'espace de travail"
+
+msgid "failedGetApiKey"
+msgstr "Échec de la récupération de la clé API"
+
+msgid "failedGetGitCredentials"
+msgstr "Échec de la récupération des identifiants git"
+
+msgid "failedGetInvite"
+msgstr "Échec de la récupération de l'invitation"
+
+msgid "failedGetRepository"
+msgstr "Échec de la récupération du dépôt"
+
+msgid "failedGetRunner"
+msgstr "Échec de la récupération du runner"
+
+msgid "failedGetRunnerForPing"
+msgstr "Échec de la récupération du runner pour le ping"
+
+msgid "failedGetSettings"
+msgstr "Échec de la récupération des paramètres"
+
+msgid "failedGetSshKey"
+msgstr "Échec de la récupération de la clé SSH"
+
+msgid "failedGetUser"
+msgstr "Échec de la récupération de l'utilisateur"
+
+msgid "failedGetWorkspace"
+msgstr "Échec de la récupération de l'espace de travail"
+
+msgid "failedGetWorkspaceUser"
+msgstr "Échec de la récupération de l'utilisateur de l'espace"
+
+msgid "failedListApiKeys"
+msgstr "Échec du listage des clés API"
+
+msgid "failedListGitCredentials"
+msgstr "Échec du listage des identifiants git"
+
+msgid "failedListInvites"
+msgstr "Échec du listage des invitations"
+
+msgid "failedListRepositories"
+msgstr "Échec du listage des dépôts"
+
+msgid "failedListRunners"
+msgstr "Échec du listage des runners"
+
+msgid "failedListSshKeys"
+msgstr "Échec du listage des clés SSH"
+
+msgid "failedListUsers"
+msgstr "Échec du listage des utilisateurs"
+
+msgid "failedListUsersForWorkspace"
+msgstr "Échec du listage des utilisateurs"
+
+msgid "failedListWorkspaceUsers"
+msgstr "Échec du listage des utilisateurs de l'espace"
+
+msgid "failedListWorkspaces"
+msgstr "Échec du listage des espaces de travail"
+
+msgid "failedProcessRequest"
+msgstr "Échec du traitement de la requête"
+
+msgid "failedRemoveUserFromWorkspace"
+msgstr "Échec du retrait de l'utilisateur de l'espace de travail"
+
+msgid "failedResetPassword"
+msgstr "Échec de la réinitialisation du mot de passe"
+
+msgid "failedToReadBody"
+msgstr "échec de la lecture du corps"
+
+msgid "failedUpdateGitCredentials"
+msgstr "Échec de la mise à jour des identifiants git"
+
+msgid "failedUpdateProfile"
+msgstr "Échec de la mise à jour du profil"
+
+msgid "failedUpdateRepository"
+msgstr "Échec de la mise à jour du dépôt"
+
+msgid "failedUpdateRunner"
+msgstr "Échec de la mise à jour du runner"
+
+msgid "failedUpdateSettings"
+msgstr "Échec de la mise à jour des paramètres"
+
+msgid "failedUpdateSshKey"
+msgstr "Échec de la mise à jour de la clé SSH"
+
+msgid "failedUpdateUser"
+msgstr "Échec de la mise à jour de l'utilisateur"
+
+msgid "failedUpdateWorkspace"
+msgstr "Échec de la mise à jour de l'espace de travail"
+
+msgid "failedUpdateWorkspaceUserRole"
+msgstr "Échec de la mise à jour du rôle de l'utilisateur"
+
+msgid "forgotPasswordSuccess"
+msgstr "Si un compte existe pour cette adresse e-mail, vous recevrez un lien de réinitialisation sous peu."
+
+msgid "gitBranchOrTagRequired"
+msgstr "Une branche ou un tag git est requis"
+
+msgid "gitCredentialsNotFound"
+msgstr "Identifiants git introuvables"
+
+msgid "invalidApiKeyID"
+msgstr "ID de clé API invalide"
+
+msgid "invalidExpiresAtFormat"
+msgstr "Format expiresAt invalide"
+
+msgid "invalidGitCredentialsID"
+msgstr "ID d'identifiants git invalide"
+
+msgid "invalidInviteID"
+msgstr "ID d'invitation invalide"
+
+msgid "invalidOrExpiredInviteToken"
+msgstr "Jeton d'invitation invalide ou expiré"
+
+msgid "invalidRepositoryID"
+msgstr "ID de dépôt invalide"
+
+msgid "invalidRunnerID"
+msgstr "ID de runner invalide"
+
+msgid "invalidSshKeyID"
+msgstr "ID de clé SSH invalide"
+
+msgid "invalidToken"
+msgstr "Jeton invalide"
+
+msgid "invalidUserID"
+msgstr "ID utilisateur invalide"
+
+msgid "invalidUsernameOrPassword"
+msgstr "Nom d'utilisateur ou mot de passe incorrect"
+
+msgid "invalidWorkspaceID"
+msgstr "ID d'espace de travail invalide"
+
+msgid "invalidWorkspaceIDOrUserID"
+msgstr "ID d'espace de travail ou ID utilisateur invalide"
+
+msgid "inviteExpired"
+msgstr "L'invitation a expiré"
+
+msgid "inviteNoLongerValid"
+msgstr "L'invitation n'est plus valide"
+
+msgid "inviteNotFound"
+msgstr "Invitation introuvable"
+
+msgid "loginSuccessful"
+msgstr "Connexion réussie"
+
+msgid "logoutSuccessful"
+msgstr "Déconnexion réussie"
+
+msgid "maintenanceModeEnabled"
+msgstr "Le mode maintenance est activé. Seuls les administrateurs peuvent se connecter."
+
+msgid "methodNotAllowed"
+msgstr "méthode non autorisée"
+
+msgid "noPermissionAddUsersToWorkspace"
+msgstr "Vous n'avez pas la permission d'ajouter des utilisateurs à cet espace de travail"
+
+msgid "noPermissionDeleteWorkspace"
+msgstr "Vous n'avez pas la permission de supprimer cet espace de travail"
+
+msgid "noPermissionRemoveUsersFromWorkspace"
+msgstr "Vous n'avez pas la permission de retirer des utilisateurs de cet espace de travail"
+
+msgid "noPermissionUpdateUsersInWorkspace"
+msgstr "Vous n'avez pas la permission de modifier les utilisateurs de cet espace de travail"
+
+msgid "noPermissionUpdateWorkspace"
+msgstr "Vous n'avez pas la permission de modifier cet espace de travail"
+
+msgid "notAuthenticated"
+msgstr "Non authentifié"
+
+msgid "passwordResetSuccess"
+msgstr "Votre mot de passe a été réinitialisé avec succès."
+
+msgid "payloadMustDecryptToPONG"
+msgstr "le contenu doit se déchiffrer en PONG"
+
+msgid "pendingInviteAlreadyExists"
+msgstr "Une invitation en attente existe déjà pour cette adresse e-mail"
+
+msgid "platformAlreadyInstalled"
+msgstr "La plateforme est déjà installée"
+
+msgid "profileUpdatedSuccessfully"
+msgstr "Profil mis à jour avec succès"
+
+msgid "registrationSuccessful"
+msgstr "Inscription réussie. Veuillez vous connecter."
+
+msgid "repositoryNotFound"
+msgstr "Dépôt introuvable"
+
+msgid "resetLinkInvalidOrExpired"
+msgstr "Ce lien de réinitialisation est invalide ou a expiré."
+
+msgid "runnerIdentityUnavailable"
+msgstr "identité du runner indisponible"
+
+msgid "runnerNotFound"
+msgstr "Runner introuvable"
+
+msgid "runnerPublicKeyNotConfigured"
+msgstr "Clé publique du runner non configurée"
+
+msgid "runnerUrlNotConfigured"
+msgstr "URL du runner non configurée"
+
+msgid "runnerWithTokenExists"
+msgstr "Un runner avec ce jeton existe déjà"
+
+msgid "settingsUpdatedSuccessfully"
+msgstr "Paramètres mis à jour avec succès"
+
+msgid "setupCompletedSuccessfully"
+msgstr "Configuration de la plateforme terminée avec succès"
+
+msgid "sshKeyNotFound"
+msgstr "Clé SSH introuvable"
+
+msgid "tokenCannotBeEmpty"
+msgstr "Le jeton ne peut pas être vide"
+
+msgid "tokenMustBeValidUUID"
+msgstr "Le jeton doit être un UUID valide"
+
+msgid "userAlreadyMemberOfWorkspace"
+msgstr "L'utilisateur est déjà membre de cet espace de travail"
+
+msgid "userNotFound"
+msgstr "Utilisateur introuvable"
+
+msgid "userNotMemberOfWorkspace"
+msgstr "L'utilisateur n'est pas membre de cet espace de travail"
+
+msgid "userWithEmailAlreadyRegistered"
+msgstr "Un utilisateur avec cette adresse e-mail est déjà inscrit"
+
+msgid "userWithEmailExists"
+msgstr "Un utilisateur avec cette adresse e-mail existe déjà"
+
+msgid "workspaceNotFound"
+msgstr "Espace de travail introuvable"

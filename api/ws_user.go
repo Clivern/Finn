@@ -11,9 +11,10 @@ import (
 	"time"
 
 	"github.com/clivern/finn/db"
+	"github.com/clivern/finn/locale"
 	"github.com/clivern/finn/middleware"
 	"github.com/clivern/finn/module"
-	"github.com/clivern/finn/service"
+	"github.com/clivern/finn/service/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )
@@ -35,23 +36,23 @@ func AddWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Not authenticated",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "notAuthenticated"),
 		})
 		return
 	}
 
 	workspaceIDStr := chi.URLParam(r, "workspaceID")
 	if workspaceIDStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid workspace ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidWorkspaceID"),
 		})
 		return
 	}
 
 	var req AddWorkspaceUserRequest
-	if err := service.DecodeAndValidate(r, &req); err != nil {
-		service.WriteValidationError(w, err)
+	if err := util.DecodeAndValidate(r, &req); err != nil {
+		util.WriteValidationError(w, err)
 		return
 	}
 
@@ -59,14 +60,14 @@ func AddWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 	workspace, err := wsModule.GetWorkspace(db.ID(workspaceIDStr))
 	if err != nil {
 		if errors.Is(err, module.ErrWorkspaceNotFound) {
-			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-				"errorMessage": "Workspace not found",
+			util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+				"errorMessage": locale.TR(r, "workspaceNotFound"),
 			})
 			return
 		}
 		log.Error().Err(err).Msg("Failed to get workspace")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get workspace",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetWorkspace"),
 		})
 		return
 	}
@@ -79,14 +80,14 @@ func AddWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to check access",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCheckAccess"),
 		})
 		return
 	}
 	if !allowed {
-		service.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
-			"errorMessage": "You do not have permission to add users to this workspace",
+		util.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
+			"errorMessage": locale.TR(r, "noPermissionAddUsersToWorkspace"),
 		})
 		return
 	}
@@ -94,16 +95,16 @@ func AddWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 	userRepo := db.NewUserRepository(db.GetDB())
 	targetUser, err := userRepo.GetByID(db.ID(req.UserID))
 	if err != nil || targetUser == nil {
-		service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-			"errorMessage": "User not found",
+		util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+			"errorMessage": locale.TR(r, "userNotFound"),
 		})
 		return
 	}
 
 	existing, _ := wsModule.GetWorkspaceUser(db.ID(workspaceIDStr), db.ID(req.UserID))
 	if existing != nil {
-		service.WriteJSON(w, http.StatusConflict, map[string]interface{}{
-			"errorMessage": "User is already a member of this workspace",
+		util.WriteJSON(w, http.StatusConflict, map[string]interface{}{
+			"errorMessage": locale.TR(r, "userAlreadyMemberOfWorkspace"),
 		})
 		return
 	}
@@ -113,8 +114,8 @@ func AddWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to add workspace user")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to add user to workspace",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedAddUserToWorkspace"),
 		})
 		return
 	}
@@ -125,14 +126,14 @@ func AddWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 		Str("role", workspaceUser.Role).
 		Msg("User added to workspace successfully")
 
-	service.WriteJSON(w, http.StatusCreated, map[string]interface{}{
+	util.WriteJSON(w, http.StatusCreated, map[string]interface{}{
 		"id":          workspaceUser.ID,
 		"userId":      workspaceUser.UserID,
 		"name":        targetUser.Name,
 		"email":       targetUser.Email,
 		"role":        workspaceUser.Role,
 		"isActive":    targetUser.IsActive,
-		"avatar":      service.GravatarURL(targetUser.Email, 80),
+		"avatar":      util.GravatarURL(targetUser.Email, 80),
 		"lastLoginAt": targetUser.LastLoginAt.UTC().Format(time.RFC3339),
 		"createdAt":   workspaceUser.CreatedAt.UTC().Format(time.RFC3339),
 		"updatedAt":   workspaceUser.UpdatedAt.UTC().Format(time.RFC3339),
@@ -145,16 +146,16 @@ func ListWorkspaceUsersAction(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Not authenticated",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "notAuthenticated"),
 		})
 		return
 	}
 
 	workspaceIDStr := chi.URLParam(r, "workspaceID")
 	if workspaceIDStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid workspace ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidWorkspaceID"),
 		})
 		return
 	}
@@ -178,14 +179,14 @@ func ListWorkspaceUsersAction(w http.ResponseWriter, r *http.Request) {
 	workspace, err := wsModule.GetWorkspace(db.ID(workspaceIDStr))
 	if err != nil {
 		if errors.Is(err, module.ErrWorkspaceNotFound) {
-			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-				"errorMessage": "Workspace not found",
+			util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+				"errorMessage": locale.TR(r, "workspaceNotFound"),
 			})
 			return
 		}
 		log.Error().Err(err).Msg("Failed to get workspace")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get workspace",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetWorkspace"),
 		})
 		return
 	}
@@ -198,14 +199,14 @@ func ListWorkspaceUsersAction(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to check access",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCheckAccess"),
 		})
 		return
 	}
 	if !allowed {
-		service.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
-			"errorMessage": "Access denied to this workspace",
+		util.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
+			"errorMessage": locale.TR(r, "accessDeniedToWorkspace"),
 		})
 		return
 	}
@@ -217,8 +218,8 @@ func ListWorkspaceUsersAction(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to list workspace users")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to list workspace users",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedListWorkspaceUsers"),
 		})
 		return
 	}
@@ -235,7 +236,7 @@ func ListWorkspaceUsersAction(w http.ResponseWriter, r *http.Request) {
 				"email":       u.Email,
 				"role":        wu.Role,
 				"isActive":    u.IsActive,
-				"avatar":      service.GravatarURL(u.Email, 80),
+				"avatar":      util.GravatarURL(u.Email, 80),
 				"lastLoginAt": u.LastLoginAt.UTC().Format(time.RFC3339),
 				"createdAt":   wu.CreatedAt.UTC().Format(time.RFC3339),
 				"updatedAt":   wu.UpdatedAt.UTC().Format(time.RFC3339),
@@ -243,7 +244,7 @@ func ListWorkspaceUsersAction(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"users": users,
 		"_meta": map[string]interface{}{
 			"limit":  limit,
@@ -259,8 +260,8 @@ func GetWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Not authenticated",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "notAuthenticated"),
 		})
 		return
 	}
@@ -268,8 +269,8 @@ func GetWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 	workspaceIDStr := chi.URLParam(r, "workspaceID")
 	userIDStr := chi.URLParam(r, "userID")
 	if workspaceIDStr == "" || userIDStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid workspace ID or user ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidWorkspaceIDOrUserID"),
 		})
 		return
 	}
@@ -278,14 +279,14 @@ func GetWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 	_, err := wsModule.GetWorkspace(db.ID(workspaceIDStr))
 	if err != nil {
 		if errors.Is(err, module.ErrWorkspaceNotFound) {
-			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-				"errorMessage": "Workspace not found",
+			util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+				"errorMessage": locale.TR(r, "workspaceNotFound"),
 			})
 			return
 		}
 		log.Error().Err(err).Msg("Failed to get workspace")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get workspace",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetWorkspace"),
 		})
 		return
 	}
@@ -293,14 +294,14 @@ func GetWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 	workspaceUser, err := wsModule.GetWorkspaceUser(db.ID(workspaceIDStr), db.ID(userIDStr))
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get workspace user")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get workspace user",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetWorkspaceUser"),
 		})
 		return
 	}
 	if workspaceUser == nil {
-		service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-			"errorMessage": "User is not a member of this workspace",
+		util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+			"errorMessage": locale.TR(r, "userNotMemberOfWorkspace"),
 		})
 		return
 	}
@@ -313,14 +314,14 @@ func GetWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to check access",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCheckAccess"),
 		})
 		return
 	}
 	if !allowed {
-		service.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
-			"errorMessage": "Access denied to this workspace",
+		util.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
+			"errorMessage": locale.TR(r, "accessDeniedToWorkspace"),
 		})
 		return
 	}
@@ -329,20 +330,20 @@ func GetWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 	targetUser, _ := userRepo.GetByID(workspaceUser.UserID)
 
 	if targetUser == nil {
-		service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-			"errorMessage": "User not found",
+		util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+			"errorMessage": locale.TR(r, "userNotFound"),
 		})
 		return
 	}
 
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"id":          workspaceUser.ID,
 		"userId":      workspaceUser.UserID,
 		"name":        targetUser.Name,
 		"email":       targetUser.Email,
 		"role":        workspaceUser.Role,
 		"isActive":    targetUser.IsActive,
-		"avatar":      service.GravatarURL(targetUser.Email, 80),
+		"avatar":      util.GravatarURL(targetUser.Email, 80),
 		"lastLoginAt": targetUser.LastLoginAt.UTC().Format(time.RFC3339),
 		"createdAt":   workspaceUser.CreatedAt.UTC().Format(time.RFC3339),
 		"updatedAt":   workspaceUser.UpdatedAt.UTC().Format(time.RFC3339),
@@ -355,8 +356,8 @@ func UpdateWorkspaceUserRoleAction(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Not authenticated",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "notAuthenticated"),
 		})
 		return
 	}
@@ -364,15 +365,15 @@ func UpdateWorkspaceUserRoleAction(w http.ResponseWriter, r *http.Request) {
 	workspaceIDStr := chi.URLParam(r, "workspaceID")
 	userIDStr := chi.URLParam(r, "userID")
 	if workspaceIDStr == "" || userIDStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid workspace ID or user ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidWorkspaceIDOrUserID"),
 		})
 		return
 	}
 
 	var req UpdateWorkspaceUserRoleRequest
-	if err := service.DecodeAndValidate(r, &req); err != nil {
-		service.WriteValidationError(w, err)
+	if err := util.DecodeAndValidate(r, &req); err != nil {
+		util.WriteValidationError(w, err)
 		return
 	}
 
@@ -380,14 +381,14 @@ func UpdateWorkspaceUserRoleAction(w http.ResponseWriter, r *http.Request) {
 	_, err := wsModule.GetWorkspace(db.ID(workspaceIDStr))
 	if err != nil {
 		if errors.Is(err, module.ErrWorkspaceNotFound) {
-			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-				"errorMessage": "Workspace not found",
+			util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+				"errorMessage": locale.TR(r, "workspaceNotFound"),
 			})
 			return
 		}
 		log.Error().Err(err).Msg("Failed to get workspace")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get workspace",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetWorkspace"),
 		})
 		return
 	}
@@ -395,14 +396,14 @@ func UpdateWorkspaceUserRoleAction(w http.ResponseWriter, r *http.Request) {
 	workspaceUser, err := wsModule.GetWorkspaceUser(db.ID(workspaceIDStr), db.ID(userIDStr))
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get workspace user")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get workspace user",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetWorkspaceUser"),
 		})
 		return
 	}
 	if workspaceUser == nil {
-		service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-			"errorMessage": "User is not a member of this workspace",
+		util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+			"errorMessage": locale.TR(r, "userNotMemberOfWorkspace"),
 		})
 		return
 	}
@@ -415,14 +416,14 @@ func UpdateWorkspaceUserRoleAction(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to check access",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCheckAccess"),
 		})
 		return
 	}
 	if !allowed {
-		service.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
-			"errorMessage": "You do not have permission to update users in this workspace",
+		util.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
+			"errorMessage": locale.TR(r, "noPermissionUpdateUsersInWorkspace"),
 		})
 		return
 	}
@@ -435,14 +436,14 @@ func UpdateWorkspaceUserRoleAction(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		if errors.Is(err, module.ErrWorkspaceUserNotFound) {
-			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-				"errorMessage": "User is not a member of this workspace",
+			util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+				"errorMessage": locale.TR(r, "userNotMemberOfWorkspace"),
 			})
 			return
 		}
 		log.Error().Err(err).Msg("Failed to update workspace user role")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to update workspace user role",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedUpdateWorkspaceUserRole"),
 		})
 		return
 	}
@@ -451,20 +452,20 @@ func UpdateWorkspaceUserRoleAction(w http.ResponseWriter, r *http.Request) {
 	targetUser, _ := userRepo.GetByID(workspaceUser.UserID)
 
 	if targetUser == nil {
-		service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-			"errorMessage": "User not found",
+		util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+			"errorMessage": locale.TR(r, "userNotFound"),
 		})
 		return
 	}
 
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"id":          workspaceUser.ID,
 		"userId":      workspaceUser.UserID,
 		"name":        targetUser.Name,
 		"email":       targetUser.Email,
 		"role":        workspaceUser.Role,
 		"isActive":    targetUser.IsActive,
-		"avatar":      service.GravatarURL(targetUser.Email, 80),
+		"avatar":      util.GravatarURL(targetUser.Email, 80),
 		"lastLoginAt": targetUser.LastLoginAt.UTC().Format(time.RFC3339),
 		"createdAt":   workspaceUser.CreatedAt.UTC().Format(time.RFC3339),
 		"updatedAt":   workspaceUser.UpdatedAt.UTC().Format(time.RFC3339),
@@ -477,8 +478,8 @@ func RemoveWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Not authenticated",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "notAuthenticated"),
 		})
 		return
 	}
@@ -486,8 +487,8 @@ func RemoveWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 	workspaceIDStr := chi.URLParam(r, "workspaceID")
 	userIDStr := chi.URLParam(r, "userID")
 	if workspaceIDStr == "" || userIDStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid workspace ID or user ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidWorkspaceIDOrUserID"),
 		})
 		return
 	}
@@ -496,14 +497,14 @@ func RemoveWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 	_, err := wsModule.GetWorkspace(db.ID(workspaceIDStr))
 	if err != nil {
 		if errors.Is(err, module.ErrWorkspaceNotFound) {
-			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-				"errorMessage": "Workspace not found",
+			util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+				"errorMessage": locale.TR(r, "workspaceNotFound"),
 			})
 			return
 		}
 		log.Error().Err(err).Msg("Failed to get workspace")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get workspace",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetWorkspace"),
 		})
 		return
 	}
@@ -511,14 +512,14 @@ func RemoveWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 	workspaceUser, err := wsModule.GetWorkspaceUser(db.ID(workspaceIDStr), db.ID(userIDStr))
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get workspace user")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get workspace user",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetWorkspaceUser"),
 		})
 		return
 	}
 	if workspaceUser == nil {
-		service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-			"errorMessage": "User is not a member of this workspace",
+		util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+			"errorMessage": locale.TR(r, "userNotMemberOfWorkspace"),
 		})
 		return
 	}
@@ -531,14 +532,14 @@ func RemoveWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to check access",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCheckAccess"),
 		})
 		return
 	}
 	if !allowed {
-		service.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
-			"errorMessage": "You do not have permission to remove users from this workspace",
+		util.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
+			"errorMessage": locale.TR(r, "noPermissionRemoveUsersFromWorkspace"),
 		})
 		return
 	}
@@ -546,14 +547,14 @@ func RemoveWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 	err = wsModule.RemoveWorkspaceUser(db.ID(workspaceIDStr), db.ID(userIDStr))
 	if err != nil {
 		if errors.Is(err, module.ErrWorkspaceUserNotFound) {
-			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-				"errorMessage": "User is not a member of this workspace",
+			util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+				"errorMessage": locale.TR(r, "userNotMemberOfWorkspace"),
 			})
 			return
 		}
 		log.Error().Err(err).Msg("Failed to remove workspace user")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to remove user from workspace",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedRemoveUserFromWorkspace"),
 		})
 		return
 	}
@@ -563,7 +564,7 @@ func RemoveWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 		Str("userID", userIDStr).
 		Msg("User removed from workspace")
 
-	service.WriteJSON(w, http.StatusNoContent, map[string]interface{}{})
+	util.WriteJSON(w, http.StatusNoContent, map[string]interface{}{})
 }
 
 // ListAllUsersAction lists all users for the workspace add-user form. Only callable by users with
@@ -572,16 +573,16 @@ func ListAllUsersAction(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
-		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Not authenticated",
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "notAuthenticated"),
 		})
 		return
 	}
 
 	workspaceIDStr := chi.URLParam(r, "workspaceID")
 	if workspaceIDStr == "" {
-		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": "Invalid workspace ID",
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidWorkspaceID"),
 		})
 		return
 	}
@@ -607,14 +608,14 @@ func ListAllUsersAction(w http.ResponseWriter, r *http.Request) {
 	workspace, err := wsModule.GetWorkspace(db.ID(workspaceIDStr))
 	if err != nil {
 		if errors.Is(err, module.ErrWorkspaceNotFound) {
-			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
-				"errorMessage": "Workspace not found",
+			util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+				"errorMessage": locale.TR(r, "workspaceNotFound"),
 			})
 			return
 		}
 		log.Error().Err(err).Msg("Failed to get workspace")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to get workspace",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetWorkspace"),
 		})
 		return
 	}
@@ -627,14 +628,14 @@ func ListAllUsersAction(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to check access",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCheckAccess"),
 		})
 		return
 	}
 	if !allowed {
-		service.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
-			"errorMessage": "You do not have permission to add users to this workspace",
+		util.WriteJSON(w, http.StatusForbidden, map[string]interface{}{
+			"errorMessage": locale.TR(r, "noPermissionAddUsersToWorkspace"),
 		})
 		return
 	}
@@ -646,8 +647,8 @@ func ListAllUsersAction(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to list users")
-		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": "Failed to list users",
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedListUsersForWorkspace"),
 		})
 		return
 	}
@@ -681,14 +682,14 @@ func ListAllUsersAction(w http.ResponseWriter, r *http.Request) {
 			"name":        u.Name,
 			"email":       u.Email,
 			"isActive":    u.IsActive,
-			"avatar":      service.GravatarURL(u.Email, 80),
+			"avatar":      util.GravatarURL(u.Email, 80),
 			"lastLoginAt": u.LastLoginAt.UTC().Format(time.RFC3339),
 			"createdAt":   u.CreatedAt.UTC().Format(time.RFC3339),
 			"updatedAt":   u.UpdatedAt.UTC().Format(time.RFC3339),
 		})
 	}
 
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"users": userList,
 		"_meta": map[string]interface{}{
 			"limit":  limit,

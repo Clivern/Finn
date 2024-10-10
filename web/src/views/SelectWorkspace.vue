@@ -10,10 +10,10 @@
       </div>
 
       <h1 class="text-xl font-semibold text-theme-text text-center">
-        {{ workspaces.length ? 'Select a Workspace' : 'Create a Workspace' }}
+        {{ workspaces.length ? $t('selectWorkspace.selectTitle') : $t('selectWorkspace.createTitle') }}
       </h1>
       <p class="mt-2 text-sm text-theme-textLight text-center">
-        {{ workspaces.length ? 'Choose a workspace to continue or create a new one' : "You don't have any workspaces yet. Create one to get started." }}
+        {{ workspaces.length ? $t('selectWorkspace.selectDescription') : $t('selectWorkspace.noWorkspaces') }}
       </p>
 
       <div v-if="workspaces.length" class="mt-6 space-y-3">
@@ -36,7 +36,7 @@
                 v-if="workspace.status === 'active' || loadWorkspaceFromStorage()?.id === workspace.id"
                 class="inline-flex flex-shrink-0 rounded-full bg-primary-200 px-2.5 py-0.5 text-xs font-medium text-theme-text"
               >
-                Active
+                {{ $t('selectWorkspace.active') }}
               </span>
             </div>
             <svg class="ml-3 h-5 w-5 flex-shrink-0 text-theme-textLight" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -58,7 +58,7 @@
           <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
-          {{ workspaces.length ? 'Create New Workspace' : 'Create Your First Workspace' }}
+          {{ workspaces.length ? $t('selectWorkspace.createNew') : $t('selectWorkspace.createFirst') }}
         </button>
       </div>
 
@@ -76,25 +76,25 @@
           @click.self="closeCreateModal"
         >
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-sm p-6">
-            <h2 id="create-workspace-title" class="text-lg font-semibold text-theme-text">Create New Workspace</h2>
-            <p class="mt-1 text-sm text-theme-textLight">Enter a name for your new workspace</p>
+            <h2 id="create-workspace-title" class="text-lg font-semibold text-theme-text">{{ $t('selectWorkspace.createModalTitle') }}</h2>
+            <p class="mt-1 text-sm text-theme-textLight">{{ $t('selectWorkspace.createModalDescription') }}</p>
             <form @submit.prevent="handleCreate" class="mt-4 space-y-4">
               <div>
-                <label for="workspace-name" class="form-label">Name</label>
+                <label for="workspace-name" class="form-label">{{ $t('selectWorkspace.workspaceName') }}</label>
                 <input
                   id="workspace-name"
                   v-model="newWorkspaceName"
                   type="text"
                   required
                   class="input-field"
-                  placeholder="My Workspace"
+                  :placeholder="$t('selectWorkspace.workspaceNamePlaceholder')"
                   autofocus
                 />
               </div>
               <div class="flex gap-3 justify-end">
-                <button type="button" @click="closeCreateModal" class="btn-secondary">Cancel</button>
+                <button type="button" @click="closeCreateModal" class="btn-secondary">{{ $t('common.cancel') }}</button>
                 <button type="submit" :disabled="createLoading || !newWorkspaceName.trim()" class="btn-primary">
-                  {{ createLoading ? 'Creating…' : 'Create' }}
+                  {{ createLoading ? $t('common.loading') : $t('common.create') }}
                 </button>
               </div>
             </form>

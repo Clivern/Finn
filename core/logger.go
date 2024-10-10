@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/clivern/finn/service"
+	"github.com/clivern/finn/service/util"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -25,14 +25,14 @@ func SetupLogging() error {
 	if viper.GetString("app.log.output") != "stdout" {
 		dir, _ := filepath.Split(viper.GetString("app.log.output"))
 
-		if !service.DirExists(dir) {
-			if err := service.EnsureDir(dir, 0775); err != nil {
+		if !util.DirExists(dir) {
+			if err := util.EnsureDir(dir, 0775); err != nil {
 				return fmt.Errorf("directory [%s] creation failed: %w", dir, err)
 			}
 		}
 
 		// Create log file if it doesn't exist to ensure it's writable
-		if !service.FileExists(viper.GetString("app.log.output")) {
+		if !util.FileExists(viper.GetString("app.log.output")) {
 			f, err := os.Create(viper.GetString("app.log.output"))
 			if err != nil {
 				return fmt.Errorf("error while creating log file [%s]: %w", viper.GetString("app.log.output"), err)

@@ -5,14 +5,14 @@
     <main class="w-full py-8 px-4 sm:px-6 lg:px-8">
       <div class="mb-8 flex justify-between items-center">
         <div>
-          <h1 class="text-3xl font-semibold text-theme-text">Users</h1>
-          <p class="text-theme-textLight mt-2">Manage user accounts and permissions</p>
+          <h1 class="text-3xl font-semibold text-theme-text">{{ $t('users.title') }}</h1>
+          <p class="text-theme-textLight mt-2">{{ $t('usersPage.subtitle') }}</p>
         </div>
         <button
           @click="openCreateModal"
           class="btn-primary"
         >
-          Add User
+          {{ $t('users.addUser') }}
         </button>
       </div>
 
@@ -29,33 +29,33 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
-          <p class="text-theme-textLight mt-2">Loading users...</p>
+          <p class="text-theme-textLight mt-2">{{ $t('usersPage.loading') }}</p>
         </div>
 
         <div v-else-if="users.length === 0" class="p-8 text-center">
-          <p class="text-theme-textLight">No users found</p>
+          <p class="text-theme-textLight">{{ $t('usersPage.noUsers') }}</p>
         </div>
 
         <table v-else class="min-w-full divide-y divide-theme-border">
           <thead class="bg-theme-hover">
             <tr>
               <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                User
+                {{ $t('usersPage.user') }}
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                Role
+                {{ $t('usersPage.role') }}
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                Status
+                {{ $t('usersPage.status') }}
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                Last Login
+                {{ $t('usersPage.lastLogin') }}
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                Created
+                {{ $t('usersPage.created') }}
               </th>
               <th class="px-6 py-3 text-right text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                Actions
+                {{ $t('usersPage.actions') }}
               </th>
             </tr>
           </thead>
@@ -82,7 +82,7 @@
                     'bg-green-100 text-green-800': user.isActive,
                     'bg-red-100 text-red-800': !user.isActive
                   }">
-                  {{ user.isActive ? 'Active' : 'Inactive' }}
+                  {{ user.isActive ? $t('usersPage.active') : $t('usersPage.inactive') }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-theme-textLight">
@@ -96,13 +96,13 @@
                   @click="openEditModal(user)"
                   class="text-blue-600 hover:text-blue-900 mr-4"
                 >
-                  Edit
+                  {{ $t('common.edit') }}
                 </button>
                 <button
                   @click="openDeleteModal(user)"
                   class="text-red-600 hover:text-red-900"
                 >
-                  Delete
+                  {{ $t('common.delete') }}
                 </button>
               </td>
             </tr>
@@ -111,7 +111,7 @@
 
         <div v-if="total > 0" class="bg-white px-6 py-4 border-t border-theme-border flex items-center justify-between">
           <div class="text-sm text-theme-textLight">
-            Showing {{ offset + 1 }} to {{ Math.min(offset + limit, total) }} of {{ total }} users
+            {{ $t('usersPage.showing', { from: offset + 1, to: Math.min(offset + limit, total), total }) }}
           </div>
           <div class="flex items-center space-x-2">
             <button
@@ -119,14 +119,14 @@
               :disabled="offset === 0"
               class="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Previous
+              {{ $t('usersPage.previous') }}
             </button>
             <button
               @click="goToPage(offset + limit)"
               :disabled="offset + limit >= total"
               class="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Next
+              {{ $t('usersPage.next') }}
             </button>
           </div>
         </div>
@@ -140,7 +140,7 @@
           <form @submit.prevent="handleCreate">
             <div class="bg-white px-6 pt-6 pb-4">
               <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-theme-text">Create User</h3>
+                <h3 class="text-lg font-semibold text-theme-text">{{ $t('usersPage.createUser') }}</h3>
                 <button
                   type="button"
                   @click="closeCreateModal"
@@ -154,7 +154,7 @@
               <div class="space-y-4">
                 <div>
                   <label for="create-name" class="block text-sm font-medium text-theme-text mb-2">
-                    Name *
+                    {{ $t('usersPage.name') }} *
                   </label>
                   <input
                     id="create-name"
@@ -167,7 +167,7 @@
                 </div>
                 <div>
                   <label for="create-email" class="block text-sm font-medium text-theme-text mb-2">
-                    Email *
+                    {{ $t('usersPage.email') }} *
                   </label>
                   <input
                     id="create-email"
@@ -180,7 +180,7 @@
                 </div>
                 <div>
                   <label for="create-password" class="block text-sm font-medium text-theme-text mb-2">
-                    Password *
+                    {{ $t('usersPage.password') }} *
                   </label>
                   <input
                     id="create-password"
@@ -193,7 +193,7 @@
                 </div>
                 <div>
                   <label for="create-role" class="block text-sm font-medium text-theme-text mb-2">
-                    Role *
+                    {{ $t('usersPage.roleRequired') }}
                   </label>
                   <select
                     id="create-role"
@@ -201,8 +201,8 @@
                     required
                     class="input-field"
                   >
-                    <option value="admin">Admin</option>
-                    <option value="regular">Regular</option>
+                    <option value="admin">{{ $t('usersPage.admin') }}</option>
+                    <option value="regular">{{ $t('usersPage.regular') }}</option>
                   </select>
                 </div>
                 <div class="flex items-start">
@@ -213,8 +213,8 @@
                     class="h-4 w-4 mt-1 rounded text-theme-text focus:ring-theme-text border-theme-border"
                   />
                   <label for="create-isActive" class="ml-3 block">
-                    <span class="text-sm font-medium text-theme-text">Active</span>
-                    <p class="text-xs text-theme-textLight mt-1">User account is active and can log in</p>
+                    <span class="text-sm font-medium text-theme-text">{{ $t('usersPage.active') }}</span>
+                    <p class="text-xs text-theme-textLight mt-1">{{ $t('usersPage.activeHint') }}</p>
                   </label>
                 </div>
               </div>
@@ -225,20 +225,20 @@
                 @click="closeCreateModal"
                 class="btn-secondary"
               >
-                Cancel
+                {{ $t('common.cancel') }}
               </button>
               <button
                 type="submit"
                 class="btn-primary"
                 :disabled="createLoading"
               >
-                <span v-if="!createLoading">Create</span>
+                <span v-if="!createLoading">{{ $t('common.create') }}</span>
                 <span v-else class="flex items-center">
                   <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Creating...
+                  {{ $t('usersPage.creating') }}
                 </span>
               </button>
             </div>
@@ -254,7 +254,7 @@
           <form @submit.prevent="handleUpdate">
             <div class="bg-white px-6 pt-6 pb-4">
               <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-theme-text">Edit User</h3>
+                <h3 class="text-lg font-semibold text-theme-text">{{ $t('usersPage.editUser') }}</h3>
                 <button
                   type="button"
                   @click="closeEditModal"
@@ -268,7 +268,7 @@
               <div class="space-y-4">
                 <div>
                   <label for="edit-email" class="block text-sm font-medium text-theme-text mb-2">
-                    Email *
+                    {{ $t('usersPage.email') }} *
                   </label>
                   <input
                     id="edit-email"
@@ -281,7 +281,7 @@
                 </div>
                 <div>
                   <label for="edit-password" class="block text-sm font-medium text-theme-text mb-2">
-                    Password
+                    {{ $t('usersPage.password') }}
                   </label>
                   <input
                     id="edit-password"
@@ -290,11 +290,11 @@
                     class="input-field"
                     placeholder="Leave empty to keep current password"
                   />
-                  <p class="text-xs text-theme-textLight mt-1">Leave empty to keep current password</p>
+                  <p class="text-xs text-theme-textLight mt-1">{{ $t('usersPage.passwordLeaveBlank') }}</p>
                 </div>
                 <div>
                   <label for="edit-role" class="block text-sm font-medium text-theme-text mb-2">
-                    Role *
+                    {{ $t('usersPage.roleRequired') }}
                   </label>
                   <select
                     id="edit-role"
@@ -302,8 +302,8 @@
                     required
                     class="input-field"
                   >
-                    <option value="admin">Admin</option>
-                    <option value="regular">Regular</option>
+                    <option value="admin">{{ $t('usersPage.admin') }}</option>
+                    <option value="regular">{{ $t('usersPage.regular') }}</option>
                   </select>
                 </div>
                 <div class="flex items-start">
@@ -314,8 +314,8 @@
                     class="h-4 w-4 mt-1 rounded text-theme-text focus:ring-theme-text border-theme-border"
                   />
                   <label for="edit-isActive" class="ml-3 block">
-                    <span class="text-sm font-medium text-theme-text">Active</span>
-                    <p class="text-xs text-theme-textLight mt-1">User account is active and can log in</p>
+                    <span class="text-sm font-medium text-theme-text">{{ $t('usersPage.active') }}</span>
+                    <p class="text-xs text-theme-textLight mt-1">{{ $t('usersPage.activeHint') }}</p>
                   </label>
                 </div>
               </div>
@@ -326,20 +326,20 @@
                 @click="closeEditModal"
                 class="btn-secondary"
               >
-                Cancel
+                {{ $t('common.cancel') }}
               </button>
               <button
                 type="submit"
                 class="btn-primary"
                 :disabled="editLoading"
               >
-                <span v-if="!editLoading">Update</span>
+                <span v-if="!editLoading">{{ $t('common.save') }}</span>
                 <span v-else class="flex items-center">
                   <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Updating...
+                  {{ $t('usersPage.updating') }}
                 </span>
               </button>
             </div>
@@ -354,7 +354,7 @@
         <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
           <div class="bg-white px-6 pt-6 pb-4">
             <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-semibold text-theme-text">Delete User</h3>
+              <h3 class="text-lg font-semibold text-theme-text">{{ $t('usersPage.deleteUser') }}</h3>
               <button
                 type="button"
                 @click="closeDeleteModal"
@@ -366,8 +366,7 @@
               </button>
             </div>
             <p class="text-sm text-theme-textLight">
-              Are you sure you want to delete user <strong class="text-theme-text">{{ userToDelete?.email }}</strong>?
-              This action cannot be undone.
+              {{ $t('usersPage.deleteUserConfirm', { email: userToDelete?.email }) }}
             </p>
           </div>
           <div class="bg-theme-hover px-6 py-4 flex justify-end space-x-3">
@@ -376,20 +375,20 @@
               @click="closeDeleteModal"
               class="btn-secondary"
             >
-              Cancel
+              {{ $t('common.cancel') }}
             </button>
             <button
               @click="handleDelete"
               class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none transition-all duration-150"
               :disabled="deleteLoading"
             >
-              <span v-if="!deleteLoading">Delete</span>
+              <span v-if="!deleteLoading">{{ $t('common.delete') }}</span>
               <span v-else class="flex items-center">
                 <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                Deleting...
+                {{ $t('usersPage.deleting') }}
               </span>
             </button>
           </div>
@@ -401,9 +400,12 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { userAPI } from '@/api'
 import AppNav from '@/components/AppNav.vue'
 import { formatRelative } from '@/utils/date'
+
+const { t } = useI18n()
 
 const loading = ref(false)
 const users = ref([])
@@ -451,7 +453,7 @@ const loadUsers = async () => {
     total.value = res.data._meta.total
   } catch (err) {
     console.error('Failed to load users:', err)
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to load users'
+    errorMessage.value = err.response?.data?.errorMessage || t('usersPage.failedLoad')
   } finally {
     loading.value = false
   }
@@ -495,13 +497,13 @@ const handleCreate = async () => {
       role: createForm.role,
       isActive: createForm.isActive
     })
-    successMessage.value = 'User created successfully'
+    successMessage.value = t('usersPage.userCreated')
     closeCreateModal()
     await loadUsers()
     setTimeout(() => { successMessage.value = null }, 3000)
   } catch (err) {
     console.error('Failed to create user:', err)
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to create user. Please try again.'
+    errorMessage.value = err.response?.data?.errorMessage || t('usersPage.failedCreate')
   } finally {
     createLoading.value = false
   }
@@ -539,13 +541,13 @@ const handleUpdate = async () => {
 
   try {
     await userAPI.updateUser(editForm.id, payload)
-    successMessage.value = 'User updated successfully'
+    successMessage.value = t('usersPage.userUpdated')
     closeEditModal()
     await loadUsers()
     setTimeout(() => { successMessage.value = null }, 3000)
   } catch (err) {
     console.error('Failed to update user:', err)
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to update user. Please try again.'
+    errorMessage.value = err.response?.data?.errorMessage || t('usersPage.failedUpdate')
   } finally {
     editLoading.value = false
   }
@@ -570,13 +572,13 @@ const handleDelete = async () => {
 
   try {
     await userAPI.deleteUser(userToDelete.value.id)
-    successMessage.value = 'User deleted successfully'
+    successMessage.value = t('usersPage.userDeleted')
     closeDeleteModal()
     await loadUsers()
     setTimeout(() => { successMessage.value = null }, 3000)
   } catch (err) {
     console.error('Failed to delete user:', err)
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to delete user. Please try again.'
+    errorMessage.value = err.response?.data?.errorMessage || t('usersPage.failedDelete')
   } finally {
     deleteLoading.value = false
   }

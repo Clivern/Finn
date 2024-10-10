@@ -1,0 +1,395 @@
+# API messages for Finn
+msgid ""
+msgstr ""
+"Project-Id-Version: Finn API\n"
+"POT-Creation-Date: 2025-02-18 00:00+0000\n"
+"PO-Revision-Date: 2026-02-22 13:42+0100\n"
+"Last-Translator: \n"
+"Language-Team: English\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 3.8\n"
+
+msgid "accessDeniedToWorkspace"
+msgstr "Access denied to this workspace"
+
+msgid "accountNotActive"
+msgstr "Your account is not active. Please contact support."
+
+msgid "accountWithEmailAlreadyExists"
+msgstr "An account with this email already exists"
+
+msgid "accountWithEmailExists"
+msgstr "An account with this email already exists"
+
+msgid "apiKeyNotFound"
+msgstr "API key not found"
+
+msgid "backendNotFound"
+msgstr "Backend not found"
+
+msgid "backendSlugExists"
+msgstr "A backend with this slug already exists in the workspace"
+
+msgid "bodyMustBeBase64Ciphertext"
+msgstr "body must be base64-encoded ciphertext"
+
+msgid "cannotDeleteOwnAccount"
+msgstr "You cannot delete your own account"
+
+msgid "currentPasswordIncorrect"
+msgstr "Current password is incorrect"
+
+msgid "currentPasswordRequired"
+msgstr "Current password is required to change email or password"
+
+msgid "decryptionFailed"
+msgstr "decryption failed"
+
+msgid "failedAddUserToWorkspace"
+msgstr "Failed to add user to workspace"
+
+msgid "failedCheckAccess"
+msgstr "Failed to check access"
+
+msgid "failedCheckMaintenance"
+msgstr "Failed to check maintenance status"
+
+msgid "failedCompleteRegistration"
+msgstr "Failed to complete registration"
+
+msgid "failedCompleteSetup"
+msgstr "Failed to complete setup"
+
+msgid "failedCreateApiKey"
+msgstr "Failed to create API key"
+
+msgid "failedCreateGitCredentials"
+msgstr "Failed to create git credentials"
+
+msgid "failedCreateInvite"
+msgstr "Failed to create invite"
+
+msgid "failedCreateRepository"
+msgstr "Failed to create repository"
+
+msgid "failedCreateRunner"
+msgstr "Failed to create runner"
+
+msgid "failedCreateSession"
+msgstr "Failed to create session"
+
+msgid "failedCreateSshKey"
+msgstr "Failed to create SSH key"
+
+msgid "failedCreateBackend"
+msgstr "Failed to create backend"
+
+msgid "failedCreateUser"
+msgstr "Failed to create user"
+
+msgid "failedCreateWorkspace"
+msgstr "Failed to create workspace"
+
+msgid "failedDeleteApiKey"
+msgstr "Failed to delete API key"
+
+msgid "failedDeleteGitCredentials"
+msgstr "Failed to delete git credentials"
+
+msgid "failedDeleteInvite"
+msgstr "Failed to delete invite"
+
+msgid "failedDeleteRepository"
+msgstr "Failed to delete repository"
+
+msgid "failedDeleteRunner"
+msgstr "Failed to delete runner"
+
+msgid "failedDeleteSshKey"
+msgstr "Failed to delete SSH key"
+
+msgid "failedDeleteBackend"
+msgstr "Failed to delete backend"
+
+msgid "failedDeleteUser"
+msgstr "Failed to delete user"
+
+msgid "failedDeleteWorkspace"
+msgstr "Failed to delete workspace"
+
+msgid "failedGetApiKey"
+msgstr "Failed to get API key"
+
+msgid "failedGetGitCredentials"
+msgstr "Failed to get git credentials"
+
+msgid "failedGetInvite"
+msgstr "Failed to get invite"
+
+msgid "failedGetRepository"
+msgstr "Failed to get repository"
+
+msgid "failedGetRunner"
+msgstr "Failed to get runner"
+
+msgid "failedGetRunnerForPing"
+msgstr "Failed to get runner for ping"
+
+msgid "failedGetSettings"
+msgstr "Failed to get settings"
+
+msgid "failedGetSshKey"
+msgstr "Failed to get SSH key"
+
+msgid "failedGetBackend"
+msgstr "Failed to get backend"
+
+msgid "failedGetUser"
+msgstr "Failed to get user"
+
+msgid "failedGetWorkspace"
+msgstr "Failed to get workspace"
+
+msgid "failedGetWorkspaceUser"
+msgstr "Failed to get workspace user"
+
+msgid "failedListApiKeys"
+msgstr "Failed to list API keys"
+
+msgid "failedListGitCredentials"
+msgstr "Failed to list git credentials"
+
+msgid "failedListInvites"
+msgstr "Failed to list invites"
+
+msgid "failedListRepositories"
+msgstr "Failed to list repositories"
+
+msgid "failedListRunners"
+msgstr "Failed to list runners"
+
+msgid "failedListSshKeys"
+msgstr "Failed to list SSH keys"
+
+msgid "failedListBackends"
+msgstr "Failed to list backends"
+
+msgid "failedListUsers"
+msgstr "Failed to list users"
+
+msgid "failedListUsersForWorkspace"
+msgstr "Failed to list users"
+
+msgid "failedListWorkspaceUsers"
+msgstr "Failed to list workspace users"
+
+msgid "failedListWorkspaces"
+msgstr "Failed to list workspaces"
+
+msgid "failedProcessRequest"
+msgstr "Failed to process request"
+
+msgid "failedRemoveUserFromWorkspace"
+msgstr "Failed to remove user from workspace"
+
+msgid "failedResetPassword"
+msgstr "Failed to reset password"
+
+msgid "failedToReadBody"
+msgstr "failed to read body"
+
+msgid "failedUpdateGitCredentials"
+msgstr "Failed to update git credentials"
+
+msgid "failedUpdateProfile"
+msgstr "Failed to update profile"
+
+msgid "failedUpdateRepository"
+msgstr "Failed to update repository"
+
+msgid "failedUpdateBackend"
+msgstr "Failed to update backend"
+
+msgid "failedUpdateRunner"
+msgstr "Failed to update runner"
+
+msgid "failedUpdateSettings"
+msgstr "Failed to update settings"
+
+msgid "failedUpdateSshKey"
+msgstr "Failed to update SSH key"
+
+msgid "failedUpdateUser"
+msgstr "Failed to update user"
+
+msgid "failedUpdateWorkspace"
+msgstr "Failed to update workspace"
+
+msgid "failedUpdateWorkspaceUserRole"
+msgstr "Failed to update workspace user role"
+
+msgid "forgotPasswordSuccess"
+msgstr "If an account exists for this email, you will receive a password reset link shortly."
+
+msgid "gitBranchOrTagRequired"
+msgstr "Git branch or tag is required"
+
+msgid "gitCredentialsNotFound"
+msgstr "Git credentials not found"
+
+msgid "invalidApiKeyID"
+msgstr "Invalid API key ID"
+
+msgid "invalidBackendID"
+msgstr "Invalid backend ID"
+
+msgid "invalidExpiresAtFormat"
+msgstr "Invalid expiresAt format"
+
+msgid "invalidGitCredentialsID"
+msgstr "Invalid git credentials ID"
+
+msgid "invalidInviteID"
+msgstr "Invalid invite ID"
+
+msgid "invalidOrExpiredInviteToken"
+msgstr "Invalid or expired invite token"
+
+msgid "invalidRepositoryID"
+msgstr "Invalid repository ID"
+
+msgid "invalidRunnerID"
+msgstr "Invalid runner ID"
+
+msgid "invalidSshKeyID"
+msgstr "Invalid SSH key ID"
+
+msgid "invalidToken"
+msgstr "Invalid token"
+
+msgid "invalidUserID"
+msgstr "Invalid user ID"
+
+msgid "invalidUsernameOrPassword"
+msgstr "Invalid username or password"
+
+msgid "invalidWorkspaceID"
+msgstr "Invalid workspace ID"
+
+msgid "invalidWorkspaceIDOrUserID"
+msgstr "Invalid workspace ID or user ID"
+
+msgid "inviteExpired"
+msgstr "Invite has expired"
+
+msgid "inviteNoLongerValid"
+msgstr "Invite is no longer valid"
+
+msgid "inviteNotFound"
+msgstr "Invite not found"
+
+msgid "loginSuccessful"
+msgstr "Login successful"
+
+msgid "logoutSuccessful"
+msgstr "Logout successful"
+
+msgid "maintenanceModeEnabled"
+msgstr "Maintenance mode is enabled. Only administrators can sign in."
+
+msgid "methodNotAllowed"
+msgstr "method not allowed"
+
+msgid "noPermissionAddUsersToWorkspace"
+msgstr "You do not have permission to add users to this workspace"
+
+msgid "noPermissionDeleteWorkspace"
+msgstr "You do not have permission to delete this workspace"
+
+msgid "noPermissionRemoveUsersFromWorkspace"
+msgstr "You do not have permission to remove users from this workspace"
+
+msgid "noPermissionUpdateUsersInWorkspace"
+msgstr "You do not have permission to update users in this workspace"
+
+msgid "noPermissionUpdateWorkspace"
+msgstr "You do not have permission to update this workspace"
+
+msgid "notAuthenticated"
+msgstr "Not authenticated"
+
+msgid "passwordResetSuccess"
+msgstr "Your password has been reset successfully."
+
+msgid "payloadMustDecryptToPONG"
+msgstr "payload must decrypt to PONG"
+
+msgid "pendingInviteAlreadyExists"
+msgstr "A pending invite already exists for this email"
+
+msgid "platformAlreadyInstalled"
+msgstr "Platform is already installed"
+
+msgid "profileUpdatedSuccessfully"
+msgstr "Profile updated successfully"
+
+msgid "registrationSuccessful"
+msgstr "Registration successful. Please sign in."
+
+msgid "repositoryNotFound"
+msgstr "Repository not found"
+
+msgid "resetLinkInvalidOrExpired"
+msgstr "This reset link is invalid or has expired."
+
+msgid "runnerIdentityUnavailable"
+msgstr "runner identity unavailable"
+
+msgid "runnerNotFound"
+msgstr "Runner not found"
+
+msgid "runnerPublicKeyNotConfigured"
+msgstr "Runner public key is not configured"
+
+msgid "runnerUrlNotConfigured"
+msgstr "Runner URL is not configured"
+
+msgid "runnerWithTokenExists"
+msgstr "A runner with this token already exists"
+
+msgid "settingsUpdatedSuccessfully"
+msgstr "Settings updated successfully"
+
+msgid "setupCompletedSuccessfully"
+msgstr "Platform setup completed successfully"
+
+msgid "sshKeyNotFound"
+msgstr "SSH key not found"
+
+msgid "tokenCannotBeEmpty"
+msgstr "Token cannot be empty"
+
+msgid "tokenMustBeValidUUID"
+msgstr "Token must be a valid UUID"
+
+msgid "userAlreadyMemberOfWorkspace"
+msgstr "User is already a member of this workspace"
+
+msgid "userNotFound"
+msgstr "User not found"
+
+msgid "userNotMemberOfWorkspace"
+msgstr "User is not a member of this workspace"
+
+msgid "userWithEmailAlreadyRegistered"
+msgstr "A user with this email is already registered"
+
+msgid "userWithEmailExists"
+msgstr "User with this email already exists"
+
+msgid "workspaceNotFound"
+msgstr "Workspace not found"

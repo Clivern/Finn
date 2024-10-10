@@ -8,7 +8,7 @@ import (
 	"errors"
 
 	"github.com/clivern/finn/db"
-	"github.com/clivern/finn/service"
+	"github.com/clivern/finn/service/util"
 )
 
 // Auth is a module that handles authentication.
@@ -30,7 +30,7 @@ func (a *Auth) Login(email, password string) (*db.User, error) {
 	if user == nil {
 		return nil, errors.New("email not found")
 	}
-	if !service.ComparePassword(user.Password, password) {
+	if !util.ComparePassword(user.Password, password) {
 		return nil, errors.New("invalid password")
 	}
 

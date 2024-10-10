@@ -4,19 +4,19 @@
       <div class="text-center mb-10">
         <div class="flex justify-center mb-8">
           <router-link to="/">
-            <img src="/logo.png" alt="Finn Logo" class="h-24 w-auto">
+            <img src="/logo.png" :alt="$t('common.logoAlt')" class="h-24 w-auto">
           </router-link>
         </div>
       </div>
 
       <div class="bg-white rounded-lg border border-theme-border p-8 shadow-sm">
-        <h2 class="text-2xl font-semibold text-theme-text mb-2 text-center">Reset password</h2>
+        <h2 class="text-2xl font-semibold text-theme-text mb-2 text-center">{{ $t('resetPassword.title') }}</h2>
         <p class="text-sm text-theme-textLight text-center mb-6">
-          Enter your new password below.
+          {{ $t('resetPassword.description') }}
         </p>
         <form class="space-y-5" @submit.prevent="handleSubmit">
           <div>
-            <label for="password" class="block text-sm font-medium text-theme-text mb-2">New password</label>
+            <label for="password" class="block text-sm font-medium text-theme-text mb-2">{{ $t('resetPassword.newPassword') }}</label>
             <input
               id="password"
               v-model="form.password"
@@ -24,12 +24,12 @@
               required
               minlength="8"
               class="input-field"
-              placeholder="Enter new password"
+              :placeholder="$t('resetPassword.newPasswordPlaceholder')"
               :disabled="loading"
             >
           </div>
           <div>
-            <label for="confirmPassword" class="block text-sm font-medium text-theme-text mb-2">Confirm password</label>
+            <label for="confirmPassword" class="block text-sm font-medium text-theme-text mb-2">{{ $t('resetPassword.confirmPassword') }}</label>
             <input
               id="confirmPassword"
               v-model="form.confirmPassword"
@@ -37,7 +37,7 @@
               required
               minlength="8"
               class="input-field"
-              placeholder="Confirm new password"
+              :placeholder="$t('resetPassword.confirmPasswordPlaceholder')"
               :disabled="loading"
             >
           </div>
@@ -55,13 +55,13 @@
               class="w-full btn-primary py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
               :disabled="loading"
             >
-              <span v-if="!loading">Reset password</span>
+              <span v-if="!loading">{{ $t('resetPassword.submit') }}</span>
               <span v-else class="flex items-center justify-center">
                 <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                Resetting...
+                {{ $t('resetPassword.submitting') }}
               </span>
             </button>
           </div>
@@ -69,13 +69,13 @@
 
         <p class="text-center mt-6">
           <router-link to="/login" class="text-sm text-primary-800 hover:text-primary-900 font-medium">
-            Back to login
+            {{ $t('resetPassword.backToLogin') }}
           </router-link>
         </p>
       </div>
 
       <p class="text-center text-xs text-theme-textLight mt-8">
-        Copyright © 2025 Finn. All rights reserved.
+        {{ $t('common.copyright') }}
       </p>
     </div>
   </div>
@@ -84,8 +84,10 @@
 <script setup>
 import { reactive, ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { authAPI } from '@/api'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const token = computed(() => route.params.token || '')
@@ -100,15 +102,15 @@ const success = ref(null)
 
 const handleSubmit = async () => {
   if (form.password !== form.confirmPassword) {
-    error.value = 'Passwords do not match.'
+    error.value = t('resetPassword.errorPasswordsMatch')
     return
   }
   if (form.password.length < 8) {
-    error.value = 'Password must be at least 8 characters.'
+    error.value = t('resetPassword.errorPasswordLength')
     return
   }
   if (!token.value) {
-    error.value = 'Invalid or missing reset link.'
+    error.value = t('resetPassword.errorInvalidLink')
     return
   }
 
@@ -117,10 +119,10 @@ const handleSubmit = async () => {
   success.value = null
   try {
     await authAPI.resetPassword({ token: token.value, password: form.password })
-    success.value = 'Your password has been reset. Redirecting to login...'
+    success.value = t('resetPassword.success')
     setTimeout(() => router.push('/login'), 2000)
   } catch (err) {
-    error.value = err.response?.data?.errorMessage || 'Failed to reset password. Please try again.'
+    error.value = err.response?.data?.errorMessage || t('resetPassword.errorDefault')
   } finally {
     loading.value = false
   }
