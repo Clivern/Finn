@@ -2,7 +2,7 @@
 
 Track tasks, improvements, and planned work for the project.
 
-#### High priority
+#### Backlog
 
 - [x] Workspace SSH Keys Logic
 - [x] Workspace Git Credentials Logic
@@ -11,14 +11,8 @@ Track tasks, improvements, and planned work for the project.
 - [ ] Workspace Environment Logic
 - [ ] Workspace Task Templates Logic
 - [ ] Sending Tasks to Runners like Repositories Clone
-
-#### Features
-
-- [ ]
-
-#### Bugs / Fixes
-
-- [ ]
+- [ ] Workspace Task Run Logic
+- [ ] Workspace Flows Logic
 
 #### Refactor / Tech debt
 
@@ -31,8 +25,8 @@ Track tasks, improvements, and planned work for the project.
 - [x] Settings Logic
 - [x] Invites Logic
 - [x] Profile Logic
-- [ ] Workspaces Logic
-- [ ] Workspace Logic
+- [x] Workspaces Logic
+- [x] Workspace Logic
 - [ ] Runners Logic
 - [ ] Workspace SSH Keys Logic
 - [ ] Workspace Git Credentials Logic

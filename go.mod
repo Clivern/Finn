@@ -1,4 +1,4 @@
-module github.com/clivern/lapin
+module github.com/clivern/finn
 
 go 1.24.13
 

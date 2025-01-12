@@ -5,9 +5,9 @@
 package cli
 
 import (
-	"github.com/clivern/lapin/core"
-	"github.com/clivern/lapin/db"
-	"github.com/clivern/lapin/migration"
+	"github.com/clivern/finn/core"
+	"github.com/clivern/finn/db"
+	"github.com/clivern/finn/migration"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -33,7 +33,6 @@ var migrateUpCmd = &cobra.Command{
 			log.Fatal().Err(err).Msg("Failed to setup logging")
 		}
 
-		// Initialize database connection
 		dbConfig := db.Config{
 			Driver:          viper.GetString("app.database.driver"),
 			Host:            viper.GetString("app.database.host"),
@@ -53,15 +52,12 @@ var migrateUpCmd = &cobra.Command{
 		}
 		defer conn.Close()
 
-		// Create migration manager
 		mgr := migration.NewManager(conn.DB, conn.Driver)
 
-		// Register all migrations
 		for _, m := range migration.GetAll() {
 			mgr.Register(m)
 		}
 
-		// Run migrations
 		if err := mgr.Up(); err != nil {
 			log.Fatal().Err(err).Msg("Failed to run migrations")
 		}
@@ -84,7 +80,6 @@ var migrateDownCmd = &cobra.Command{
 			log.Fatal().Err(err).Msg("Failed to setup logging")
 		}
 
-		// Initialize database connection
 		dbConfig := db.Config{
 			Driver:          viper.GetString("app.database.driver"),
 			Host:            viper.GetString("app.database.host"),
@@ -104,15 +99,12 @@ var migrateDownCmd = &cobra.Command{
 		}
 		defer conn.Close()
 
-		// Create migration manager
 		mgr := migration.NewManager(conn.DB, conn.Driver)
 
-		// Register all migrations
 		for _, m := range migration.GetAll() {
 			mgr.Register(m)
 		}
 
-		// Roll back migration
 		if err := mgr.Down(); err != nil {
 			log.Fatal().Err(err).Msg("Failed to roll back migration")
 		}
@@ -135,7 +127,6 @@ var migrateStatusCmd = &cobra.Command{
 			log.Fatal().Err(err).Msg("Failed to setup logging")
 		}
 
-		// Initialize database connection
 		dbConfig := db.Config{
 			Driver:          viper.GetString("app.database.driver"),
 			Host:            viper.GetString("app.database.host"),
@@ -155,15 +146,12 @@ var migrateStatusCmd = &cobra.Command{
 		}
 		defer conn.Close()
 
-		// Create migration manager
 		mgr := migration.NewManager(conn.DB, conn.Driver)
 
-		// Register all migrations
 		for _, m := range migration.GetAll() {
 			mgr.Register(m)
 		}
 
-		// Show status
 		if err := mgr.Status(); err != nil {
 			log.Fatal().Err(err).Msg("Failed to get migration status")
 		}

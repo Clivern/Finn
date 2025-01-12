@@ -1,7 +1,7 @@
 {
-  "name": "lapin",
+  "name": "finn",
   "version": "0.1.0",
-  "description": "Lapin - Run Ansible, Terraform, OpenTofu with AI-powered Platform",
+  "description": "Finn - Run Ansible, Terraform, OpenTofu with AI-powered Platform",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -7,10 +7,10 @@ package api
 import (
 	"net/http"
 
-	"github.com/clivern/lapin/db"
-	"github.com/clivern/lapin/middleware"
-	"github.com/clivern/lapin/module"
-	"github.com/clivern/lapin/service"
+	"github.com/clivern/finn/db"
+	"github.com/clivern/finn/middleware"
+	"github.com/clivern/finn/module"
+	"github.com/clivern/finn/service"
 
 	"github.com/rs/zerolog/log"
 )
@@ -19,7 +19,7 @@ import (
 func LogoutAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Logout endpoint called")
 
-	service.DeleteCookie(w, "_lapin_session")
+	service.DeleteCookie(w, "_finn_session")
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {

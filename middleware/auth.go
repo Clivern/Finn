@@ -9,9 +9,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/clivern/lapin/db"
-	"github.com/clivern/lapin/module"
-	"github.com/clivern/lapin/service"
+	"github.com/clivern/finn/db"
+	"github.com/clivern/finn/module"
+	"github.com/clivern/finn/service"
 
 	"github.com/rs/zerolog/log"
 )
@@ -47,7 +47,7 @@ func SessionAuth() func(http.Handler) http.Handler {
 				return
 			}
 
-			sessionToken := service.GetCookie(r, "_lapin_session")
+			sessionToken := service.GetCookie(r, "_finn_session")
 			if sessionToken == "" {
 				log.Info().Str("path", r.URL.Path).Msg("No session cookie found")
 				service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
@@ -63,7 +63,7 @@ func SessionAuth() func(http.Handler) http.Handler {
 
 			user, _, err := sessionManager.ValidateSession(sessionToken)
 			if err != nil {
-				service.DeleteCookie(w, "_lapin_session")
+				service.DeleteCookie(w, "_finn_session")
 				sessionManager.RevokeUserSessions(user.ID)
 				log.Info().Err(err).Str("path", r.URL.Path).Msg("Session validation failed")
 				service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{

@@ -7,7 +7,7 @@ package main
 import (
 	"embed"
 
-	"github.com/clivern/lapin/cli"
+	"github.com/clivern/finn/cli"
 )
 
 var (

@@ -5,7 +5,7 @@
         <div class="flex items-center">
           <div class="flex-shrink-0 flex items-center">
             <router-link to="/">
-              <img src="/logo.png" alt="Lapin Logo" class="h-8 w-auto">
+              <img src="/logo.png" alt="Finn Logo" class="h-8 w-auto">
             </router-link>
           </div>
           <div class="hidden md:ml-8 md:flex md:space-x-1">

@@ -4,7 +4,7 @@
       <div class="text-center mb-10">
         <div class="flex justify-center mb-8">
           <router-link to="/">
-            <img src="/logo.png" alt="Lapin Logo" class="h-24 w-auto">
+            <img src="/logo.png" alt="Finn Logo" class="h-24 w-auto">
           </router-link>
         </div>
       </div>
@@ -75,7 +75,7 @@
       </div>
 
       <p class="text-center text-xs text-theme-textLight mt-8">
-        Copyright © 2025 Lapin. All rights reserved.
+        Copyright © 2025 Finn. All rights reserved.
       </p>
     </div>
   </div>

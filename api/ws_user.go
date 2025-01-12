@@ -10,10 +10,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/clivern/lapin/db"
-	"github.com/clivern/lapin/middleware"
-	"github.com/clivern/lapin/module"
-	"github.com/clivern/lapin/service"
+	"github.com/clivern/finn/db"
+	"github.com/clivern/finn/middleware"
+	"github.com/clivern/finn/module"
+	"github.com/clivern/finn/service"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )
@@ -31,7 +31,7 @@ type UpdateWorkspaceUserRoleRequest struct {
 
 // AddWorkspaceUserAction adds a user to a workspace
 func AddWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Add workspace user endpoint called")
+	log.Info().Msg("Add workspace user endpoint called")
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
@@ -91,7 +91,6 @@ func AddWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Ensure target user exists
 	userRepo := db.NewUserRepository(db.GetDB())
 	targetUser, err := userRepo.GetByID(db.ID(req.UserID))
 	if err != nil || targetUser == nil {
@@ -123,26 +122,26 @@ func AddWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().
 		Str("workspaceID", workspaceIDStr).
 		Str("userID", targetUser.ID.String()).
-		Msg("User added to workspace")
+		Str("role", workspaceUser.Role).
+		Msg("User added to workspace successfully")
 
 	service.WriteJSON(w, http.StatusCreated, map[string]interface{}{
 		"id":          workspaceUser.ID,
-		"workspaceId": workspaceUser.WorkspaceID,
 		"userId":      workspaceUser.UserID,
+		"name":        targetUser.Name,
+		"email":       targetUser.Email,
 		"role":        workspaceUser.Role,
+		"isActive":    targetUser.IsActive,
+		"avatar":      service.GravatarURL(targetUser.Email, 80),
+		"lastLoginAt": targetUser.LastLoginAt.UTC().Format(time.RFC3339),
 		"createdAt":   workspaceUser.CreatedAt.UTC().Format(time.RFC3339),
 		"updatedAt":   workspaceUser.UpdatedAt.UTC().Format(time.RFC3339),
-		"user": map[string]interface{}{
-			"id":    targetUser.ID,
-			"name":  targetUser.Name,
-			"email": targetUser.Email,
-		},
 	})
 }
 
 // ListWorkspaceUsersAction lists users in a workspace
 func ListWorkspaceUsersAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("List workspace users endpoint called")
+	log.Info().Msg("List workspace users endpoint called")
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
@@ -225,29 +224,27 @@ func ListWorkspaceUsersAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userRepo := db.NewUserRepository(db.GetDB())
-	workspaceUserList := make([]map[string]interface{}, 0, len(result.WorkspaceUsers))
+	users := make([]map[string]interface{}, 0, len(result.WorkspaceUsers))
 	for _, wu := range result.WorkspaceUsers {
 		u, _ := userRepo.GetByID(wu.UserID)
-		item := map[string]interface{}{
-			"id":          wu.ID,
-			"workspaceId": wu.WorkspaceID,
-			"userId":      wu.UserID,
-			"role":        wu.Role,
-			"createdAt":   wu.CreatedAt.UTC().Format(time.RFC3339),
-			"updatedAt":   wu.UpdatedAt.UTC().Format(time.RFC3339),
-		}
 		if u != nil {
-			item["user"] = map[string]interface{}{
-				"id":    u.ID,
-				"name":  u.Name,
-				"email": u.Email,
-			}
+			users = append(users, map[string]interface{}{
+				"id":          wu.ID,
+				"userId":      wu.UserID,
+				"name":        u.Name,
+				"email":       u.Email,
+				"role":        wu.Role,
+				"isActive":    u.IsActive,
+				"avatar":      service.GravatarURL(u.Email, 80),
+				"lastLoginAt": u.LastLoginAt.UTC().Format(time.RFC3339),
+				"createdAt":   wu.CreatedAt.UTC().Format(time.RFC3339),
+				"updatedAt":   wu.UpdatedAt.UTC().Format(time.RFC3339),
+			})
 		}
-		workspaceUserList = append(workspaceUserList, item)
 	}
 
 	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"users": workspaceUserList,
+		"users": users,
 		"_meta": map[string]interface{}{
 			"limit":  limit,
 			"offset": offset,
@@ -258,7 +255,7 @@ func ListWorkspaceUsersAction(w http.ResponseWriter, r *http.Request) {
 
 // GetWorkspaceUserAction returns a single workspace user membership
 func GetWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Get workspace user endpoint called")
+	log.Info().Msg("Get workspace user endpoint called")
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
@@ -330,27 +327,31 @@ func GetWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 
 	userRepo := db.NewUserRepository(db.GetDB())
 	targetUser, _ := userRepo.GetByID(workspaceUser.UserID)
-	resp := map[string]interface{}{
+
+	if targetUser == nil {
+		service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+			"errorMessage": "User not found",
+		})
+		return
+	}
+
+	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"id":          workspaceUser.ID,
-		"workspaceId": workspaceUser.WorkspaceID,
 		"userId":      workspaceUser.UserID,
+		"name":        targetUser.Name,
+		"email":       targetUser.Email,
 		"role":        workspaceUser.Role,
+		"isActive":    targetUser.IsActive,
+		"avatar":      service.GravatarURL(targetUser.Email, 80),
+		"lastLoginAt": targetUser.LastLoginAt.UTC().Format(time.RFC3339),
 		"createdAt":   workspaceUser.CreatedAt.UTC().Format(time.RFC3339),
 		"updatedAt":   workspaceUser.UpdatedAt.UTC().Format(time.RFC3339),
-	}
-	if targetUser != nil {
-		resp["user"] = map[string]interface{}{
-			"id":    targetUser.ID,
-			"name":  targetUser.Name,
-			"email": targetUser.Email,
-		}
-	}
-	service.WriteJSON(w, http.StatusOK, resp)
+	})
 }
 
 // UpdateWorkspaceUserRoleAction updates a workspace user's role
 func UpdateWorkspaceUserRoleAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Update workspace user role endpoint called")
+	log.Info().Msg("Update workspace user role endpoint called")
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
@@ -448,27 +449,31 @@ func UpdateWorkspaceUserRoleAction(w http.ResponseWriter, r *http.Request) {
 
 	userRepo := db.NewUserRepository(db.GetDB())
 	targetUser, _ := userRepo.GetByID(workspaceUser.UserID)
-	resp := map[string]interface{}{
+
+	if targetUser == nil {
+		service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+			"errorMessage": "User not found",
+		})
+		return
+	}
+
+	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"id":          workspaceUser.ID,
-		"workspaceId": workspaceUser.WorkspaceID,
 		"userId":      workspaceUser.UserID,
+		"name":        targetUser.Name,
+		"email":       targetUser.Email,
 		"role":        workspaceUser.Role,
+		"isActive":    targetUser.IsActive,
+		"avatar":      service.GravatarURL(targetUser.Email, 80),
+		"lastLoginAt": targetUser.LastLoginAt.UTC().Format(time.RFC3339),
 		"createdAt":   workspaceUser.CreatedAt.UTC().Format(time.RFC3339),
 		"updatedAt":   workspaceUser.UpdatedAt.UTC().Format(time.RFC3339),
-	}
-	if targetUser != nil {
-		resp["user"] = map[string]interface{}{
-			"id":    targetUser.ID,
-			"name":  targetUser.Name,
-			"email": targetUser.Email,
-		}
-	}
-	service.WriteJSON(w, http.StatusOK, resp)
+	})
 }
 
 // RemoveWorkspaceUserAction removes a user from a workspace
 func RemoveWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Remove workspace user endpoint called")
+	log.Info().Msg("Remove workspace user endpoint called")
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
@@ -558,12 +563,12 @@ func RemoveWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 		Str("userID", userIDStr).
 		Msg("User removed from workspace")
 
-	w.WriteHeader(http.StatusNoContent)
+	service.WriteJSON(w, http.StatusNoContent, map[string]interface{}{})
 }
 
 // ListAllUsersAction lists all users for the workspace add-user form. Only callable by users with
 func ListAllUsersAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("List all users (add form) endpoint called")
+	log.Info().Msg("List all users (add form) endpoint called")
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
@@ -672,10 +677,14 @@ func ListAllUsersAction(w http.ResponseWriter, r *http.Request) {
 	userList := make([]map[string]interface{}, 0, len(result.Users))
 	for _, u := range result.Users {
 		userList = append(userList, map[string]interface{}{
-			"id":       u.ID,
-			"name":     u.Name,
-			"email":    u.Email,
-			"isActive": u.IsActive,
+			"id":          u.ID,
+			"name":        u.Name,
+			"email":       u.Email,
+			"isActive":    u.IsActive,
+			"avatar":      service.GravatarURL(u.Email, 80),
+			"lastLoginAt": u.LastLoginAt.UTC().Format(time.RFC3339),
+			"createdAt":   u.CreatedAt.UTC().Format(time.RFC3339),
+			"updatedAt":   u.UpdatedAt.UTC().Format(time.RFC3339),
 		})
 	}
 

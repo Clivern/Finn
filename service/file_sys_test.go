@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/clivern/lapin/pkg"
+	"github.com/clivern/finn/pkg"
 	"github.com/stretchr/testify/assert"
 )
 

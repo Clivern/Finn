@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/clivern/lapin/db"
+	"github.com/clivern/finn/db"
 )
 
 // Settings manages application configuration options.

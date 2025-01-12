@@ -19,27 +19,6 @@
       <div v-if="successMessage" class="mb-6 rounded-md border border-green-200 bg-green-50 p-4">
         <p class="text-sm text-green-800">{{ successMessage }}</p>
       </div>
-      <div v-if="createdRunnerToken" class="mb-6 rounded-lg border border-primary-200 bg-primary-50 p-4">
-        <p class="text-sm font-medium text-primary-900 mb-1">Runner created</p>
-        <p class="text-xs text-primary-800 mb-2">Use this token when registering the runner. Copy it now — it won’t be shown again in full.</p>
-        <div class="flex flex-wrap items-center gap-2">
-          <code class="flex-1 min-w-0 text-xs text-primary-900 bg-white/80 px-2 py-1.5 rounded border border-primary-200 truncate font-mono">{{ createdRunnerToken }}</code>
-          <button
-            type="button"
-            @click="copyCreatedToken"
-            class="btn-secondary text-sm shrink-0"
-          >
-            Copy token
-          </button>
-          <button
-            type="button"
-            @click="dismissTokenCard"
-            class="text-sm text-primary-700 hover:text-primary-900 shrink-0"
-          >
-            Dismiss
-          </button>
-        </div>
-      </div>
       <div v-if="errorMessage" class="mb-6 rounded-md border border-red-200 bg-red-50 p-4">
         <p class="text-sm text-red-800">{{ errorMessage }}</p>
       </div>
@@ -55,7 +34,7 @@
 
         <div v-else-if="runners.length === 0" class="p-8 text-center">
           <p class="text-theme-textLight">No runners registered</p>
-          <p class="text-sm text-theme-textLight mt-1">Create a runner to get a token, then install and register the runner to execute jobs.</p>
+          <p class="text-sm text-theme-textLight mt-1">Set up a runner and register it to execute jobs.</p>
         </div>
 
         <table v-else class="min-w-full divide-y divide-theme-border">
@@ -74,6 +53,9 @@
                 Status
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
+                Connection
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
                 Created
               </th>
               <th class="px-6 py-3 text-right text-xs font-medium text-theme-textLight uppercase tracking-wider">
@@ -88,13 +70,6 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <code class="text-xs text-theme-textLight font-mono">{{ maskToken(runner.token) }}</code>
-                <button
-                  type="button"
-                  @click="copyToken(runner.token)"
-                  class="ml-1 text-blue-600 hover:text-blue-900 text-xs"
-                >
-                  Copy
-                </button>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-theme-textLight">
                 {{ runner.tags || '—' }}
@@ -108,6 +83,33 @@
                   }">
                   {{ runner.status === 'active' ? 'Active' : runner.status === 'inactive' ? 'Inactive' : 'Maintenance' }}
                 </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span
+                  v-if="connectionStatus(runner.id) === null && canPingRunner(runner)"
+                  class="inline-flex items-center gap-1.5 text-theme-textLight"
+                  title="Checking connection…"
+                >
+                  <span class="inline-block w-2.5 h-2.5 rounded-full bg-theme-textLight/40 animate-pulse" aria-hidden="true" />
+                  <span class="text-xs">Checking…</span>
+                </span>
+                <span
+                  v-else-if="connectionStatus(runner.id) === 'ok'"
+                  class="inline-flex items-center gap-1.5"
+                  title="Runner is reachable"
+                >
+                  <span class="inline-block w-2.5 h-2.5 rounded-full bg-green-500" aria-hidden="true" />
+                  <span class="text-xs text-green-700">Connected</span>
+                </span>
+                <span
+                  v-else-if="connectionStatus(runner.id)?.failed"
+                  class="inline-flex items-center gap-1.5 cursor-help"
+                  :title="connectionStatus(runner.id).error"
+                >
+                  <span class="inline-block w-2.5 h-2.5 rounded-full bg-red-500" aria-hidden="true" />
+                  <span class="text-xs text-red-700">Failed</span>
+                </span>
+                <span v-else class="text-sm text-theme-textLight">—</span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-theme-textLight">
                 {{ formatRelative(runner.createdAt) }}
@@ -195,6 +197,10 @@
                   <input id="create-url" v-model="createForm.url" type="url" class="input-field" placeholder="https://runner.example.com" />
                 </div>
                 <div>
+                  <label for="create-token" class="block text-sm font-medium text-theme-text mb-2">Token</label>
+                  <input id="create-token" v-model="createForm.token" type="text" class="input-field font-mono text-sm" placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000" />
+                </div>
+                <div>
                   <label for="create-publicKey" class="block text-sm font-medium text-theme-text mb-2">Public key</label>
                   <textarea id="create-publicKey" v-model="createForm.publicKey" class="input-field min-h-[80px] font-mono text-xs" placeholder="Paste runner public key (e.g. SSH or PEM)" rows="4" />
                 </div>
@@ -257,6 +263,10 @@
                 <div>
                   <label for="edit-url" class="block text-sm font-medium text-theme-text mb-2">URL</label>
                   <input id="edit-url" v-model="editForm.url" type="url" class="input-field" placeholder="https://runner.example.com" />
+                </div>
+                <div>
+                  <label for="edit-token" class="block text-sm font-medium text-theme-text mb-2">Token</label>
+                  <input id="edit-token" v-model="editForm.token" type="text" class="input-field font-mono text-sm" placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000" />
                 </div>
                 <div>
                   <label for="edit-publicKey" class="block text-sm font-medium text-theme-text mb-2">Public key</label>
@@ -339,6 +349,8 @@ const offset = ref(0)
 const successMessage = ref(null)
 const errorMessage = ref(null)
 
+const connectionStatusMap = ref({})
+
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
 const showDeleteModal = ref(false)
@@ -347,9 +359,9 @@ const updateLoading = ref(false)
 const deleteLoading = ref(false)
 const runnerToDelete = ref(null)
 const runnerToEdit = ref(null)
-const createdRunnerToken = ref(null)
 
 const createForm = reactive({
+  token: '',
   name: '',
   tags: '',
   maxParallelTasks: 10,
@@ -359,6 +371,7 @@ const createForm = reactive({
 })
 
 const editForm = reactive({
+  token: '',
   name: '',
   tags: '',
   maxParallelTasks: 10,
@@ -370,21 +383,67 @@ const editForm = reactive({
 const showingFrom = computed(() => (total.value === 0 ? 0 : offset.value + 1))
 const showingTo = computed(() => Math.min(offset.value + runners.value.length, total.value))
 
+function canPingRunner(runner) {
+  return runner?.url && runner?.publicKey
+}
+
+function connectionStatus(runnerId) {
+  return connectionStatusMap.value[runnerId]
+}
+
+async function pingRunner(runnerId) {
+  connectionStatusMap.value[runnerId] = null
+
+  try {
+    const res = await runnersAPI.ping(runnerId)
+    const status = res.data?.status
+    if (status === 'ok') {
+      connectionStatusMap.value[runnerId] = 'ok'
+    } else {
+      connectionStatusMap.value[runnerId] = {
+        failed: true,
+        error: res.data?.errorMessage || 'Ping failed'
+      }
+    }
+  } catch (err) {
+    connectionStatusMap.value[runnerId] = {
+      failed: true,
+      error: err.response?.data?.errorMessage || 'Connection failed'
+    }
+  }
+}
+
+function loadConnectionStatuses() {
+  connectionStatusMap.value = {}
+  runners.value.forEach((r) => {
+    if (canPingRunner(r)) {
+      pingRunner(r.id)
+    }
+  })
+}
+
 function maskToken(token) {
-  if (!token || token.length < 12) return '••••••••'
-  return token.slice(0, 4) + '…' + token.slice(-8)
+  if (!token || typeof token !== 'string') return '—'
+  const t = token.trim()
+  if (t.length < 12) return '••••••••'
+  if (t.length === 36 && /^[0-9a-f-]{36}$/i.test(t)) {
+    return t.slice(0, 8) + '…' + t.slice(-4)
+  }
+  return t.slice(0, 4) + '…' + t.slice(-8)
 }
 
 async function loadRunners(overrideOffset) {
   loading.value = true
   errorMessage.value = null
   const off = overrideOffset !== undefined ? overrideOffset : offset.value
+
   try {
     const response = await runnersAPI.list({ limit: limit.value, offset: off })
     runners.value = response.data?.runners ?? []
     const meta = response.data?._meta
     total.value = meta?.total ?? runners.value.length
     offset.value = off
+    loadConnectionStatuses()
   } catch (err) {
     console.error('Failed to load runners:', err)
     errorMessage.value = err.response?.data?.errorMessage || 'Failed to load runners'
@@ -399,35 +458,8 @@ function goToPage(newOffset) {
   loadRunners(off)
 }
 
-async function copyToken(token) {
-  try {
-    await navigator.clipboard.writeText(token)
-    successMessage.value = 'Token copied to clipboard'
-    setTimeout(() => { successMessage.value = null }, 3000)
-  } catch {
-    errorMessage.value = 'Failed to copy token'
-    setTimeout(() => { errorMessage.value = null }, 3000)
-  }
-}
-
-async function copyCreatedToken() {
-  if (!createdRunnerToken.value) return
-  try {
-    await navigator.clipboard.writeText(createdRunnerToken.value)
-    successMessage.value = 'Token copied to clipboard'
-    setTimeout(() => { successMessage.value = null }, 3000)
-  } catch {
-    errorMessage.value = 'Failed to copy token'
-    setTimeout(() => { errorMessage.value = null }, 3000)
-  }
-}
-
-function dismissTokenCard() {
-  createdRunnerToken.value = null
-}
-
 function openCreateModal() {
-  createdRunnerToken.value = null
+  createForm.token = ''
   createForm.name = ''
   createForm.tags = ''
   createForm.maxParallelTasks = 10
@@ -443,6 +475,7 @@ function closeCreateModal() {
 
 function openEditModal(runner) {
   runnerToEdit.value = runner
+  editForm.token = runner.token || ''
   editForm.name = runner.name || ''
   editForm.tags = runner.tags || ''
   editForm.maxParallelTasks = runner.maxParallelTasks ?? 10
@@ -471,9 +504,10 @@ async function handleCreate() {
   createLoading.value = true
   errorMessage.value = null
   successMessage.value = null
-  createdRunnerToken.value = null
+
   try {
-    const response = await runnersAPI.create({
+    await runnersAPI.create({
+      token: createForm.token.trim(),
       name: createForm.name,
       tags: createForm.tags,
       maxParallelTasks: createForm.maxParallelTasks,
@@ -481,14 +515,10 @@ async function handleCreate() {
       url: createForm.url,
       publicKey: createForm.publicKey || undefined
     })
-    const data = response.data
-    if (data?.token) {
-      createdRunnerToken.value = data.token
-      successMessage.value = 'Runner created. Copy the token to register the runner.'
-    }
+    successMessage.value = 'Runner created.'
     closeCreateModal()
     await loadRunners()
-    if (successMessage.value) setTimeout(() => { successMessage.value = null }, 5000)
+    setTimeout(() => { successMessage.value = null }, 5000)
   } catch (err) {
     console.error('Failed to create runner:', err)
     errorMessage.value = err.response?.data?.errorMessage || 'Failed to create runner'
@@ -501,8 +531,10 @@ async function handleUpdate() {
   if (!runnerToEdit.value?.id) return
   updateLoading.value = true
   errorMessage.value = null
+
   try {
     await runnersAPI.update(runnerToEdit.value.id, {
+      token: editForm.token.trim() || null,
       name: editForm.name || null,
       tags: editForm.tags || null,
       maxParallelTasks: editForm.maxParallelTasks,
@@ -526,6 +558,7 @@ async function handleDelete() {
   if (!runnerToDelete.value?.id) return
   deleteLoading.value = true
   errorMessage.value = null
+
   try {
     await runnersAPI.delete(runnerToDelete.value.id)
     successMessage.value = 'Runner deleted'

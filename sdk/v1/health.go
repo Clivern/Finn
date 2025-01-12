@@ -14,7 +14,7 @@ type HealthResponse struct {
 	Status string `json:"status"`
 }
 
-// Health checks the health status of the Lapin API
+// Health checks the health status of the Finn API
 func (c *Client) Health() (*HealthResponse, error) {
 	resp, err := c.doRequest(http.MethodGet, "/api/v1/public/_health", nil)
 	if err != nil {
@@ -29,7 +29,7 @@ func (c *Client) Health() (*HealthResponse, error) {
 	return &healthResp, nil
 }
 
-// Health checks the health status of the Lapin API at the given base URL
+// Health checks the health status of the Finn API at the given base URL
 func Health(baseURL string) (*HealthResponse, error) {
 	client, err := NewClient(ClientConfig{BaseURL: baseURL})
 	if err != nil {

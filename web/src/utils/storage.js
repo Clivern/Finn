@@ -1,5 +1,5 @@
-const USER_STORAGE_KEY = 'lapin_user'
-const WORKSPACE_STORAGE_KEY = 'lapin_workspace'
+const USER_STORAGE_KEY = 'finn_user'
+const WORKSPACE_STORAGE_KEY = 'finn_workspace'
 
 export const loadUserFromStorage = () => {
   try {

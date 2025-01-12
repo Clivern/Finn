@@ -7,7 +7,7 @@ package module
 import (
 	"database/sql"
 
-	"github.com/clivern/lapin/db"
+	"github.com/clivern/finn/db"
 )
 
 // Workspace permission constants. Use with Permission.Has for workspace-scoped checks.

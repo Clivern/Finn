@@ -41,7 +41,7 @@
                   type="text"
                   required
                   class="input-field max-w-md"
-                  placeholder="Lapin"
+                  placeholder="Finn"
                   :disabled="loading"
                 >
               </div>
@@ -53,7 +53,7 @@
                   type="email"
                   required
                   class="input-field max-w-md"
-                  placeholder="admin@lapin.example.com"
+                  placeholder="admin@finn.example.com"
                   :disabled="loading"
                 >
               </div>
@@ -65,7 +65,7 @@
                   type="url"
                   required
                   class="input-field max-w-md"
-                  placeholder="https://lapin.example.com"
+                  placeholder="https://finn.example.com"
                   :disabled="loading"
                 >
               </div>

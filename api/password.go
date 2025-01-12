@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/clivern/lapin/db"
-	"github.com/clivern/lapin/module"
-	"github.com/clivern/lapin/service"
+	"github.com/clivern/finn/db"
+	"github.com/clivern/finn/module"
+	"github.com/clivern/finn/service"
 	"github.com/google/uuid"
 
 	"github.com/rs/zerolog/log"

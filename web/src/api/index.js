@@ -90,6 +90,7 @@ export const runnersAPI = {
   create: (data) => api.post('/runners', data),
   update: (id, data) => api.put(`/runners/${id}`, data),
   delete: (id) => api.delete(`/runners/${id}`),
+  ping: (id) => api.post(`/runners/${id}/ping`),
 }
 
 // API endpoints for settings

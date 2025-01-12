@@ -3,9 +3,9 @@
     <div class="max-w-md w-full">
       <div class="text-center mb-10">
         <div class="flex justify-center mb-6">
-          <img src="/logo.png" alt="Lapin Logo" class="h-24 w-auto">
+          <img src="/logo.png" alt="Finn Logo" class="h-24 w-auto">
         </div>
-        <h1 class="text-2xl font-semibold text-theme-text mb-2">Lapin</h1>
+        <h1 class="text-2xl font-semibold text-theme-text mb-2">Finn</h1>
         <p class="text-sm text-theme-textLight">Configure your platform and create an admin account</p>
       </div>
 
@@ -23,7 +23,7 @@
               minlength="2"
               maxlength="50"
               class="input-field"
-              placeholder="Lapin"
+              placeholder="Finn"
               :disabled="loading"
             >
             <p class="text-xs text-theme-textLight mt-1.5">A friendly name for this platform</p>
@@ -39,7 +39,7 @@
               type="url"
               required
               class="input-field"
-              placeholder="https://lapin.io"
+              placeholder="https://finn.io"
               :disabled="loading"
             >
             <p class="text-xs text-theme-textLight mt-1.5">The public URL where this platform will be accessible</p>
@@ -55,7 +55,7 @@
               type="email"
               required
               class="input-field"
-              placeholder="admin@lapin.io"
+              placeholder="admin@finn.io"
               :disabled="loading"
             >
             <p class="text-xs text-theme-textLight mt-1.5">The contact email for this platform</p>
@@ -80,7 +80,7 @@
               type="email"
               required
               class="input-field"
-              placeholder="hello@lapin.example.com"
+              placeholder="hello@finn.example.com"
               :disabled="loading"
             >
             <p class="text-xs text-theme-textLight mt-1.5">The email address for the admin account</p>
@@ -151,7 +151,7 @@
       </div>
 
       <p class="text-center text-xs text-theme-textLight mt-8">
-        Copyright © 2025 Lapin. All rights reserved.
+        Copyright © 2025 Finn. All rights reserved.
       </p>
     </div>
   </div>

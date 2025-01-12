@@ -1,11 +1,11 @@
-# Lapin SDK v1
+# Finn SDK v1
 
-A Go SDK for interacting with the Lapin API.
+A Go SDK for interacting with the Finn API.
 
 ## Installation
 
 ```bash
-go get github.com/clivern/lapin/sdk/v1
+go get github.com/clivern/finn/sdk/v1
 ```
 
 ## Usage
@@ -19,7 +19,7 @@ import (
     "fmt"
     "log"
 
-    "github.com/clivern/lapin/sdk/v1"
+    "github.com/clivern/finn/sdk/v1"
 )
 
 func main() {

@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/clivern/lapin/db"
+	"github.com/clivern/finn/db"
 	"github.com/rs/zerolog/log"
 )
 

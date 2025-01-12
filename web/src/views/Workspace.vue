@@ -107,8 +107,8 @@
                     <tr v-for="wu in workspaceUsers" :key="wu.id" class="hover:bg-theme-hover">
                       <td class="px-6 py-4 whitespace-nowrap">
                         <div>
-                          <p class="text-sm font-medium text-theme-text">{{ wu.user?.name || wu.user?.email || wu.userId }}</p>
-                          <p v-if="wu.user?.email" class="text-xs text-theme-textLight">{{ wu.user.email }}</p>
+                          <p class="text-sm font-medium text-theme-text">{{ wu.name || wu.email }}</p>
+                          <p v-if="wu.email" class="text-xs text-theme-textLight">{{ wu.email }}</p>
                         </div>
                       </td>
                       <td class="px-6 py-4 whitespace-nowrap">
@@ -233,7 +233,7 @@
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-sm p-6">
             <h2 id="edit-role-title" class="text-lg font-semibold text-theme-text">Edit role</h2>
             <p class="mt-1 text-sm text-theme-textLight">
-              {{ editRoleModalUser?.user?.name || editRoleModalUser?.user?.email }}
+              {{ editRoleModalUser?.name || editRoleModalUser?.email }}
             </p>
             <form @submit.prevent="saveRole" class="mt-4 space-y-4">
               <div>
@@ -270,7 +270,7 @@
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-sm p-6">
             <h2 id="remove-user-title" class="text-lg font-semibold text-theme-text">Remove member</h2>
             <p class="mt-2 text-sm text-theme-textLight">
-              Remove <span class="font-medium text-theme-text">{{ removeUserModalUser?.user?.name || removeUserModalUser?.user?.email || removeUserModalUser?.userId }}</span> from this workspace?
+              Remove <span class="font-medium text-theme-text">{{ removeUserModalUser?.name || removeUserModalUser?.email }}</span> from this workspace?
             </p>
             <div class="mt-6 flex gap-3 justify-end">
               <button type="button" @click="removeUserModalUser = null" class="btn-secondary" :disabled="removeUserSaving">Cancel</button>
@@ -359,17 +359,13 @@ async function saveName() {
   if (!workspace.value || !name || name === workspace.value.name) return
   nameSaving.value = true
   errorMessage.value = null
+
   try {
     const res = await workspaceAPI.update(workspace.value.id, { name })
-    const updated = res.data
-    if (updated) {
-      workspace.value = { ...workspace.value, ...updated }
-      saveWorkspaceToStorage(workspace.value)
-      successMessage.value = 'Workspace name updated.'
-      clearSuccessAfter()
-    } else {
-      errorMessage.value = 'Failed to update name'
-    }
+    workspace.value = { ...workspace.value, ...res.data }
+    saveWorkspaceToStorage(workspace.value)
+    successMessage.value = 'Workspace name updated.'
+    clearSuccessAfter()
   } catch (err) {
     errorMessage.value = err.response?.data?.errorMessage || 'Failed to update workspace name'
   } finally {
@@ -380,19 +376,14 @@ async function saveName() {
 async function loadWorkspaceUsers() {
   if (!workspace.value?.id) return
   usersLoading.value = true
+
   try {
     const offset = (membersPage.value - 1) * membersLimit.value
     const res = await workspaceUsersAPI.list(workspace.value.id, { limit: membersLimit.value, offset })
-    workspaceUsers.value = res.data?.workspaceUsers ?? []
-    const meta = res.data?._meta
-    if (meta) membersTotal.value = meta.total ?? 0
-    else membersTotal.value = workspaceUsers.value.length
-    // If current page is empty and not first page, show previous page
-    if (workspaceUsers.value.length === 0 && membersPage.value > 1 && membersTotal.value > 0) {
-      membersPage.value = membersPage.value - 1
-      await loadWorkspaceUsers()
-    }
-  } catch {
+    workspaceUsers.value = res.data.users ?? []
+    membersTotal.value = res.data._meta.total ?? 0
+  } catch (err) {
+    errorMessage.value = err.response?.data?.errorMessage || 'Failed to load workspace users'
     workspaceUsers.value = []
     membersTotal.value = 0
   } finally {
@@ -419,7 +410,7 @@ function canEditOrRemoveUser(wu) {
 const currentUserId = ref(null)
 function setCurrentUserId() {
   try {
-    const user = JSON.parse(localStorage.getItem('lapin_user') || '{}')
+    const user = JSON.parse(localStorage.getItem('finn_user') || '{}')
     currentUserId.value = user?.id ?? null
   } catch {
     currentUserId.value = null
@@ -436,6 +427,7 @@ const allUsersLoading = ref(false)
 async function loadAllUsers() {
   if (!workspace.value?.id) return
   allUsersLoading.value = true
+
   try {
     const res = await workspaceUsersAPI.listAllUsers(
       workspace.value.id,
@@ -465,6 +457,7 @@ async function addUser() {
   if (!workspace.value?.id || !addUserUserId.value || !addUserRole.value) return
   addUserSaving.value = true
   errorMessage.value = null
+
   try {
     await workspaceUsersAPI.add(workspace.value.id, { userId: addUserUserId.value, role: addUserRole.value })
     addUserModalOpen.value = false
@@ -492,6 +485,7 @@ async function saveRole() {
   if (!workspace.value?.id || !wu?.userId) return
   editRoleSaving.value = true
   errorMessage.value = null
+
   try {
     await workspaceUsersAPI.updateRole(workspace.value.id, wu.userId, { role: editRoleValue.value })
     editRoleModalUser.value = null
@@ -517,6 +511,7 @@ async function confirmRemoveUser() {
   if (!workspace.value?.id || !wu?.userId) return
   removeUserSaving.value = true
   errorMessage.value = null
+
   try {
     await workspaceUsersAPI.remove(workspace.value.id, wu.userId)
     removeUserModalUser.value = null
@@ -533,7 +528,6 @@ async function confirmRemoveUser() {
 const deleteModalOpen = ref(false)
 const deleteConfirmName = ref('')
 const deleteSaving = ref(false)
-
 const canConfirmDelete = computed(() => workspace.value?.name && deleteConfirmName.value.trim() === workspace.value.name)
 
 function openDeleteModal() {
@@ -552,6 +546,7 @@ async function confirmDelete() {
   if (!workspace.value || !canConfirmDelete.value) return
   deleteSaving.value = true
   errorMessage.value = null
+
   try {
     await workspaceAPI.delete(workspace.value.id)
     if (loadWorkspaceFromStorage()?.id === workspace.value.id) {
@@ -583,12 +578,11 @@ onMounted(async () => {
   }
   workspace.value = { ...stored }
   errorMessage.value = null
+
   try {
     const res = await workspaceAPI.get(stored.id)
-    if (res.data) {
-      workspace.value = { ...workspace.value, ...res.data, role: stored.role }
-      saveWorkspaceToStorage(workspace.value)
-    }
+    workspace.value = { ...workspace.value, ...res.data }
+    saveWorkspaceToStorage(workspace.value)
   } catch (err) {
     if (err.response?.status === 403 || err.response?.status === 404) {
       removeWorkspaceFromStorage()

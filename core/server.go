@@ -17,9 +17,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/clivern/lapin/api"
-	"github.com/clivern/lapin/db"
-	"github.com/clivern/lapin/middleware"
+	"github.com/clivern/finn/api"
+	"github.com/clivern/finn/db"
+	"github.com/clivern/finn/middleware"
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
@@ -29,7 +29,7 @@ import (
 )
 
 // Setup creates and configures the HTTP server
-func Setup(Static embed.FS) http.Handler {
+func SetupServer(Static embed.FS) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(chimiddleware.Recoverer)
@@ -96,6 +96,7 @@ func Setup(Static embed.FS) http.Handler {
 		r.Post("/api/v1/runners", api.CreateRunnerAction)
 		r.Put("/api/v1/runners/{id}", api.UpdateRunnerAction)
 		r.Delete("/api/v1/runners/{id}", api.DeleteRunnerAction)
+		r.Post("/api/v1/runners/{id}/ping", api.PingRunnerAction)
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))
@@ -193,7 +194,7 @@ func InitDatabase() error {
 }
 
 // Run starts the HTTP server with graceful shutdown support
-func Run(handler http.Handler) error {
+func RunServer(handler http.Handler) error {
 	if err := InitDatabase(); err != nil {
 		return fmt.Errorf("failed to initialize database: %w", err)
 	}

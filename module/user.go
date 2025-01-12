@@ -8,8 +8,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/clivern/lapin/db"
-	"github.com/clivern/lapin/service"
+	"github.com/clivern/finn/db"
+	"github.com/clivern/finn/service"
 )
 
 var (

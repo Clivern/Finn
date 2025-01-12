@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/clivern/lapin/db"
-	"github.com/clivern/lapin/module"
-	"github.com/clivern/lapin/service"
+	"github.com/clivern/finn/db"
+	"github.com/clivern/finn/module"
+	"github.com/clivern/finn/service"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -96,7 +96,7 @@ func LoginAction(w http.ResponseWriter, r *http.Request) {
 		cookieOptions.MaxAge = 0
 	}
 
-	service.SetCookie(w, "_lapin_session", session.Token, cookieOptions)
+	service.SetCookie(w, "_finn_session", session.Token, cookieOptions)
 	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"successMessage": "Login successful",
 		"user": map[string]interface{}{

@@ -8,7 +8,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/clivern/lapin/service"
+	"github.com/clivern/finn/service"
 
 	"github.com/rs/zerolog/log"
 )

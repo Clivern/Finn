@@ -312,9 +312,8 @@ async function handleUpdate() {
 
   try {
     const res = await workspaceAPI.update(workspace.id, { name })
-    const updated = res.data
-    if (updated && loadWorkspaceFromStorage()?.id === workspace.id) {
-      saveWorkspaceToStorage({ ...loadWorkspaceFromStorage(), ...updated })
+    if (loadWorkspaceFromStorage()?.id === workspace.id) {
+      saveWorkspaceToStorage({ ...loadWorkspaceFromStorage(), ...res.data })
     }
     editModalWorkspace.value = null
     editWorkspaceName.value = ''

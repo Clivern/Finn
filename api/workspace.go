@@ -10,10 +10,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/clivern/lapin/db"
-	"github.com/clivern/lapin/middleware"
-	"github.com/clivern/lapin/module"
-	"github.com/clivern/lapin/service"
+	"github.com/clivern/finn/db"
+	"github.com/clivern/finn/middleware"
+	"github.com/clivern/finn/module"
+	"github.com/clivern/finn/service"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )
@@ -62,10 +62,12 @@ func CreateWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Str("workspaceID", workspace.ID.String()).Str("userID", user.ID.String()).Msg("User added to workspace as owner")
 
 	service.WriteJSON(w, http.StatusCreated, map[string]interface{}{
-		"id":        workspace.ID,
-		"name":      workspace.Name,
-		"createdAt": workspace.CreatedAt.UTC().Format(time.RFC3339),
-		"updatedAt": workspace.UpdatedAt.UTC().Format(time.RFC3339),
+		"id":           workspace.ID,
+		"name":         workspace.Name,
+		"membersCount": 1,
+		"role":         db.UserRoleOwner,
+		"createdAt":    workspace.CreatedAt.UTC().Format(time.RFC3339),
+		"updatedAt":    workspace.UpdatedAt.UTC().Format(time.RFC3339),
 	})
 }
 
@@ -197,11 +199,14 @@ func GetWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	membersCount, _ := wsModule.CountWorkspaceMembers(workspace.ID)
+
 	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"id":        workspace.ID,
-		"name":      workspace.Name,
-		"createdAt": workspace.CreatedAt.UTC().Format(time.RFC3339),
-		"updatedAt": workspace.UpdatedAt.UTC().Format(time.RFC3339),
+		"id":           workspace.ID,
+		"name":         workspace.Name,
+		"membersCount": membersCount,
+		"createdAt":    workspace.CreatedAt.UTC().Format(time.RFC3339),
+		"updatedAt":    workspace.UpdatedAt.UTC().Format(time.RFC3339),
 	})
 }
 
@@ -285,12 +290,15 @@ func UpdateWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	membersCount, _ := wsModule.CountWorkspaceMembers(workspace.ID)
+
 	log.Info().Str("workspaceID", workspace.ID.String()).Msg("Workspace updated successfully")
 	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"id":        workspace.ID,
-		"name":      workspace.Name,
-		"createdAt": workspace.CreatedAt.UTC().Format(time.RFC3339),
-		"updatedAt": workspace.UpdatedAt.UTC().Format(time.RFC3339),
+		"id":           workspace.ID,
+		"name":         workspace.Name,
+		"membersCount": membersCount,
+		"createdAt":    workspace.CreatedAt.UTC().Format(time.RFC3339),
+		"updatedAt":    workspace.UpdatedAt.UTC().Format(time.RFC3339),
 	})
 }
 
@@ -349,6 +357,8 @@ func DeleteWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
+	log.Info().Str("workspaceID", idStr).Msg("Deleting workspace")
 
 	err = wsModule.DeleteWorkspace(db.ID(idStr))
 	if err != nil {
