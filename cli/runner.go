@@ -10,7 +10,7 @@ import (
 	"os"
 
 	"github.com/clivern/finn/core"
-	"github.com/clivern/finn/service/runner"
+	"github.com/clivern/finn/pkg/runner"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -33,8 +33,7 @@ var runnerCmd = &cobra.Command{
 			panic(fmt.Sprintf("Runner init: %s", err.Error()))
 		}
 
-		r := core.SetupRunner(db)
-		if err := core.RunRunner(r, db); err != nil {
+		if err := core.RunRunner(db); err != nil {
 			panic(fmt.Sprintf("Runner error: %s", err.Error()))
 		}
 	},
@@ -44,7 +43,7 @@ var runnerIdentityOutput string
 
 var runnerIdentityCmd = &cobra.Command{
 	Use:   "identity",
-	Short: "Output runner identity token and public key",
+	Short: "Output runner identity token (used for signing with mgmt)",
 	Run: func(_ *cobra.Command, _ []string) {
 		if err := core.Load(config); err != nil {
 			fmt.Fprintln(os.Stderr, err.Error())
@@ -64,7 +63,7 @@ var runnerIdentityCmd = &cobra.Command{
 		}
 		defer db.Close()
 
-		mod := &runner.Module{Bolt: db, Key: &runner.Key{}}
+		mod := &runner.Module{Bolt: db}
 		identity, err := mod.GetIdentity()
 		if err != nil || identity == nil {
 			identity, err = mod.Init()
@@ -77,8 +76,8 @@ var runnerIdentityCmd = &cobra.Command{
 		switch runnerIdentityOutput {
 		case "json":
 			out := map[string]string{
-				"token":      identity.ID,
-				"public_key": string(identity.PublicKey),
+				"id":    identity.ID,
+				"token": identity.Token,
 			}
 			enc := json.NewEncoder(os.Stdout)
 			enc.SetEscapeHTML(false)
@@ -87,12 +86,7 @@ var runnerIdentityCmd = &cobra.Command{
 				os.Exit(1)
 			}
 		default:
-			fmt.Printf("Token: %s\n\n", identity.ID)
-			fmt.Println("Public Key:")
-			fmt.Print(string(identity.PublicKey))
-			if len(identity.PublicKey) > 0 && identity.PublicKey[len(identity.PublicKey)-1] != '\n' {
-				fmt.Println()
-			}
+			fmt.Printf("ID: %s\nToken: %s\n", identity.ID, identity.Token)
 		}
 	},
 }

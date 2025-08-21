@@ -10,13 +10,11 @@ import (
 )
 
 // BasicAuth creates a basic authentication middleware
-// This is used for metrics endpoint
 func BasicAuth(username, password string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			user, pass, ok := r.BasicAuth()
 
-			// Use constant time comparison to prevent timing attacks
 			userMatch := subtle.ConstantTimeCompare([]byte(user), []byte(username)) == 1
 			passMatch := subtle.ConstantTimeCompare([]byte(pass), []byte(password)) == 1
 

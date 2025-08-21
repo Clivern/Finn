@@ -8,18 +8,20 @@ import (
 	"net/http"
 
 	"github.com/clivern/finn/db"
-	"github.com/clivern/finn/service/util"
+	"github.com/clivern/finn/pkg/util"
 
 	"github.com/rs/zerolog/log"
 )
 
-// ReadyAction handles readiness check requests
+// ReadyAction returns whether the app is ready (e.g. DB reachable).
 func ReadyAction(w http.ResponseWriter, _ *http.Request) {
 	log.Debug().Msg("Readiness check endpoint called")
 
 	database := db.GetDB()
 	if err := database.Ping(); err != nil {
-		log.Error().Err(err).Msg("Database ping failed during readiness check")
+		log.Error().
+			Err(err).
+			Msg("Database ping failed during readiness check")
 
 		util.WriteJSON(w, http.StatusServiceUnavailable, map[string]interface{}{
 			"status": "not_ok",

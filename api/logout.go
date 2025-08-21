@@ -11,12 +11,12 @@ import (
 	"github.com/clivern/finn/locale"
 	"github.com/clivern/finn/middleware"
 	"github.com/clivern/finn/module"
-	"github.com/clivern/finn/service/util"
+	"github.com/clivern/finn/pkg/util"
 
 	"github.com/rs/zerolog/log"
 )
 
-// LogoutAction handles logout requests.
+// LogoutAction logs the user out and revokes their session.
 func LogoutAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Logout endpoint called")
 
@@ -37,8 +37,16 @@ func LogoutAction(w http.ResponseWriter, r *http.Request) {
 
 	sessionManager.CleanupExpiredSessions()
 	if err := sessionManager.RevokeUserSessions(user.ID); err != nil {
-		log.Error().Err(err).Msg("Failed to revoke session")
+		log.Error().
+			Str("userID", user.ID.String()).
+			Err(err).
+			Msg("Failed to revoke session")
+	} else {
+		log.Info().
+			Str("userID", user.ID.String()).
+			Msg("Session revoked successfully")
 	}
+
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"successMessage": locale.TR(r, "logoutSuccessful"),
 	})

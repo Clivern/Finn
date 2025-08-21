@@ -12,20 +12,20 @@ import (
 	"github.com/clivern/finn/db"
 	"github.com/clivern/finn/locale"
 	"github.com/clivern/finn/module"
-	"github.com/clivern/finn/service/util"
+	"github.com/clivern/finn/pkg/util"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
-// LoginRequest represents the login request body
+// LoginRequest is the body you send to log in.
 type LoginRequest struct {
 	Email      string `json:"email" validate:"required,email" label:"Email"`
 	Password   string `json:"password" validate:"required" label:"Password"`
 	RememberMe bool   `json:"rememberMe" validate:"omitempty,boolean" label:"Remember Me"`
 }
 
-// LoginAction handles login requests
+// LoginAction logs the user in and creates a session.
 func LoginAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Login endpoint called")
 
@@ -57,7 +57,9 @@ func LoginAction(w http.ResponseWriter, r *http.Request) {
 	maintenanceOpt, err := optionRepo.Get("maintenance_mode")
 
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get maintenance_mode option")
+		log.Error().
+			Err(err).
+			Msg("Failed to get maintenance_mode option")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCheckMaintenance"),
 		})

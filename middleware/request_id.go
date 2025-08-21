@@ -18,7 +18,6 @@ type contextKey string
 const RequestIDKey contextKey = "request_id"
 
 // RequestID middleware adds a unique request ID to each request
-// It checks for existing X-Request-ID header, or generates a new UUID
 func RequestID(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requestID := r.Header.Get("X-Request-ID")

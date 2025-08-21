@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// WorkspaceEvent is a single row in the workspace_events table (workspace-scoped event log)
+// WorkspaceEvent is one row in the workspace event log.
 type WorkspaceEvent struct {
 	ID          ID
 	WorkspaceID ID
@@ -22,20 +22,20 @@ type WorkspaceEvent struct {
 // Workspace event data structs (payload for each event type).
 // Unmarshal event.Data into the appropriate struct based on event.Type.
 
-// WorkspaceEventInventoryUpdated is the payload for type "inventory_updated"
+// WorkspaceEventInventoryUpdated is the event data for "inventory_updated".
 type WorkspaceEventInventoryUpdated struct {
 	InventoryID string `json:"inventory_id"`
 	UpdatedBy   string `json:"updated_by,omitempty"`
 }
 
-// WorkspaceEventMemberAdded is the payload for type "member_added"
+// WorkspaceEventMemberAdded is the event data for "member_added".
 type WorkspaceEventMemberAdded struct {
 	UserID  string `json:"user_id"`
 	Role    string `json:"role"`
 	AddedBy string `json:"added_by,omitempty"`
 }
 
-// WorkspaceEventRepository defines workspace event persistence
+// WorkspaceEventRepository is the interface for workspace event persistence.
 type WorkspaceEventRepository interface {
 	Create(workspaceID ID, eventType string, data interface{}) error
 	GetByID(id ID) (*WorkspaceEvent, error)

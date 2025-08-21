@@ -31,9 +31,11 @@ Track tasks, improvements, and planned work for the project.
 - [x] Profile Logic
 - [x] Workspaces Logic
 - [x] Workspace Logic
-- [ ] Runners Logic
 - [ ] Workspace SSH Keys Logic
 - [ ] Workspace Git Credentials Logic
 - [ ] Workspace Git Repositories Logic
 - [ ] TF Backend Logic
+- [ ] Runners Logic
 - [ ] Locales Switch Logic
+- [ ] AI Assistant Logic
+- [ ] Runner GRPC Server.

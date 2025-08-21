@@ -18,8 +18,10 @@ import (
 	"time"
 
 	"github.com/clivern/finn/api"
+	apiw "github.com/clivern/finn/api/workspace"
 	"github.com/clivern/finn/db"
 	"github.com/clivern/finn/middleware"
+	"github.com/clivern/finn/pkg/mgmt"
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
@@ -56,15 +58,21 @@ func SetupServer(Static embed.FS) http.Handler {
 		r.Post("/api/v1/public/action/reset-password", api.ResetPasswordAction)
 		r.Get("/api/v1/public/action/invite/token/{token}", api.GetUserInviteByTokenAction)
 		r.Post("/api/v1/public/action/register", api.RegisterAction)
-		r.Post("/client/{slug}/state", api.CreateBackendStateAction)
-		r.Get("/client/{slug}/state", api.GetBackendStateAction)
-		r.Post("/client/{slug}/lock", api.LockBackendStateAction)
-		r.Post("/client/{slug}/unlock", api.UnlockBackendStateAction)
+		r.Post("/client/{slug}/state", apiw.CreateBackendStateAction)
+		r.Get("/client/{slug}/state", apiw.GetBackendStateAction)
+		r.Post("/client/{slug}/lock", apiw.LockBackendStateAction)
+		r.Post("/client/{slug}/unlock", apiw.UnlockBackendStateAction)
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))
 		r.Get("/api/v1/action/profile", api.GetProfileAction)
 		r.Put("/api/v1/action/profile", api.UpdateProfileAction)
+	})
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))
+		r.Get("/api/v1/ai/status", api.GetStatusAction)
+		r.Post("/api/v1/ai/messages", api.CreateMessageAction)
+		r.Get("/api/v1/ai/messages", api.GetMessagesAction)
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.RequireRole(db.UserRoleAdmin))
@@ -112,45 +120,47 @@ func SetupServer(Static embed.FS) http.Handler {
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))
-		r.Post("/api/v1/workspaces/{workspaceID}/users", api.AddWorkspaceUserAction)
-		r.Get("/api/v1/workspaces/{workspaceID}/users", api.ListWorkspaceUsersAction)
-		r.Get("/api/v1/workspaces/{workspaceID}/all-users", api.ListAllUsersAction)
-		r.Get("/api/v1/workspaces/{workspaceID}/users/{userID}", api.GetWorkspaceUserAction)
-		r.Put("/api/v1/workspaces/{workspaceID}/users/{userID}", api.UpdateWorkspaceUserRoleAction)
-		r.Delete("/api/v1/workspaces/{workspaceID}/users/{userID}", api.RemoveWorkspaceUserAction)
+		r.Post("/api/v1/workspaces/{workspaceID}/users", apiw.AddWorkspaceUserAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/users", apiw.ListWorkspaceUsersAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/all-users", apiw.ListAllUsersAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/users/{userID}", apiw.GetWorkspaceUserAction)
+		r.Put("/api/v1/workspaces/{workspaceID}/users/{userID}", apiw.UpdateWorkspaceUserRoleAction)
+		r.Delete("/api/v1/workspaces/{workspaceID}/users/{userID}", apiw.RemoveWorkspaceUserAction)
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))
-		r.Post("/api/v1/workspaces/{workspaceID}/repositories", api.CreateWorkspaceRepositoryAction)
-		r.Get("/api/v1/workspaces/{workspaceID}/repositories", api.ListWorkspaceRepositoriesAction)
-		r.Get("/api/v1/workspaces/{workspaceID}/repositories/{id}", api.GetWorkspaceRepositoryAction)
-		r.Put("/api/v1/workspaces/{workspaceID}/repositories/{id}", api.UpdateWorkspaceRepositoryAction)
-		r.Delete("/api/v1/workspaces/{workspaceID}/repositories/{id}", api.DeleteWorkspaceRepositoryAction)
+		r.Post("/api/v1/workspaces/{workspaceID}/repositories", apiw.CreateWorkspaceRepositoryAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/repositories", apiw.ListWorkspaceRepositoriesAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/repositories/{id}", apiw.GetWorkspaceRepositoryAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/repositories/{id}/tasks/{taskID}", apiw.GetWorkspaceRepositoryTaskAction)
+		r.Put("/api/v1/workspaces/{workspaceID}/repositories/{id}", apiw.UpdateWorkspaceRepositoryAction)
+		r.Delete("/api/v1/workspaces/{workspaceID}/repositories/{id}", apiw.DeleteWorkspaceRepositoryAction)
+		r.Post("/api/v1/workspaces/{workspaceID}/repositories/{id}/clone", apiw.CloneWorkspaceRepositoryAction)
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))
-		r.Post("/api/v1/workspaces/{workspaceID}/keys", api.CreateWorkspaceSSHKeyAction)
-		r.Get("/api/v1/workspaces/{workspaceID}/keys", api.ListWorkspaceSSHKeysAction)
-		r.Get("/api/v1/workspaces/{workspaceID}/keys/{id}", api.GetWorkspaceSSHKeyAction)
-		r.Put("/api/v1/workspaces/{workspaceID}/keys/{id}", api.UpdateWorkspaceSSHKeyAction)
-		r.Delete("/api/v1/workspaces/{workspaceID}/keys/{id}", api.DeleteWorkspaceSSHKeyAction)
+		r.Post("/api/v1/workspaces/{workspaceID}/keys", apiw.CreateWorkspaceSSHKeyAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/keys", apiw.ListWorkspaceSSHKeysAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/keys/{id}", apiw.GetWorkspaceSSHKeyAction)
+		r.Put("/api/v1/workspaces/{workspaceID}/keys/{id}", apiw.UpdateWorkspaceSSHKeyAction)
+		r.Delete("/api/v1/workspaces/{workspaceID}/keys/{id}", apiw.DeleteWorkspaceSSHKeyAction)
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))
-		r.Post("/api/v1/workspaces/{workspaceID}/credentials", api.CreateWorkspaceGitCredAction)
-		r.Get("/api/v1/workspaces/{workspaceID}/credentials", api.ListWorkspaceGitCredsAction)
-		r.Get("/api/v1/workspaces/{workspaceID}/credentials/{id}", api.GetWorkspaceGitCredAction)
-		r.Put("/api/v1/workspaces/{workspaceID}/credentials/{id}", api.UpdateWorkspaceGitCredAction)
-		r.Delete("/api/v1/workspaces/{workspaceID}/credentials/{id}", api.DeleteWorkspaceGitCredAction)
+		r.Post("/api/v1/workspaces/{workspaceID}/credentials", apiw.CreateWorkspaceGitCredAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/credentials", apiw.ListWorkspaceGitCredsAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/credentials/{id}", apiw.GetWorkspaceGitCredAction)
+		r.Put("/api/v1/workspaces/{workspaceID}/credentials/{id}", apiw.UpdateWorkspaceGitCredAction)
+		r.Delete("/api/v1/workspaces/{workspaceID}/credentials/{id}", apiw.DeleteWorkspaceGitCredAction)
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))
-		r.Post("/api/v1/workspaces/{workspaceID}/backends", api.CreateWorkspaceBackendAction)
-		r.Get("/api/v1/workspaces/{workspaceID}/backends", api.ListWorkspaceBackendsAction)
-		r.Get("/api/v1/workspaces/{workspaceID}/backends/{id}", api.GetWorkspaceBackendAction)
-		r.Get("/api/v1/workspaces/{workspaceID}/backends/{id}/password", api.RevealWorkspaceBackendPasswordAction)
-		r.Put("/api/v1/workspaces/{workspaceID}/backends/{id}", api.UpdateWorkspaceBackendAction)
-		r.Delete("/api/v1/workspaces/{workspaceID}/backends/{id}", api.DeleteWorkspaceBackendAction)
+		r.Post("/api/v1/workspaces/{workspaceID}/backends", apiw.CreateWorkspaceBackendAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/backends", apiw.ListWorkspaceBackendsAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/backends/{id}", apiw.GetWorkspaceBackendAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/backends/{id}/password", apiw.RevealWorkspaceBackendPasswordAction)
+		r.Put("/api/v1/workspaces/{workspaceID}/backends/{id}", apiw.UpdateWorkspaceBackendAction)
+		r.Delete("/api/v1/workspaces/{workspaceID}/backends/{id}", apiw.DeleteWorkspaceBackendAction)
 	})
 
 	r.With(middleware.BasicAuth(
@@ -214,9 +224,20 @@ func RunServer(handler http.Handler) error {
 
 	defer func() {
 		if err := db.CloseDB(); err != nil {
-			log.Error().Err(err).Msg("Error closing database connection")
+			log.Error().
+				Err(err).
+				Msg("Error closing database connection")
 		}
 	}()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	worker := mgmt.NewWorker(
+		db.NewWorkspaceRepositoryCloneTaskRepository(db.GetDB()),
+		db.NewRunnerRepository(db.GetDB()),
+	)
+	mgmt.SetDefaultWorker(worker)
+	defer cancel()
+	go worker.Run(ctx)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", strconv.Itoa(viper.GetInt("app.port"))),
@@ -256,6 +277,8 @@ func RunServer(handler http.Handler) error {
 		log.Info().
 			Str("signal", sig.String()).
 			Msg("Received shutdown signal")
+
+		cancel()
 
 		shutdownTimeout := 30 * time.Second
 

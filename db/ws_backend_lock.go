@@ -25,7 +25,7 @@ type WorkspaceBackendLock struct {
 	UpdatedAt time.Time
 }
 
-// WorkspaceBackendLockRepository defines workspace backend lock CRUD.
+// WorkspaceBackendLockRepository is the interface for workspace backend lock CRUD.
 type WorkspaceBackendLockRepository interface {
 	Create(l *WorkspaceBackendLock) error
 	GetByID(id ID) (*WorkspaceBackendLock, error)

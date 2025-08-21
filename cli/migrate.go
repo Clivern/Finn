@@ -26,11 +26,15 @@ var migrateUpCmd = &cobra.Command{
 		configFile, _ := cmd.Flags().GetString("config")
 
 		if err := core.Load(configFile); err != nil {
-			log.Fatal().Err(err).Msg("Failed to load configuration")
+			log.Fatal().
+				Err(err).
+				Msg("Failed to load configuration")
 		}
 
 		if err := core.SetupLogging(); err != nil {
-			log.Fatal().Err(err).Msg("Failed to setup logging")
+			log.Fatal().
+				Err(err).
+				Msg("Failed to setup logging")
 		}
 
 		dbConfig := db.Config{
@@ -48,7 +52,9 @@ var migrateUpCmd = &cobra.Command{
 
 		conn, err := db.NewConnection(dbConfig)
 		if err != nil {
-			log.Fatal().Err(err).Msg("Failed to connect to database")
+			log.Fatal().
+				Err(err).
+				Msg("Failed to connect to database")
 		}
 		defer conn.Close()
 
@@ -59,7 +65,9 @@ var migrateUpCmd = &cobra.Command{
 		}
 
 		if err := mgr.Up(); err != nil {
-			log.Fatal().Err(err).Msg("Failed to run migrations")
+			log.Fatal().
+				Err(err).
+				Msg("Failed to run migrations")
 		}
 
 		log.Info().Msg("Migration completed successfully")
@@ -73,11 +81,15 @@ var migrateDownCmd = &cobra.Command{
 		configFile, _ := cmd.Flags().GetString("config")
 
 		if err := core.Load(configFile); err != nil {
-			log.Fatal().Err(err).Msg("Failed to load configuration")
+			log.Fatal().
+				Err(err).
+				Msg("Failed to load configuration")
 		}
 
 		if err := core.SetupLogging(); err != nil {
-			log.Fatal().Err(err).Msg("Failed to setup logging")
+			log.Fatal().
+				Err(err).
+				Msg("Failed to setup logging")
 		}
 
 		dbConfig := db.Config{
@@ -95,7 +107,9 @@ var migrateDownCmd = &cobra.Command{
 
 		conn, err := db.NewConnection(dbConfig)
 		if err != nil {
-			log.Fatal().Err(err).Msg("Failed to connect to database")
+			log.Fatal().
+				Err(err).
+				Msg("Failed to connect to database")
 		}
 		defer conn.Close()
 
@@ -106,7 +120,9 @@ var migrateDownCmd = &cobra.Command{
 		}
 
 		if err := mgr.Down(); err != nil {
-			log.Fatal().Err(err).Msg("Failed to roll back migration")
+			log.Fatal().
+				Err(err).
+				Msg("Failed to roll back migration")
 		}
 
 		log.Info().Msg("Rollback completed successfully")
@@ -120,11 +136,15 @@ var migrateStatusCmd = &cobra.Command{
 		configFile, _ := cmd.Flags().GetString("config")
 
 		if err := core.Load(configFile); err != nil {
-			log.Fatal().Err(err).Msg("Failed to load configuration")
+			log.Fatal().
+				Err(err).
+				Msg("Failed to load configuration")
 		}
 
 		if err := core.SetupLogging(); err != nil {
-			log.Fatal().Err(err).Msg("Failed to setup logging")
+			log.Fatal().
+				Err(err).
+				Msg("Failed to setup logging")
 		}
 
 		dbConfig := db.Config{
@@ -142,7 +162,9 @@ var migrateStatusCmd = &cobra.Command{
 
 		conn, err := db.NewConnection(dbConfig)
 		if err != nil {
-			log.Fatal().Err(err).Msg("Failed to connect to database")
+			log.Fatal().
+				Err(err).
+				Msg("Failed to connect to database")
 		}
 		defer conn.Close()
 
@@ -153,7 +175,9 @@ var migrateStatusCmd = &cobra.Command{
 		}
 
 		if err := mgr.Status(); err != nil {
-			log.Fatal().Err(err).Msg("Failed to get migration status")
+			log.Fatal().
+				Err(err).
+				Msg("Failed to get migration status")
 		}
 	},
 }

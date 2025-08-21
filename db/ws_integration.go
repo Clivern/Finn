@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// Integration represents an integration (webhook, Slack, etc.) in the database
+// Integration is the DB row for a workspace integration (webhook, Slack, etc.).
 type Integration struct {
 	ID          ID
 	WorkspaceID ID
@@ -21,7 +21,7 @@ type Integration struct {
 	UpdatedAt   time.Time
 }
 
-// IntegrationRepository defines integration CRUD
+// IntegrationRepository is the interface for integration CRUD.
 type IntegrationRepository interface {
 	Create(integration *Integration) error
 	GetByID(id ID) (*Integration, error)

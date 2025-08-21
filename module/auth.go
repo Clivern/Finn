@@ -8,10 +8,10 @@ import (
 	"errors"
 
 	"github.com/clivern/finn/db"
-	"github.com/clivern/finn/service/util"
+	"github.com/clivern/finn/pkg/util"
 )
 
-// Auth is a module that handles authentication.
+// Auth does login and password checks.
 type Auth struct {
 	UserRepository db.UserRepository
 }

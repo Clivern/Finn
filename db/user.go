@@ -18,7 +18,7 @@ const (
 	UserRoleReadOnly = "readonly"
 )
 
-// User represents a user in the database.
+// User is the DB row for a user.
 type User struct {
 	ID          ID
 	Name        string
@@ -31,7 +31,7 @@ type User struct {
 	UpdatedAt   time.Time
 }
 
-// UserRepository defines user CRUD
+// UserRepository is the interface for user CRUD.
 type UserRepository interface {
 	Create(user *User) error
 	GetByID(id ID) (*User, error)
@@ -337,7 +337,7 @@ func (r *userRepoPostgres) Count() (int64, error) {
 	return count, err
 }
 
-// UserMeta represents metadata associated with a user
+// UserMeta is extra metadata for a user.
 type UserMeta struct {
 	ID        ID
 	Key       string
@@ -347,7 +347,7 @@ type UserMeta struct {
 	UpdatedAt time.Time
 }
 
-// UserMetaRepository defines user metadata CRUD
+// UserMetaRepository is the interface for user metadata CRUD.
 type UserMetaRepository interface {
 	Create(userID ID, key, value string) error
 	Get(userID ID, key string) (*UserMeta, error)

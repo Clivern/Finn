@@ -50,7 +50,7 @@ var (
 	)
 )
 
-// metricsResponseWriter wraps http.ResponseWriter to capture metrics
+// metricsResponseWriter wraps the response to capture status and size for metrics.
 type metricsResponseWriter struct {
 	http.ResponseWriter
 	statusCode  int

@@ -14,7 +14,7 @@ import (
 	"github.com/clivern/finn/db"
 	"github.com/clivern/finn/locale"
 	"github.com/clivern/finn/middleware"
-	"github.com/clivern/finn/service/util"
+	"github.com/clivern/finn/pkg/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -25,13 +25,13 @@ const (
 	inviteStatusPending = "pending"
 )
 
-// CreateUserInviteRequest represents the create user invite request payload
+// CreateUserInviteRequest is the body you send when creating an invite.
 type CreateUserInviteRequest struct {
 	Email string `json:"email" validate:"required,email,min=4,max=255" label:"Email"`
 	Role  string `json:"role" validate:"required,oneof=admin regular" label:"Role"`
 }
 
-// CreateUserInviteAction handles user invite creation requests
+// CreateUserInviteAction creates a new user invite.
 func CreateUserInviteAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Create user invite endpoint called")
 
@@ -52,7 +52,9 @@ func CreateUserInviteAction(w http.ResponseWriter, r *http.Request) {
 	userRepo := db.NewUserRepository(db.GetDB())
 	existingUser, err := userRepo.GetByEmail(req.Email)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to check existing user for invite")
+		log.Error().
+			Err(err).
+			Msg("Failed to check existing user for invite")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCreateInvite"),
 		})
@@ -68,7 +70,9 @@ func CreateUserInviteAction(w http.ResponseWriter, r *http.Request) {
 	inviteRepo := db.NewUserInviteRepository(db.GetDB())
 	count, err := inviteRepo.CountPendingByEmail(req.Email)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to count pending invites for email")
+		log.Error().
+			Err(err).
+			Msg("Failed to count pending invites for email")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCreateInvite"),
 		})
@@ -94,7 +98,9 @@ func CreateUserInviteAction(w http.ResponseWriter, r *http.Request) {
 		ExpiresAt:     expiresAt,
 	}
 	if err := inviteRepo.Create(invite); err != nil {
-		log.Error().Err(err).Msg("Failed to create user invite")
+		log.Error().
+			Err(err).
+			Msg("Failed to create user invite")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCreateInvite"),
 		})
@@ -114,7 +120,10 @@ func CreateUserInviteAction(w http.ResponseWriter, r *http.Request) {
 	inviteLink := strings.TrimSuffix(platformURL, "/") + "/register?token=" + url.QueryEscape(invite.Token)
 	mailer := util.NewMailer(optRepo)
 	if err := mailer.SendInviteEmail(req.Email, inviteLink, platformName); err != nil {
-		log.Warn().Err(err).Str("email", req.Email).Msg("Failed to send invite email; invite was created, link available in UI")
+		log.Warn().
+			Err(err).
+			Str("email", req.Email).
+			Msg("Failed to send invite email; invite was created, link available in UI")
 	}
 
 	log.Info().
@@ -133,9 +142,9 @@ func CreateUserInviteAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// ListInvitesAction handles listing all user invites (admin only). Admins see all invites.
+// ListInvitesAction returns all invites (admin only).
 func ListInvitesAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("List invites endpoint called")
+	log.Info().Msg("List invites endpoint called")
 
 	limitStr := r.URL.Query().Get("limit")
 	offsetStr := r.URL.Query().Get("offset")
@@ -155,7 +164,9 @@ func ListInvitesAction(w http.ResponseWriter, r *http.Request) {
 	repo := db.NewUserInviteRepository(db.GetDB())
 	total, err := repo.Count()
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to count invites")
+		log.Error().
+			Err(err).
+			Msg("Failed to count invites")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedListInvites"),
 		})
@@ -165,14 +176,16 @@ func ListInvitesAction(w http.ResponseWriter, r *http.Request) {
 	repo.MarkExpiredAsExpired()
 	invites, err := repo.ListPaginated(limit, offset)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to list invites")
+		log.Error().
+			Err(err).
+			Msg("Failed to list invites")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedListInvites"),
 		})
 		return
 	}
 
-	inviteList := make([]map[string]interface{}, 0, len(invites))
+	list := make([]map[string]interface{}, 0, len(invites))
 	for _, inv := range invites {
 		item := map[string]interface{}{
 			"id":            inv.ID,
@@ -183,15 +196,16 @@ func ListInvitesAction(w http.ResponseWriter, r *http.Request) {
 			"inviterUserId": inv.InviterUserID,
 			"expiresAt":     inv.ExpiresAt.UTC().Format(time.RFC3339),
 			"createdAt":     inv.CreatedAt.UTC().Format(time.RFC3339),
+			"updatedAt":     inv.UpdatedAt.UTC().Format(time.RFC3339),
 		}
 		if inv.AcceptedAt != nil {
 			item["acceptedAt"] = inv.AcceptedAt.UTC().Format(time.RFC3339)
 		}
-		inviteList = append(inviteList, item)
+		list = append(list, item)
 	}
 
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"invites": inviteList,
+		"invites": list,
 		"_meta": map[string]interface{}{
 			"limit":  limit,
 			"offset": offset,
@@ -200,7 +214,7 @@ func ListInvitesAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetUserInviteAction handles get user invite by ID requests
+// GetUserInviteAction returns one invite by ID.
 func GetUserInviteAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Get user invite endpoint called")
 
@@ -217,7 +231,9 @@ func GetUserInviteAction(w http.ResponseWriter, r *http.Request) {
 	repo.MarkExpiredAsExpired()
 	invite, err := repo.GetByID(db.ID(idStr))
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get user invite")
+		log.Error().
+			Err(err).
+			Msg("Failed to get user invite")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetInvite"),
 		})
@@ -237,6 +253,7 @@ func GetUserInviteAction(w http.ResponseWriter, r *http.Request) {
 		"status":    invite.Status,
 		"expiresAt": invite.ExpiresAt.UTC().Format(time.RFC3339),
 		"createdAt": invite.CreatedAt.UTC().Format(time.RFC3339),
+		"updatedAt": invite.UpdatedAt.UTC().Format(time.RFC3339),
 	}
 	if invite.AcceptedAt != nil {
 		resp["acceptedAt"] = invite.AcceptedAt.UTC().Format(time.RFC3339)
@@ -244,7 +261,7 @@ func GetUserInviteAction(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, http.StatusOK, resp)
 }
 
-// DeleteUserInviteAction handles user invite deletion requests
+// DeleteUserInviteAction deletes an invite by ID.
 func DeleteUserInviteAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Delete user invite endpoint called")
 
@@ -259,18 +276,22 @@ func DeleteUserInviteAction(w http.ResponseWriter, r *http.Request) {
 	repo := db.NewUserInviteRepository(db.GetDB())
 	err := repo.Delete(db.ID(idStr))
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to delete user invite")
+		log.Error().
+			Err(err).
+			Msg("Failed to delete user invite")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedDeleteInvite"),
 		})
 		return
 	}
 
-	log.Info().Str("inviteID", idStr).Msg("User invite deleted successfully")
+	log.Info().
+		Str("inviteID", idStr).
+		Msg("User invite deleted successfully")
 	util.WriteJSON(w, http.StatusNoContent, nil)
 }
 
-// GetUserInviteByTokenAction returns invite details by token (public, for accept page)
+// GetUserInviteByTokenAction returns invite details by token (used on the signup page).
 func GetUserInviteByTokenAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Get user invite by token endpoint called")
 
@@ -287,7 +308,9 @@ func GetUserInviteByTokenAction(w http.ResponseWriter, r *http.Request) {
 	repo.MarkExpiredAsExpired()
 	invite, err := repo.GetByToken(token)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get user invite by token")
+		log.Error().
+			Err(err).
+			Msg("Failed to get user invite by token")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetInvite"),
 		})
@@ -307,8 +330,12 @@ func GetUserInviteByTokenAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"id":        invite.ID,
 		"email":     invite.Email,
 		"role":      invite.Role,
+		"status":    invite.Status,
 		"expiresAt": invite.ExpiresAt.UTC().Format(time.RFC3339),
+		"createdAt": invite.CreatedAt.UTC().Format(time.RFC3339),
+		"updatedAt": invite.UpdatedAt.UTC().Format(time.RFC3339),
 	})
 }

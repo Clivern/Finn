@@ -47,3 +47,14 @@ app:
     conn_max_lifetime: ${FINN_DATABASE_CONN_MAX_LIFETIME:-300}
     # SQLite specific config (path to database file)
     datasource: ${FINN_DATABASE_DATASOURCE:-./cache/finn_mgmt.db}
+
+  # AI provider configs (Genkit: openai, googleai, vertexai, anthropic)
+  ai:
+    enabled: ${FINN_AI_ENABLED:-false}
+    provider: ${FINN_AI_PROVIDER:-openai}
+    model: ${FINN_AI_MODEL:-openai/gpt-5-mini}
+    api_key: ${FINN_AI_API_KEY:-}
+    base_url: ${FINN_AI_BASE_URL:-}
+    # Vertex AI only
+    project_id: ${FINN_AI_PROJECT_ID:-}
+    location: ${FINN_AI_LOCATION:-}

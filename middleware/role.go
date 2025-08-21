@@ -8,7 +8,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/clivern/finn/service/util"
+	"github.com/clivern/finn/pkg/util"
 
 	"github.com/rs/zerolog/log"
 )
@@ -20,7 +20,9 @@ func RequireRole(allowedRoles ...string) func(http.Handler) http.Handler {
 			// Get user from context
 			user, ok := GetUserFromContext(r.Context())
 			if !ok || user == nil {
-				log.Info().Str("path", r.URL.Path).Msg("User not found in context for role check")
+				log.Info().
+					Str("path", r.URL.Path).
+					Msg("User not found in context for role check")
 				util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
 					"errorMessage": "Not authenticated",
 				})

@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// Option represents a key-value option in the database
+// Option is a key-value setting in the DB.
 type Option struct {
 	ID        ID
 	Key       string
@@ -18,7 +18,7 @@ type Option struct {
 	UpdatedAt time.Time
 }
 
-// OptionRepository defines option CRUD
+// OptionRepository is the interface for option CRUD.
 type OptionRepository interface {
 	Create(key, value string) error
 	Get(key string) (*Option, error)

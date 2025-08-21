@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/clivern/finn/service/util"
+	"github.com/clivern/finn/pkg/util"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

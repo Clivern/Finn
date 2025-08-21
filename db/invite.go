@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// UserInvite represents a user invite (by email) in the database
+// UserInvite is the DB row for an invite (by email).
 type UserInvite struct {
 	ID            ID
 	Email         string
@@ -24,7 +24,7 @@ type UserInvite struct {
 	UpdatedAt     time.Time
 }
 
-// UserInviteRepository defines user invite CRUD
+// UserInviteRepository is the interface for user invite CRUD.
 type UserInviteRepository interface {
 	Create(invite *UserInvite) error
 	GetByID(id ID) (*UserInvite, error)
@@ -82,8 +82,13 @@ func (r *userInviteRepoSQLite) Create(invite *UserInvite) error {
 	result, err := r.db.Exec(
 		`INSERT INTO user_invites (email, role, token, status, inviter_user_id, expires_at, accepted_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?)`,
-		invite.Email, invite.Role, invite.Token, invite.Status, invite.InviterUserID.String(),
-		invite.ExpiresAt, invite.AcceptedAt,
+		invite.Email,
+		invite.Role,
+		invite.Token,
+		invite.Status,
+		invite.InviterUserID.String(),
+		invite.ExpiresAt,
+		invite.AcceptedAt,
 	)
 	if err != nil {
 		return err
@@ -103,8 +108,18 @@ func (r *userInviteRepoSQLite) GetByID(id ID) (*UserInvite, error) {
 		`SELECT id, email, role, token, status, inviter_user_id, expires_at, accepted_at, created_at, updated_at
 		FROM user_invites WHERE id = ?`,
 		id.String(),
-	).Scan(&u.ID, &u.Email, &u.Role, &u.Token, &u.Status, &u.InviterUserID,
-		&u.ExpiresAt, &u.AcceptedAt, &u.CreatedAt, &u.UpdatedAt)
+	).Scan(
+		&u.ID,
+		&u.Email,
+		&u.Role,
+		&u.Token,
+		&u.Status,
+		&u.InviterUserID,
+		&u.ExpiresAt,
+		&u.AcceptedAt,
+		&u.CreatedAt,
+		&u.UpdatedAt,
+	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -121,8 +136,18 @@ func (r *userInviteRepoSQLite) GetByToken(token string) (*UserInvite, error) {
 		`SELECT id, email, role, token, status, inviter_user_id, expires_at, accepted_at, created_at, updated_at
 		FROM user_invites WHERE token = ?`,
 		token,
-	).Scan(&u.ID, &u.Email, &u.Role, &u.Token, &u.Status, &u.InviterUserID,
-		&u.ExpiresAt, &u.AcceptedAt, &u.CreatedAt, &u.UpdatedAt)
+	).Scan(
+		&u.ID,
+		&u.Email,
+		&u.Role,
+		&u.Token,
+		&u.Status,
+		&u.InviterUserID,
+		&u.ExpiresAt,
+		&u.AcceptedAt,
+		&u.CreatedAt,
+		&u.UpdatedAt,
+	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -140,7 +165,8 @@ func (r *userInviteRepoSQLite) ListPaginated(limit, offset int) ([]*UserInvite, 
 	rows, err := r.db.Query(
 		`SELECT id, email, role, token, status, inviter_user_id, expires_at, accepted_at, created_at, updated_at
 		FROM user_invites ORDER BY created_at DESC LIMIT ? OFFSET ?`,
-		limit, offset,
+		limit,
+		offset,
 	)
 	if err != nil {
 		return nil, err
@@ -153,7 +179,10 @@ func (r *userInviteRepoSQLite) ListPaginated(limit, offset int) ([]*UserInvite, 
 func (r *userInviteRepoSQLite) UpdateStatus(id ID, status string, acceptedAt *time.Time) error {
 	_, err := r.db.Exec(
 		`UPDATE user_invites SET status = ?, accepted_at = ?, updated_at = ? WHERE id = ?`,
-		status, acceptedAt, time.Now().UTC(), id.String(),
+		status,
+		acceptedAt,
+		time.Now().UTC(),
+		id.String(),
 	)
 	return err
 }
@@ -162,7 +191,8 @@ func (r *userInviteRepoSQLite) UpdateStatus(id ID, status string, acceptedAt *ti
 func (r *userInviteRepoSQLite) MarkExpiredAsExpired() (int64, error) {
 	result, err := r.db.Exec(
 		`UPDATE user_invites SET status = 'expired', updated_at = ? WHERE status = 'pending' AND expires_at < ?`,
-		time.Now().UTC(), time.Now().UTC(),
+		time.Now().UTC(),
+		time.Now().UTC(),
 	)
 	if err != nil {
 		return 0, err
@@ -194,7 +224,8 @@ func (r *userInviteRepoSQLite) CountPendingByEmail(email string) (int64, error) 
 	err := r.db.QueryRow(
 		`SELECT COUNT(*) FROM user_invites
 		WHERE email = ? AND status = 'pending' AND expires_at > ?`,
-		email, time.Now().UTC(),
+		email,
+		time.Now().UTC(),
 	).Scan(&count)
 	return count, err
 }
@@ -211,8 +242,13 @@ func (r *userInviteRepoPostgres) Create(invite *UserInvite) error {
 	err := r.db.QueryRow(
 		`INSERT INTO user_invites (email, role, token, status, inviter_user_id, expires_at, accepted_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-		invite.Email, invite.Role, invite.Token, invite.Status, invite.InviterUserID.String(),
-		invite.ExpiresAt, invite.AcceptedAt,
+		invite.Email,
+		invite.Role,
+		invite.Token,
+		invite.Status,
+		invite.InviterUserID.String(),
+		invite.ExpiresAt,
+		invite.AcceptedAt,
 	).Scan(&invite.ID)
 	return err
 }
@@ -224,8 +260,18 @@ func (r *userInviteRepoPostgres) GetByID(id ID) (*UserInvite, error) {
 		`SELECT id, email, role, token, status, inviter_user_id, expires_at, accepted_at, created_at, updated_at
 		FROM user_invites WHERE id = $1`,
 		id.String(),
-	).Scan(&u.ID, &u.Email, &u.Role, &u.Token, &u.Status, &u.InviterUserID,
-		&u.ExpiresAt, &u.AcceptedAt, &u.CreatedAt, &u.UpdatedAt)
+	).Scan(
+		&u.ID,
+		&u.Email,
+		&u.Role,
+		&u.Token,
+		&u.Status,
+		&u.InviterUserID,
+		&u.ExpiresAt,
+		&u.AcceptedAt,
+		&u.CreatedAt,
+		&u.UpdatedAt,
+	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -242,8 +288,18 @@ func (r *userInviteRepoPostgres) GetByToken(token string) (*UserInvite, error) {
 		`SELECT id, email, role, token, status, inviter_user_id, expires_at, accepted_at, created_at, updated_at
 		FROM user_invites WHERE token = $1`,
 		token,
-	).Scan(&u.ID, &u.Email, &u.Role, &u.Token, &u.Status, &u.InviterUserID,
-		&u.ExpiresAt, &u.AcceptedAt, &u.CreatedAt, &u.UpdatedAt)
+	).Scan(
+		&u.ID,
+		&u.Email,
+		&u.Role,
+		&u.Token,
+		&u.Status,
+		&u.InviterUserID,
+		&u.ExpiresAt,
+		&u.AcceptedAt,
+		&u.CreatedAt,
+		&u.UpdatedAt,
+	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -261,7 +317,8 @@ func (r *userInviteRepoPostgres) ListPaginated(limit, offset int) ([]*UserInvite
 	rows, err := r.db.Query(
 		`SELECT id, email, role, token, status, inviter_user_id, expires_at, accepted_at, created_at, updated_at
 		FROM user_invites ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
-		limit, offset,
+		limit,
+		offset,
 	)
 	if err != nil {
 		return nil, err
@@ -274,7 +331,10 @@ func (r *userInviteRepoPostgres) ListPaginated(limit, offset int) ([]*UserInvite
 func (r *userInviteRepoPostgres) UpdateStatus(id ID, status string, acceptedAt *time.Time) error {
 	_, err := r.db.Exec(
 		`UPDATE user_invites SET status = $1, accepted_at = $2, updated_at = $3 WHERE id = $4`,
-		status, acceptedAt, time.Now().UTC(), id.String(),
+		status,
+		acceptedAt,
+		time.Now().UTC(),
+		id.String(),
 	)
 	return err
 }
@@ -283,7 +343,8 @@ func (r *userInviteRepoPostgres) UpdateStatus(id ID, status string, acceptedAt *
 func (r *userInviteRepoPostgres) MarkExpiredAsExpired() (int64, error) {
 	result, err := r.db.Exec(
 		`UPDATE user_invites SET status = 'expired', updated_at = $1 WHERE status = 'pending' AND expires_at < $2`,
-		time.Now().UTC(), time.Now().UTC(),
+		time.Now().UTC(),
+		time.Now().UTC(),
 	)
 	if err != nil {
 		return 0, err
@@ -315,7 +376,8 @@ func (r *userInviteRepoPostgres) CountPendingByEmail(email string) (int64, error
 	err := r.db.QueryRow(
 		`SELECT COUNT(*) FROM user_invites
 		WHERE email = $1 AND status = 'pending' AND expires_at > $2`,
-		email, time.Now().UTC(),
+		email,
+		time.Now().UTC(),
 	).Scan(&count)
 	return count, err
 }

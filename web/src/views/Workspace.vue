@@ -43,7 +43,7 @@
                       type="text"
                       required
                       class="input-field max-w-md"
-                      placeholder="Workspace name"
+                      :placeholder="$t('workspacePage.workspaceNamePlaceholder')"
                       :disabled="nameSaving || !canManageWorkspace"
                     />
                   </div>
@@ -98,9 +98,9 @@
                 <table class="min-w-full divide-y divide-theme-border">
                   <thead class="bg-theme-hover">
                     <tr>
-                      <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">User</th>
-                      <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">Role</th>
-                      <th class="px-6 py-3 text-right text-xs font-medium text-theme-textLight uppercase tracking-wider">Actions</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">{{ $t('workspacePage.user') }}</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">{{ $t('workspacePage.role') }}</th>
+                      <th class="px-6 py-3 text-right text-xs font-medium text-theme-textLight uppercase tracking-wider">{{ $t('workspacePage.actions') }}</th>
                     </tr>
                   </thead>
                   <tbody class="bg-white divide-y divide-theme-border">
@@ -113,7 +113,7 @@
                       </td>
                       <td class="px-6 py-4 whitespace-nowrap">
                         <span class="inline-flex rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-theme-text">
-                          {{ wu.role }}
+                          {{ roleLabel(wu.role) }}
                         </span>
                       </td>
                       <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
@@ -123,7 +123,7 @@
                           @click="openEditRoleModal(wu)"
                           class="text-primary-600 hover:text-primary-700 hover:underline mr-3"
                         >
-                          Edit role
+                          {{ $t('workspacePage.editRole') }}
                         </button>
                         <button
                           v-if="canEditOrRemoveUser(wu)"
@@ -131,7 +131,7 @@
                           @click="openRemoveUserModal(wu)"
                           class="text-red-600 hover:text-red-700 hover:underline"
                         >
-                          Remove
+                          {{ $t('workspacePage.remove') }}
                         </button>
                       </td>
                     </tr>
@@ -144,7 +144,7 @@
                 class="bg-white px-6 py-4 border-t border-theme-border flex items-center justify-between flex-wrap gap-2"
               >
                 <p class="text-sm text-theme-textLight">
-                  Showing {{ (membersPage - 1) * membersLimit + 1 }} to {{ Math.min(membersPage * membersLimit, membersTotal) }} of {{ membersTotal }} members
+                  {{ $t('workspacePage.showingMembers', { from: (membersPage - 1) * membersLimit + 1, to: Math.min(membersPage * membersLimit, membersTotal), total: membersTotal }) }}
                 </p>
                 <div class="flex items-center gap-2">
                   <button
@@ -153,7 +153,7 @@
                     :disabled="membersPage <= 1 || usersLoading"
                     class="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Previous
+                    {{ $t('workspacePage.previous') }}
                   </button>
                   <button
                     type="button"
@@ -161,7 +161,7 @@
                     :disabled="membersPage >= membersTotalPages || usersLoading"
                     class="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Next
+                    {{ $t('workspacePage.next') }}
                   </button>
                 </div>
               </div>
@@ -183,34 +183,34 @@
           @click.self="addUserModalOpen = false"
         >
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-md p-6 max-h-[90vh] flex flex-col">
-            <h2 id="add-user-title" class="text-lg font-semibold text-theme-text">Add member</h2>
-            <p class="mt-1 text-sm text-theme-textLight">Choose a user and role for this workspace</p>
+            <h2 id="add-user-title" class="text-lg font-semibold text-theme-text">{{ $t('workspacePage.addMemberTitle') }}</h2>
+            <p class="mt-1 text-sm text-theme-textLight">{{ $t('workspacePage.addMemberDesc') }}</p>
             <form @submit.prevent="addUser" class="mt-4 flex flex-col flex-1 min-h-0 space-y-4">
               <div>
-                <label for="add-user-select" class="form-label">User</label>
+                <label for="add-user-select" class="form-label">{{ $t('workspacePage.user') }}</label>
                 <select
                   id="add-user-select"
                   v-model="addUserUserId"
                   required
                   class="input-field w-full"
                 >
-                  <option value="">Select a user…</option>
+                  <option value="">{{ $t('workspacePage.selectUser') }}</option>
                   <option v-for="u in allUsersList" :key="u.id" :value="u.id">{{ u.name || u.email }} ({{ u.email }})</option>
                 </select>
-                <p v-if="allUsersLoading" class="text-xs text-theme-textLight mt-1">Loading users…</p>
+                <p v-if="allUsersLoading" class="text-xs text-theme-textLight mt-1">{{ $t('workspacePage.loadingUsers') }}</p>
               </div>
               <div>
-                <label for="add-user-role" class="form-label">Role</label>
+                <label for="add-user-role" class="form-label">{{ $t('workspacePage.role') }}</label>
                 <select id="add-user-role" v-model="addUserRole" required class="input-field w-full">
-                  <option value="readonly">Readonly</option>
-                  <option value="admin">Admin</option>
-                  <option value="owner">Owner</option>
+                  <option value="readonly">{{ $t('workspacePage.roleReadonly') }}</option>
+                  <option value="admin">{{ $t('workspacePage.roleAdmin') }}</option>
+                  <option value="owner">{{ $t('workspacePage.roleOwner') }}</option>
                 </select>
               </div>
               <div class="flex gap-3 justify-end pt-2">
-                <button type="button" @click="addUserModalOpen = false" class="btn-secondary">Cancel</button>
+                <button type="button" @click="addUserModalOpen = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
                 <button type="submit" :disabled="addUserSaving || !addUserUserId || !addUserRole" class="btn-primary">
-                  {{ addUserSaving ? 'Adding…' : 'Add' }}
+                  {{ addUserSaving ? $t('workspacePage.adding') : $t('workspacePage.add') }}
                 </button>
               </div>
             </form>
@@ -231,23 +231,23 @@
           @click.self="editRoleModalUser = null"
         >
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-sm p-6">
-            <h2 id="edit-role-title" class="text-lg font-semibold text-theme-text">Edit role</h2>
+            <h2 id="edit-role-title" class="text-lg font-semibold text-theme-text">{{ $t('workspacePage.editRoleTitle') }}</h2>
             <p class="mt-1 text-sm text-theme-textLight">
               {{ editRoleModalUser?.name || editRoleModalUser?.email }}
             </p>
             <form @submit.prevent="saveRole" class="mt-4 space-y-4">
               <div>
-                <label for="edit-role-select" class="form-label">Role</label>
+                <label for="edit-role-select" class="form-label">{{ $t('workspacePage.role') }}</label>
                 <select id="edit-role-select" v-model="editRoleValue" required class="input-field w-full">
-                  <option value="readonly">Readonly</option>
-                  <option value="admin">Admin</option>
-                  <option value="owner">Owner</option>
+                  <option value="readonly">{{ $t('workspacePage.roleReadonly') }}</option>
+                  <option value="admin">{{ $t('workspacePage.roleAdmin') }}</option>
+                  <option value="owner">{{ $t('workspacePage.roleOwner') }}</option>
                 </select>
               </div>
               <div class="flex gap-3 justify-end">
-                <button type="button" @click="editRoleModalUser = null" class="btn-secondary">Cancel</button>
+                <button type="button" @click="editRoleModalUser = null" class="btn-secondary">{{ $t('common.cancel') }}</button>
                 <button type="submit" :disabled="editRoleSaving" class="btn-primary">
-                  {{ editRoleSaving ? 'Saving…' : 'Save' }}
+                  {{ editRoleSaving ? $t('workspacePage.saving') : $t('common.save') }}
                 </button>
               </div>
             </form>
@@ -268,14 +268,14 @@
           @click.self="removeUserModalUser = null"
         >
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-sm p-6">
-            <h2 id="remove-user-title" class="text-lg font-semibold text-theme-text">Remove member</h2>
+            <h2 id="remove-user-title" class="text-lg font-semibold text-theme-text">{{ $t('workspacePage.removeMemberTitle') }}</h2>
             <p class="mt-2 text-sm text-theme-textLight">
-              Remove <span class="font-medium text-theme-text">{{ removeUserModalUser?.name || removeUserModalUser?.email }}</span> from this workspace?
+              {{ $t('workspacePage.removeMemberConfirm', { name: removeUserModalUser?.name || removeUserModalUser?.email }) }}
             </p>
             <div class="mt-6 flex gap-3 justify-end">
-              <button type="button" @click="removeUserModalUser = null" class="btn-secondary" :disabled="removeUserSaving">Cancel</button>
+              <button type="button" @click="removeUserModalUser = null" class="btn-secondary" :disabled="removeUserSaving">{{ $t('common.cancel') }}</button>
               <button type="button" @click="confirmRemoveUser" class="btn-primary bg-red-600 hover:bg-red-700 focus:ring-red-500" :disabled="removeUserSaving">
-                {{ removeUserSaving ? 'Removing…' : 'Remove' }}
+                {{ removeUserSaving ? $t('workspacePage.removing') : $t('workspacePage.remove') }}
               </button>
             </div>
           </div>
@@ -295,13 +295,13 @@
           @click.self="closeDeleteModal"
         >
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-sm p-6">
-            <h2 id="delete-workspace-title" class="text-lg font-semibold text-theme-text">Delete workspace</h2>
+            <h2 id="delete-workspace-title" class="text-lg font-semibold text-theme-text">{{ $t('workspacePage.deleteWorkspaceModalTitle') }}</h2>
             <p class="mt-2 text-sm text-theme-textLight">
-              Delete workspace <span class="font-medium text-theme-text">"{{ workspace?.name }}"</span>? This cannot be undone.
+              {{ $t('workspacePage.deleteWorkspaceConfirm', { name: workspace?.name }) }}
             </p>
             <div class="mt-4">
               <label for="delete-confirm-name" class="block text-sm font-medium text-theme-text mb-1.5">
-                Type <span class="font-mono">{{ workspace?.name }}</span> to confirm
+                {{ $t('workspacePage.typeNameToConfirm', { name: workspace?.name }) }}
               </label>
               <input
                 id="delete-confirm-name"
@@ -314,9 +314,9 @@
               />
             </div>
             <div class="mt-6 flex gap-3 justify-end">
-              <button type="button" @click="closeDeleteModal" class="btn-secondary" :disabled="deleteSaving">Cancel</button>
+              <button type="button" @click="closeDeleteModal" class="btn-secondary" :disabled="deleteSaving">{{ $t('common.cancel') }}</button>
               <button type="button" @click="confirmDelete" class="btn-primary bg-red-600 hover:bg-red-700 focus:ring-red-500" :disabled="deleteSaving || !canConfirmDelete">
-                {{ deleteSaving ? 'Deleting…' : 'Delete' }}
+                {{ deleteSaving ? $t('workspacePage.deleting') : $t('common.delete') }}
               </button>
             </div>
           </div>
@@ -329,11 +329,17 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import AppNav from '@/components/AppNav.vue'
 import { workspaceAPI, workspaceUsersAPI } from '@/api'
-import { loadWorkspaceFromStorage, saveWorkspaceToStorage, removeWorkspaceFromStorage } from '@/utils/storage'
+import {
+  loadWorkspaceFromStorage,
+  saveWorkspaceToStorage,
+  removeWorkspaceFromStorage
+} from '@/utils/storage'
 
 const router = useRouter()
+const { t } = useI18n()
 const workspace = ref(null)
 const errorMessage = ref(null)
 const successMessage = ref(null)
@@ -361,13 +367,16 @@ async function saveName() {
   errorMessage.value = null
 
   try {
-    const res = await workspaceAPI.update(workspace.value.id, { name })
+    const res = await workspaceAPI.update(
+      workspace.value.id,
+      { name }
+    )
     workspace.value = { ...workspace.value, ...res.data }
     saveWorkspaceToStorage(workspace.value)
-    successMessage.value = 'Workspace name updated.'
-    clearSuccessAfter()
+    successMessage.value = t('workspacePage.workspaceNameUpdated')
+    setTimeout(() => { successMessage.value = null }, 4000)
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to update workspace name'
+    errorMessage.value = err.response?.data?.errorMessage || t('workspacePage.failedUpdateName')
   } finally {
     nameSaving.value = false
   }
@@ -383,7 +392,7 @@ async function loadWorkspaceUsers() {
     workspaceUsers.value = res.data.users ?? []
     membersTotal.value = res.data._meta.total ?? 0
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to load workspace users'
+    errorMessage.value = err.response?.data?.errorMessage || t('workspacePage.failedLoadUsers')
     workspaceUsers.value = []
     membersTotal.value = 0
   } finally {
@@ -405,6 +414,12 @@ function canEditOrRemoveUser(wu) {
   if (myRole === 'owner') return theirRole !== 'owner' || wu.userId === currentUserId.value
   if (myRole === 'admin') return theirRole === 'readonly'
   return false
+}
+
+function roleLabel(role) {
+  if (!role) return ''
+  const key = { readonly: 'roleReadonly', admin: 'roleAdmin', owner: 'roleOwner' }[role]
+  return key ? t('workspacePage.' + key) : role
 }
 
 const currentUserId = ref(null)
@@ -462,10 +477,10 @@ async function addUser() {
     await workspaceUsersAPI.add(workspace.value.id, { userId: addUserUserId.value, role: addUserRole.value })
     addUserModalOpen.value = false
     await loadWorkspaceUsers()
-    successMessage.value = 'Member added.'
-    clearSuccessAfter()
+    successMessage.value = t('workspacePage.memberAdded')
+    setTimeout(() => { successMessage.value = null }, 4000)
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to add member'
+    errorMessage.value = err.response?.data?.errorMessage || t('workspacePage.failedAddMember')
   } finally {
     addUserSaving.value = false
   }
@@ -490,10 +505,10 @@ async function saveRole() {
     await workspaceUsersAPI.updateRole(workspace.value.id, wu.userId, { role: editRoleValue.value })
     editRoleModalUser.value = null
     await loadWorkspaceUsers()
-    successMessage.value = 'Role updated.'
-    clearSuccessAfter()
+    successMessage.value = t('workspacePage.roleUpdated')
+    setTimeout(() => { successMessage.value = null }, 4000)
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to update role'
+    errorMessage.value = err.response?.data?.errorMessage || t('workspacePage.failedUpdateRole')
   } finally {
     editRoleSaving.value = false
   }
@@ -516,10 +531,10 @@ async function confirmRemoveUser() {
     await workspaceUsersAPI.remove(workspace.value.id, wu.userId)
     removeUserModalUser.value = null
     await loadWorkspaceUsers()
-    successMessage.value = 'Member removed.'
-    clearSuccessAfter()
+    successMessage.value = t('workspacePage.memberRemoved')
+    setTimeout(() => { successMessage.value = null }, 4000)
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to remove member'
+    errorMessage.value = err.response?.data?.errorMessage || t('workspacePage.failedRemoveMember')
   } finally {
     removeUserSaving.value = false
   }
@@ -555,14 +570,10 @@ async function confirmDelete() {
     closeDeleteModal()
     router.push('/select-workspace')
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to delete workspace'
+    errorMessage.value = err.response?.data?.errorMessage || t('workspacePage.failedDelete')
   } finally {
     deleteSaving.value = false
   }
-}
-
-function clearSuccessAfter() {
-  setTimeout(() => { successMessage.value = null }, 4000)
 }
 
 watch(workspace, (w) => {
@@ -589,7 +600,7 @@ onMounted(async () => {
       router.replace('/select-workspace')
       return
     }
-    errorMessage.value = err.response?.data?.errorMessage || 'Failed to load workspace'
+    errorMessage.value = err.response?.data?.errorMessage || t('workspacePage.failedLoad')
   }
   await loadWorkspaceUsers()
 })

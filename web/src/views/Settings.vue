@@ -253,12 +253,6 @@ const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-watch([successMessage, errorMessage], () => {
-  if (successMessage.value || errorMessage.value) {
-    nextTick(scrollToTop)
-  }
-})
-
 const handleSave = async () => {
   loading.value = true
   successMessage.value = null
@@ -280,10 +274,8 @@ const handleSave = async () => {
     if (form.smtpPassword) payload.smtpPassword = form.smtpPassword
 
     const response = await settingsAPI.updateSettings(payload)
-    if (response.data?.successMessage) {
-      successMessage.value = response.data.successMessage
-      setTimeout(() => { successMessage.value = null }, 3000)
-    }
+    successMessage.value = response.data.successMessage
+    setTimeout(() => { successMessage.value = null }, 3000)
   } catch (err) {
     console.error('Failed to save settings:', err)
     errorMessage.value = err.response?.data?.errorMessage || t('settingsPage.failedSave')
@@ -292,5 +284,13 @@ const handleSave = async () => {
   }
 }
 
-onMounted(loadSettings)
+watch([successMessage, errorMessage], () => {
+  if (successMessage.value || errorMessage.value) {
+    nextTick(scrollToTop)
+  }
+})
+
+onMounted(() => {
+  loadSettings()
+})
 </script>

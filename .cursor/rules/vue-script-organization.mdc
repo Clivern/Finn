@@ -1,0 +1,68 @@
+---
+description: Vue script setup organization and CRUD/modal patterns
+globs: web/**/*.vue
+alwaysApply: false
+---
+
+# Vue script setup organization
+
+Keep Vue SFC script sections **simple and consistently ordered**. Prefer plain `ref`/`reactive` and clear naming over extra abstraction.
+
+## Section order
+
+1. **Imports** – Vue, composables, API, components, utils.
+2. **Composables** – e.g. `const { t } = useI18n()`.
+3. **State** – Group by concern:
+   - Data/list and loading (e.g. `loading`, `items`, `total`, `limit`, `offset`).
+   - Messages (e.g. `successMessage`, `errorMessage`).
+   - Modal visibility and per-modal loading (e.g. `showCreateModal`, `createLoading`, `userToDelete`).
+   - Form state as `reactive({ ... })` (e.g. `createForm`, `editForm`).
+4. **Functions** – In logical order:
+   - Data loading (e.g. `loadUsers`).
+   - Navigation/helpers (e.g. `goToPage`).
+   - Modal lifecycle: `openXModal`, `closeXModal` (open resets form and shows modal; close hides and resets).
+   - Handlers: `handleCreate`, `handleUpdate`, `handleDelete` (async, call API, then close modal + refresh + success message).
+5. **Lifecycle** – `onMounted` (and similar) at the end.
+
+## Naming
+
+- **Modals**: `showXModal`, `openXModal`, `closeXModal`, `XLoading`, and for the target entity (e.g. `userToDelete`) when needed.
+- **Forms**: `createForm`, `editForm` as `reactive({ ... })` with all fields listed.
+- **Handlers**: `handleCreate`, `handleUpdate`, `handleDelete` for submit/action logic.
+
+## Async handler pattern
+
+Use the same shape for every async handler:
+
+- Set loading and clear messages at the start.
+- `try`: call API, set success message, close modal, reload data, clear success after a short delay.
+- `catch`: set `errorMessage` from `err.response?.data?.errorMessage` or a fallback translation.
+- `finally`: clear loading.
+
+```javascript
+const handleCreate = async () => {
+  createLoading.value = true
+  errorMessage.value = null
+  successMessage.value = null
+
+  try {
+    await someAPI.create(...)
+    successMessage.value = t('...')
+    closeCreateModal()
+    await loadItems()
+    setTimeout(() => { successMessage.value = null }, 3000)
+  } catch (err) {
+    console.error('Failed to create:', err)
+    errorMessage.value = err.response?.data?.errorMessage || t('...')
+  } finally {
+    createLoading.value = false
+  }
+}
+```
+
+## Modal open/close
+
+- **open**: reset form fields (and entity ref like `userToDelete`), then set `showXModal = true`.
+- **close**: set `showXModal = false`, then reset form and any entity ref so the next open starts clean.
+
+Keep this structure so any view with a list, modals, and CRUD stays easy to read and consistent across the app.

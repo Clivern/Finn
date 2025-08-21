@@ -22,7 +22,7 @@ type WorkspaceBackend struct {
 	UpdatedAt   time.Time
 }
 
-// WorkspaceBackendRepository defines workspace backend CRUD.
+// WorkspaceBackendRepository is the interface for workspace backend CRUD.
 type WorkspaceBackendRepository interface {
 	Create(r *WorkspaceBackend) error
 	GetByID(id ID) (*WorkspaceBackend, error)
@@ -172,7 +172,10 @@ func (r *workspaceBackendRepoSQLite) Update(b *WorkspaceBackend) error {
 }
 
 func (r *workspaceBackendRepoSQLite) Delete(id ID) error {
-	_, err := r.db.Exec(`DELETE FROM workspace_backend WHERE id = ?`, id.String())
+	_, err := r.db.Exec(
+		`DELETE FROM workspace_backend WHERE id = ?`,
+		id.String(),
+	)
 	return err
 }
 
@@ -298,7 +301,10 @@ func (r *workspaceBackendRepoPostgres) Update(b *WorkspaceBackend) error {
 }
 
 func (r *workspaceBackendRepoPostgres) Delete(id ID) error {
-	_, err := r.db.Exec(`DELETE FROM workspace_backend WHERE id = $1`, id.String())
+	_, err := r.db.Exec(
+		`DELETE FROM workspace_backend WHERE id = $1`,
+		id.String(),
+	)
 	return err
 }
 

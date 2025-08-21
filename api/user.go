@@ -14,12 +14,12 @@ import (
 	"github.com/clivern/finn/locale"
 	"github.com/clivern/finn/middleware"
 	"github.com/clivern/finn/module"
-	"github.com/clivern/finn/service/util"
+	"github.com/clivern/finn/pkg/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )
 
-// CreateUserRequest represents the create user request payload
+// CreateUserRequest is the body for creating a user.
 type CreateUserRequest struct {
 	Name     string `json:"name" validate:"required,min=4,max=60" label:"Name"`
 	Email    string `json:"email" validate:"required,email,min=4,max=60" label:"Email"`
@@ -28,7 +28,7 @@ type CreateUserRequest struct {
 	IsActive bool   `json:"isActive" label:"Is Active"`
 }
 
-// UpdateUserRequest represents the update user request payload
+// UpdateUserRequest is the body for updating a user.
 type UpdateUserRequest struct {
 	Name     string `json:"name" validate:"required,min=4,max=60" label:"Name"`
 	Email    string `json:"email" validate:"required,email,min=4,max=60" label:"Email"`
@@ -37,7 +37,7 @@ type UpdateUserRequest struct {
 	IsActive bool   `json:"isActive" label:"Is Active"`
 }
 
-// CreateUserAction handles user creation requests
+// CreateUserAction creates a new user.
 func CreateUserAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Create user endpoint called")
 
@@ -63,14 +63,18 @@ func CreateUserAction(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		log.Error().Err(err).Msg("Failed to create user")
+		log.Error().
+			Err(err).
+			Msg("Failed to create user")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCreateUser"),
 		})
 		return
 	}
 
-	log.Info().Str("userID", user.ID.String()).Msg("User created successfully")
+	log.Info().
+		Str("userID", user.ID.String()).
+		Msg("User created successfully")
 	util.WriteJSON(w, http.StatusCreated, map[string]interface{}{
 		"id":          user.ID,
 		"name":        user.Name,
@@ -83,7 +87,7 @@ func CreateUserAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetUserAction handles get user by ID requests
+// GetUserAction returns one user by ID.
 func GetUserAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Get user endpoint called")
 
@@ -104,7 +108,9 @@ func GetUserAction(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		log.Error().Err(err).Msg("Failed to get user")
+		log.Error().
+			Err(err).
+			Msg("Failed to get user")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetUser"),
 		})
@@ -123,7 +129,7 @@ func GetUserAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// UpdateUserAction handles user update requests
+// UpdateUserAction updates a user.
 func UpdateUserAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Update user endpoint called")
 
@@ -164,14 +170,18 @@ func UpdateUserAction(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		log.Error().Err(err).Msg("Failed to update user")
+		log.Error().
+			Err(err).
+			Msg("Failed to update user")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedUpdateUser"),
 		})
 		return
 	}
 
-	log.Info().Str("userID", user.ID.String()).Msg("User updated successfully")
+	log.Info().
+		Str("userID", user.ID.String()).
+		Msg("User updated successfully")
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"id":          user.ID,
 		"name":        user.Name,
@@ -184,7 +194,7 @@ func UpdateUserAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// ListUsersAction handles user listing requests with pagination
+// ListUsersAction returns users (paginated).
 func ListUsersAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("List users endpoint called")
 
@@ -213,7 +223,9 @@ func ListUsersAction(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to list users")
+		log.Error().
+			Err(err).
+			Msg("Failed to list users")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedListUsers"),
 		})
@@ -244,7 +256,7 @@ func ListUsersAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// DeleteUserAction handles user deletion requests
+// DeleteUserAction deletes a user.
 func DeleteUserAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Delete user endpoint called")
 
@@ -276,13 +288,17 @@ func DeleteUserAction(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		log.Error().Err(err).Msg("Failed to delete user")
+		log.Error().
+			Err(err).
+			Msg("Failed to delete user")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedDeleteUser"),
 		})
 		return
 	}
 
-	log.Info().Str("userID", userID.String()).Msg("User deleted successfully")
+	log.Info().
+		Str("userID", userID.String()).
+		Msg("User deleted successfully")
 	util.WriteJSON(w, http.StatusNoContent, map[string]interface{}{})
 }

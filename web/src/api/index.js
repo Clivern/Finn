@@ -142,6 +142,8 @@ export const repositoriesAPI = {
   create: (workspaceId, data) => api.post(`/workspaces/${workspaceId}/repositories`, data),
   update: (workspaceId, id, data) => api.put(`/workspaces/${workspaceId}/repositories/${id}`, data),
   delete: (workspaceId, id) => api.delete(`/workspaces/${workspaceId}/repositories/${id}`),
+  clone: (workspaceId, id) => api.post(`/workspaces/${workspaceId}/repositories/${id}/clone`),
+  getCloneTask: (workspaceId, repoId, taskId) => api.get(`/workspaces/${workspaceId}/repositories/${repoId}/tasks/${taskId}`),
 }
 
 // API endpoints for workspace SSH keys
@@ -170,4 +172,11 @@ export const backendsAPI = {
   update: (workspaceId, id, data) => api.put(`/workspaces/${workspaceId}/backends/${id}`, data),
   delete: (workspaceId, id) => api.delete(`/workspaces/${workspaceId}/backends/${id}`),
   revealPassword: (workspaceId, id) => api.get(`/workspaces/${workspaceId}/backends/${id}/password`),
+}
+
+// API endpoints for AI assistant
+export const aiAPI = {
+  getStatus: () => api.get('/ai/status'),
+  getMessages: (params = {}) => api.get('/ai/messages', { params }),
+  createMessage: (data) => api.post('/ai/messages', data),
 }

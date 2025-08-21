@@ -12,12 +12,12 @@ import (
 	"github.com/clivern/finn/locale"
 	"github.com/clivern/finn/middleware"
 	"github.com/clivern/finn/module"
-	"github.com/clivern/finn/service/util"
+	"github.com/clivern/finn/pkg/util"
 
 	"github.com/rs/zerolog/log"
 )
 
-// UpdateProfileRequest represents the update profile request payload.
+// UpdateProfileRequest is the body for updating your profile.
 type UpdateProfileRequest struct {
 	Name            string `json:"name" validate:"omitempty,max=255" label:"Name"`
 	Email           string `json:"email" validate:"omitempty,email,max=255" label:"Email"`
@@ -25,7 +25,7 @@ type UpdateProfileRequest struct {
 	NewPassword     string `json:"newPassword" validate:"omitempty,strong_password,min=8,max=60" label:"New password"`
 }
 
-// GetProfileAction handles user profile requests
+// GetProfileAction returns the current user's profile.
 func GetProfileAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Get profile endpoint called")
 
@@ -52,7 +52,7 @@ func GetProfileAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// UpdateProfileAction handles user profile update requests
+// UpdateProfileAction updates the current user's profile.
 func UpdateProfileAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Update profile endpoint called")
 
@@ -114,14 +114,18 @@ func UpdateProfileAction(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		log.Error().Err(err).Msg("Failed to update profile")
+		log.Error().
+			Err(err).
+			Msg("Failed to update profile")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedUpdateProfile"),
 		})
 		return
 	}
 
-	log.Info().Str("userID", updated.ID.String()).Msg("Profile updated successfully")
+	log.Info().
+		Str("userID", updated.ID.String()).
+		Msg("Profile updated successfully")
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"user": map[string]interface{}{
 			"id":          updated.ID,

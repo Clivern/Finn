@@ -1,0 +1,59 @@
+---
+description: Keep function, method, and type doc comments simple and casual
+globs: **/*.go
+alwaysApply: false
+---
+
+# Go Doc Comments: Simple and Casual
+
+Write doc comments for functions, methods, and types in a simple, human way. Prefer short, conversational sentences over formal or robotic phrasing.
+
+## Do
+
+- Use **"is"** for types: "User is the DB row for a user."
+- Use **"does" / "creates" / "returns" / "deletes"** for actions: "CreateUserAction creates a new user."
+- Use **"body"** for request structs: "LoginRequest is the body you send to log in."
+- One short sentence; no jargon like "request payload" or "handles X requests."
+
+## Avoid
+
+- "X represents the Y request payload" → "X is the body for Y."
+- "XAction handles Y requests" → "XAction creates/returns/deletes Y."
+- "X represents a Y in the database" → "X is the DB row for a Y."
+
+## Examples
+
+**Types (request/response, DB models):**
+
+```go
+// CreateUserInviteRequest is the body you send when creating an invite.
+type CreateUserInviteRequest struct { ... }
+
+// User is the DB row for a user.
+type User struct { ... }
+```
+
+**HTTP handlers / actions:**
+
+```go
+// CreateUserInviteAction creates a new user invite.
+func CreateUserInviteAction(...) { ... }
+
+// ListInvitesAction returns all invites (admin only).
+func ListInvitesAction(...) { ... }
+
+// GetUserInviteAction returns one invite by ID.
+func GetUserInviteAction(...) { ... }
+```
+
+**Modules / helpers:**
+
+```go
+// Auth does login and password checks.
+type Auth struct { ... }
+
+// Setup does the initial platform install and config.
+type Setup struct { ... }
+```
+
+Apply this style to all exported functions, methods, and types in Go files.

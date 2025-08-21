@@ -9,17 +9,17 @@ import (
 	"time"
 
 	"github.com/clivern/finn/db"
-	"github.com/clivern/finn/service/util"
+	"github.com/clivern/finn/pkg/util"
 )
 
-// Setup handles the initial installation and configuration of the gateway.
+// Setup does the initial platform install and config.
 type Setup struct {
 	OptionRepository      db.OptionRepository
 	UserRepository        db.UserRepository
 	SystemEventRepository db.SystemEventRepository
 }
 
-// SetupOptions contains the configuration options for gateway setup.
+// SetupOptions is what you pass when running setup.
 type SetupOptions struct {
 	PlatformURL   string
 	PlatformEmail string
@@ -28,7 +28,7 @@ type SetupOptions struct {
 	AdminPassword string
 }
 
-// NewSetup creates a new Setup instance with the provided repositories.
+// NewSetup creates a Setup with the given repositories.
 func NewSetup(optionRepository db.OptionRepository, userRepository db.UserRepository, systemEventRepository db.SystemEventRepository) *Setup {
 	return &Setup{
 		OptionRepository:      optionRepository,

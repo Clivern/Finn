@@ -73,7 +73,7 @@ func getMsg(po *gotext.Po, key string) string {
 	return ""
 }
 
-// GetLangFromRequest returns the preferred language from the request (Accept-Language header)
+// GetLangFromRequest returns the preferred language from the request.
 func GetLangFromRequest(r *http.Request) string {
 	if r == nil {
 		return defaultLang

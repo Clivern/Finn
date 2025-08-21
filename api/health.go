@@ -7,12 +7,12 @@ package api
 import (
 	"net/http"
 
-	"github.com/clivern/finn/service/util"
+	"github.com/clivern/finn/pkg/util"
 
 	"github.com/rs/zerolog/log"
 )
 
-// HealthAction handles health check requests
+// HealthAction returns a simple health check (status ok).
 func HealthAction(w http.ResponseWriter, _ *http.Request) {
 	log.Debug().Msg("Health check endpoint called")
 

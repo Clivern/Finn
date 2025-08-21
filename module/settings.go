@@ -12,17 +12,17 @@ import (
 	"github.com/clivern/finn/db"
 )
 
-// Settings manages application configuration options.
+// Settings manages app settings (platform URL, SMTP, etc.).
 type Settings struct {
 	OptionRepository db.OptionRepository
 }
 
-// NewSettings creates a new Settings module instance.
+// NewSettings creates a settings module with the given option repo.
 func NewSettings(optionRepository db.OptionRepository) *Settings {
 	return &Settings{OptionRepository: optionRepository}
 }
 
-// UpdateSettingsOptions contains the settings fields that can be updated.
+// UpdateSettingsOptions is what you pass when updating settings.
 type UpdateSettingsOptions struct {
 	PlatformName    string
 	PlatformURL     string

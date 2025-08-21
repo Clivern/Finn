@@ -74,6 +74,15 @@ lint:
 	revive -config config.toml -exclude vendor/... -formatter friendly ./...
 
 
+## proto: Generate Go code from .proto files
+.PHONY: proto
+proto:
+	@echo ">> ============= Generating Proto ============= <<"
+	protoc --proto_path=. --go_out=. --go_opt=module=github.com/clivern/finn \
+		--go-grpc_out=. --go-grpc_opt=module=github.com/clivern/finn \
+		proto/runner/v1/runner.proto
+	@echo ">> Proto generated in proto/runner/v1/"
+
 ## verify: Verify dependencies
 .PHONY: verify
 verify:
@@ -116,8 +125,8 @@ coverage:
 .PHONY: run
 run:
 	@echo ">> ============= Run API Server ============= <<"
-	$(go) run finn.go migrate up -c mgmt_config.dist.yml
-	$(go) run finn.go server -c mgmt_config.dist.yml
+	$(go) run finn.go migrate up -c mgmt_config.test.yml
+	$(go) run finn.go server -c mgmt_config.test.yml
 
 
 ## ci: Run all CI tests.

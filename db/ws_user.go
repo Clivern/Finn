@@ -20,7 +20,7 @@ type WorkspaceUser struct {
 	UpdatedAt   time.Time
 }
 
-// WorkspaceUserRepository defines workspace-user membership CRUD
+// WorkspaceUserRepository is the interface for workspace-user membership CRUD.
 type WorkspaceUserRepository interface {
 	Create(m *WorkspaceUser) error
 	GetByID(id ID) (*WorkspaceUser, error)
@@ -67,7 +67,9 @@ func (r *workspaceUserRepoSQLite) Create(m *WorkspaceUser) error {
 	result, err := r.db.Exec(
 		`INSERT INTO workspace_users (workspace_id, user_id, role)
 		VALUES (?, ?, ?)`,
-		m.WorkspaceID.String(), m.UserID.String(), m.Role,
+		m.WorkspaceID.String(),
+		m.UserID.String(),
+		m.Role,
 	)
 	if err != nil {
 		return err
@@ -93,7 +95,14 @@ func (r *workspaceUserRepoSQLite) GetByID(id ID) (*WorkspaceUser, error) {
 		`SELECT id, workspace_id, user_id, role, created_at, updated_at
 		FROM workspace_users WHERE id = ?`,
 		id.String(),
-	).Scan(&m.ID, &m.WorkspaceID, &m.UserID, &m.Role, &m.CreatedAt, &m.UpdatedAt)
+	).Scan(
+		&m.ID,
+		&m.WorkspaceID,
+		&m.UserID,
+		&m.Role,
+		&m.CreatedAt,
+		&m.UpdatedAt,
+	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -109,8 +118,16 @@ func (r *workspaceUserRepoSQLite) GetByWorkspaceAndUser(workspaceID, userID ID) 
 	err := r.db.QueryRow(
 		`SELECT id, workspace_id, user_id, role, created_at, updated_at
 		FROM workspace_users WHERE workspace_id = ? AND user_id = ?`,
-		workspaceID.String(), userID.String(),
-	).Scan(&m.ID, &m.WorkspaceID, &m.UserID, &m.Role, &m.CreatedAt, &m.UpdatedAt)
+		workspaceID.String(),
+		userID.String(),
+	).Scan(
+		&m.ID,
+		&m.WorkspaceID,
+		&m.UserID,
+		&m.Role,
+		&m.CreatedAt,
+		&m.UpdatedAt,
+	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -125,7 +142,10 @@ func (r *workspaceUserRepoSQLite) Update(m *WorkspaceUser) error {
 	_, err := r.db.Exec(
 		`UPDATE workspace_users SET workspace_id = ?, user_id = ?, role = ?, updated_at = ?
 		WHERE id = ?`,
-		m.WorkspaceID.String(), m.UserID.String(), m.Role, time.Now().UTC(),
+		m.WorkspaceID.String(),
+		m.UserID.String(),
+		m.Role,
+		time.Now().UTC(),
 		m.ID.String(),
 	)
 	return err
@@ -147,7 +167,8 @@ func (r *workspaceUserRepoSQLite) List(limit, offset int) ([]*WorkspaceUser, err
 		FROM workspace_users
 		ORDER BY created_at DESC
 		LIMIT ? OFFSET ?`,
-		limit, offset,
+		limit,
+		offset,
 	)
 	if err != nil {
 		return nil, err
@@ -173,7 +194,9 @@ func (r *workspaceUserRepoSQLite) ListByWorkspace(workspaceID ID, limit, offset 
 		WHERE workspace_id = ?
 		ORDER BY created_at DESC
 		LIMIT ? OFFSET ?`,
-		workspaceID.String(), limit, offset,
+		workspaceID.String(),
+		limit,
+		offset,
 	)
 	if err != nil {
 		return nil, err
@@ -205,7 +228,9 @@ func (r *workspaceUserRepoPostgres) Create(m *WorkspaceUser) error {
 		`INSERT INTO workspace_users (workspace_id, user_id, role)
 		VALUES ($1, $2, $3)
 		RETURNING id, created_at, updated_at`,
-		m.WorkspaceID.String(), m.UserID.String(), m.Role,
+		m.WorkspaceID.String(),
+		m.UserID.String(),
+		m.Role,
 	).Scan(&m.ID, &m.CreatedAt, &m.UpdatedAt)
 	return err
 }
@@ -217,7 +242,14 @@ func (r *workspaceUserRepoPostgres) GetByID(id ID) (*WorkspaceUser, error) {
 		`SELECT id, workspace_id, user_id, role, created_at, updated_at
 		FROM workspace_users WHERE id = $1`,
 		id.String(),
-	).Scan(&m.ID, &m.WorkspaceID, &m.UserID, &m.Role, &m.CreatedAt, &m.UpdatedAt)
+	).Scan(
+		&m.ID,
+		&m.WorkspaceID,
+		&m.UserID,
+		&m.Role,
+		&m.CreatedAt,
+		&m.UpdatedAt,
+	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -233,8 +265,16 @@ func (r *workspaceUserRepoPostgres) GetByWorkspaceAndUser(workspaceID, userID ID
 	err := r.db.QueryRow(
 		`SELECT id, workspace_id, user_id, role, created_at, updated_at
 		FROM workspace_users WHERE workspace_id = $1 AND user_id = $2`,
-		workspaceID.String(), userID.String(),
-	).Scan(&m.ID, &m.WorkspaceID, &m.UserID, &m.Role, &m.CreatedAt, &m.UpdatedAt)
+		workspaceID.String(),
+		userID.String(),
+	).Scan(
+		&m.ID,
+		&m.WorkspaceID,
+		&m.UserID,
+		&m.Role,
+		&m.CreatedAt,
+		&m.UpdatedAt,
+	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -249,7 +289,10 @@ func (r *workspaceUserRepoPostgres) Update(m *WorkspaceUser) error {
 	_, err := r.db.Exec(
 		`UPDATE workspace_users SET workspace_id = $1, user_id = $2, role = $3, updated_at = $4
 		WHERE id = $5`,
-		m.WorkspaceID.String(), m.UserID.String(), m.Role, time.Now().UTC(),
+		m.WorkspaceID.String(),
+		m.UserID.String(),
+		m.Role,
+		time.Now().UTC(),
 		m.ID.String(),
 	)
 	return err
@@ -271,7 +314,8 @@ func (r *workspaceUserRepoPostgres) List(limit, offset int) ([]*WorkspaceUser, e
 		FROM workspace_users
 		ORDER BY created_at DESC
 		LIMIT $1 OFFSET $2`,
-		limit, offset,
+		limit,
+		offset,
 	)
 	if err != nil {
 		return nil, err
@@ -297,7 +341,9 @@ func (r *workspaceUserRepoPostgres) ListByWorkspace(workspaceID ID, limit, offse
 		WHERE workspace_id = $1
 		ORDER BY created_at DESC
 		LIMIT $2 OFFSET $3`,
-		workspaceID.String(), limit, offset,
+		workspaceID.String(),
+		limit,
+		offset,
 	)
 	if err != nil {
 		return nil, err

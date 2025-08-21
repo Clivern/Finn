@@ -322,6 +322,30 @@ msgstr "You do not have permission to update this workspace"
 msgid "notAuthenticated"
 msgstr "Not authenticated"
 
+msgid "failedLoadMessages"
+msgstr "Failed to load messages"
+
+msgid "aiNotEnabled"
+msgstr "AI is not enabled"
+
+msgid "messageContentRequired"
+msgstr "Message content is required"
+
+msgid "failedSaveMessage"
+msgstr "Failed to save message"
+
+msgid "failedLoadConversation"
+msgstr "Failed to load conversation"
+
+msgid "aiNotConfigured"
+msgstr "AI is not configured"
+
+msgid "failedGenerateResponse"
+msgstr "Failed to generate response"
+
+msgid "failedSaveResponse"
+msgstr "Failed to save response"
+
 msgid "passwordResetSuccess"
 msgstr "Your password has been reset successfully."
 
@@ -354,6 +378,9 @@ msgstr "Runner not found"
 
 msgid "runnerPublicKeyNotConfigured"
 msgstr "Runner public key is not configured"
+
+msgid "runnerTokenNotConfigured"
+msgstr "Runner token is not configured"
 
 msgid "runnerUrlNotConfigured"
 msgstr "Runner URL is not configured"

@@ -16,18 +16,18 @@ var (
 	ErrWorkspaceUserNotFound = errors.New("workspace user not found")
 )
 
-// Workspace handles workspace management operations.
+// Workspace is the module for workspace CRUD and members.
 type Workspace struct {
 	WorkspaceRepository     db.WorkspaceRepository
 	WorkspaceUserRepository db.WorkspaceUserRepository
 }
 
-// NewWorkspace creates a new workspace module instance using db.NewWorkspaceRepository(db).
+// NewWorkspace creates a workspace module with the given DB.
 func NewWorkspace(dbConn *sql.DB) *Workspace {
 	return &Workspace{WorkspaceRepository: db.NewWorkspaceRepository(dbConn), WorkspaceUserRepository: db.NewWorkspaceUserRepository(dbConn)}
 }
 
-// CreateWorkspaceOptions contains options for creating a workspace.
+// CreateWorkspaceOptions is what you pass when creating a workspace.
 type CreateWorkspaceOptions struct {
 	Name string
 }
@@ -63,7 +63,7 @@ func (w *Workspace) CountWorkspaceMembers(workspaceID db.ID) (int64, error) {
 	return w.WorkspaceUserRepository.CountByWorkspace(workspaceID)
 }
 
-// ListWorkspacesOptions contains options for listing workspaces.
+// ListWorkspacesOptions is what you pass when listing workspaces.
 // UserID: nil or empty = all workspaces; set = only workspaces the user is attached to.
 type ListWorkspacesOptions struct {
 	Limit  int
@@ -71,7 +71,7 @@ type ListWorkspacesOptions struct {
 	UserID *db.ID
 }
 
-// ListWorkspacesResult contains the result of listing workspaces.
+// ListWorkspacesResult is what you get back when listing workspaces.
 type ListWorkspacesResult struct {
 	Workspaces []*db.Workspace
 	Total      int64
@@ -90,7 +90,7 @@ func (w *Workspace) ListWorkspaces(options *ListWorkspacesOptions) (*ListWorkspa
 	return &ListWorkspacesResult{Workspaces: list, Total: total}, nil
 }
 
-// UpdateWorkspaceOptions contains options for updating a workspace.
+// UpdateWorkspaceOptions is what you pass when updating a workspace.
 type UpdateWorkspaceOptions struct {
 	WorkspaceID db.ID
 	Name        string
@@ -133,14 +133,14 @@ func (w *Workspace) AddWorkspaceUser(workspaceID, userID db.ID, role string) (*d
 	return workspaceUser, nil
 }
 
-// ListWorkspaceUsersOptions contains options for listing workspace users
+// ListWorkspaceUsersOptions is what you pass when listing workspace members.
 type ListWorkspaceUsersOptions struct {
 	WorkspaceID db.ID
 	Limit       int
 	Offset      int
 }
 
-// ListWorkspaceUsersResult contains the result of listing workspace users
+// ListWorkspaceUsersResult is what you get back when listing workspace members.
 type ListWorkspaceUsersResult struct {
 	WorkspaceUsers []*db.WorkspaceUser
 	Total          int64
@@ -164,7 +164,7 @@ func (w *Workspace) GetWorkspaceUser(workspaceID, userID db.ID) (*db.WorkspaceUs
 	return w.WorkspaceUserRepository.GetByWorkspaceAndUser(workspaceID, userID)
 }
 
-// UpdateWorkspaceUserRoleOptions contains options for updating a workspace user role
+// UpdateWorkspaceUserRoleOptions is what you pass when changing a member's role.
 type UpdateWorkspaceUserRoleOptions struct {
 	WorkspaceID db.ID
 	UserID      db.ID

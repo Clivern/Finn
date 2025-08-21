@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-// ReadyResponse represents the readiness check response
+// ReadyResponse is what the ready endpoint returns.
 type ReadyResponse struct {
 	Status string `json:"status"`
 }

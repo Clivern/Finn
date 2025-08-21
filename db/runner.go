@@ -17,21 +17,20 @@ const (
 	RunnerStatusMaintenance = "maintenance"
 )
 
-// Runner represents a runner in the database
+// Runner is the DB row for a runner.
 type Runner struct {
 	ID               ID
 	Token            string
-	Name             *string
-	Tags             *string
+	Name             string
+	Tags             string
 	MaxParallelTasks int
 	Status           string
-	PublicKey        *string
-	URL              *string
+	URL              string
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 }
 
-// RunnerRepository defines runner CRUD
+// RunnerRepository is the interface for runner CRUD.
 type RunnerRepository interface {
 	Create(runner *Runner) error
 	GetByID(id ID) (*Runner, error)
@@ -65,7 +64,6 @@ func scanRunnerRows(rows *sql.Rows) ([]*Runner, error) {
 			&run.Tags,
 			&run.MaxParallelTasks,
 			&run.Status,
-			&run.PublicKey,
 			&run.URL,
 			&run.CreatedAt,
 			&run.UpdatedAt,
@@ -87,10 +85,14 @@ type runnerRepoSQLite struct {
 // Create inserts a row
 func (r *runnerRepoSQLite) Create(runner *Runner) error {
 	result, err := r.db.Exec(
-		`INSERT INTO runners (token, name, tags, max_parallel_tasks, status, public_key, url)
-		VALUES (?, ?, ?, ?, ?, ?, ?)`,
-		runner.Token, runner.Name, runner.Tags, runner.MaxParallelTasks, runner.Status,
-		runner.PublicKey, runner.URL,
+		`INSERT INTO runners (token, name, tags, max_parallel_tasks, status, url)
+		VALUES (?, ?, ?, ?, ?, ?)`,
+		runner.Token,
+		runner.Name,
+		runner.Tags,
+		runner.MaxParallelTasks,
+		runner.Status,
+		runner.URL,
 	)
 	if err != nil {
 		return err
@@ -107,11 +109,20 @@ func (r *runnerRepoSQLite) Create(runner *Runner) error {
 func (r *runnerRepoSQLite) GetByID(id ID) (*Runner, error) {
 	run := &Runner{}
 	err := r.db.QueryRow(
-		`SELECT id, token, name, tags, max_parallel_tasks, status, public_key, url, created_at, updated_at
+		`SELECT id, token, name, tags, max_parallel_tasks, status, url, created_at, updated_at
 		FROM runners WHERE id = ?`,
 		id.String(),
-	).Scan(&run.ID, &run.Token, &run.Name, &run.Tags, &run.MaxParallelTasks, &run.Status,
-		&run.PublicKey, &run.URL, &run.CreatedAt, &run.UpdatedAt)
+	).Scan(
+		&run.ID,
+		&run.Token,
+		&run.Name,
+		&run.Tags,
+		&run.MaxParallelTasks,
+		&run.Status,
+		&run.URL,
+		&run.CreatedAt,
+		&run.UpdatedAt,
+	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -125,11 +136,20 @@ func (r *runnerRepoSQLite) GetByID(id ID) (*Runner, error) {
 func (r *runnerRepoSQLite) GetByToken(token string) (*Runner, error) {
 	run := &Runner{}
 	err := r.db.QueryRow(
-		`SELECT id, token, name, tags, max_parallel_tasks, status, public_key, url, created_at, updated_at
+		`SELECT id, token, name, tags, max_parallel_tasks, status, url, created_at, updated_at
 		FROM runners WHERE token = ?`,
 		token,
-	).Scan(&run.ID, &run.Token, &run.Name, &run.Tags, &run.MaxParallelTasks, &run.Status,
-		&run.PublicKey, &run.URL, &run.CreatedAt, &run.UpdatedAt)
+	).Scan(
+		&run.ID,
+		&run.Token,
+		&run.Name,
+		&run.Tags,
+		&run.MaxParallelTasks,
+		&run.Status,
+		&run.URL,
+		&run.CreatedAt,
+		&run.UpdatedAt,
+	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -143,10 +163,16 @@ func (r *runnerRepoSQLite) GetByToken(token string) (*Runner, error) {
 func (r *runnerRepoSQLite) Update(runner *Runner) error {
 	_, err := r.db.Exec(
 		`UPDATE runners SET token = ?, name = ?, tags = ?, max_parallel_tasks = ?, status = ?,
-			public_key = ?, url = ?, updated_at = ?
+			url = ?, updated_at = ?
 		WHERE id = ?`,
-		runner.Token, runner.Name, runner.Tags, runner.MaxParallelTasks, runner.Status,
-		runner.PublicKey, runner.URL, time.Now().UTC(), runner.ID.String(),
+		runner.Token,
+		runner.Name,
+		runner.Tags,
+		runner.MaxParallelTasks,
+		runner.Status,
+		runner.URL,
+		time.Now().UTC(),
+		runner.ID.String(),
 	)
 	return err
 }
@@ -163,7 +189,7 @@ func (r *runnerRepoSQLite) Delete(id ID) error {
 // List returns a list of runners
 func (r *runnerRepoSQLite) List(limit, offset int) ([]*Runner, error) {
 	rows, err := r.db.Query(
-		`SELECT id, token, name, tags, max_parallel_tasks, status, public_key, url, created_at, updated_at
+		`SELECT id, token, name, tags, max_parallel_tasks, status, url, created_at, updated_at
 		FROM runners ORDER BY created_at DESC LIMIT ? OFFSET ?`,
 		limit, offset,
 	)
@@ -177,7 +203,7 @@ func (r *runnerRepoSQLite) List(limit, offset int) ([]*Runner, error) {
 // ListActive returns a list of active runners
 func (r *runnerRepoSQLite) ListActive() ([]*Runner, error) {
 	rows, err := r.db.Query(
-		`SELECT id, token, name, tags, max_parallel_tasks, status, public_key, url, created_at, updated_at
+		`SELECT id, token, name, tags, max_parallel_tasks, status, url, created_at, updated_at
 		FROM runners WHERE status = 'active' ORDER BY created_at DESC`,
 	)
 	if err != nil {
@@ -216,10 +242,14 @@ type runnerRepoPostgres struct {
 // Create inserts a row
 func (r *runnerRepoPostgres) Create(runner *Runner) error {
 	err := r.db.QueryRow(
-		`INSERT INTO runners (token, name, tags, max_parallel_tasks, status, public_key, url)
-		VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-		runner.Token, runner.Name, runner.Tags, runner.MaxParallelTasks, runner.Status,
-		runner.PublicKey, runner.URL,
+		`INSERT INTO runners (token, name, tags, max_parallel_tasks, status, url)
+		VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+		runner.Token,
+		runner.Name,
+		runner.Tags,
+		runner.MaxParallelTasks,
+		runner.Status,
+		runner.URL,
 	).Scan(&runner.ID)
 	return err
 }
@@ -228,11 +258,20 @@ func (r *runnerRepoPostgres) Create(runner *Runner) error {
 func (r *runnerRepoPostgres) GetByID(id ID) (*Runner, error) {
 	run := &Runner{}
 	err := r.db.QueryRow(
-		`SELECT id, token, name, tags, max_parallel_tasks, status, public_key, url, created_at, updated_at
+		`SELECT id, token, name, tags, max_parallel_tasks, status, url, created_at, updated_at
 		FROM runners WHERE id = $1`,
 		id.String(),
-	).Scan(&run.ID, &run.Token, &run.Name, &run.Tags, &run.MaxParallelTasks, &run.Status,
-		&run.PublicKey, &run.URL, &run.CreatedAt, &run.UpdatedAt)
+	).Scan(
+		&run.ID,
+		&run.Token,
+		&run.Name,
+		&run.Tags,
+		&run.MaxParallelTasks,
+		&run.Status,
+		&run.URL,
+		&run.CreatedAt,
+		&run.UpdatedAt,
+	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -246,11 +285,20 @@ func (r *runnerRepoPostgres) GetByID(id ID) (*Runner, error) {
 func (r *runnerRepoPostgres) GetByToken(token string) (*Runner, error) {
 	run := &Runner{}
 	err := r.db.QueryRow(
-		`SELECT id, token, name, tags, max_parallel_tasks, status, public_key, url, created_at, updated_at
+		`SELECT id, token, name, tags, max_parallel_tasks, status, url, created_at, updated_at
 		FROM runners WHERE token = $1`,
 		token,
-	).Scan(&run.ID, &run.Token, &run.Name, &run.Tags, &run.MaxParallelTasks, &run.Status,
-		&run.PublicKey, &run.URL, &run.CreatedAt, &run.UpdatedAt)
+	).Scan(
+		&run.ID,
+		&run.Token,
+		&run.Name,
+		&run.Tags,
+		&run.MaxParallelTasks,
+		&run.Status,
+		&run.URL,
+		&run.CreatedAt,
+		&run.UpdatedAt,
+	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -264,10 +312,16 @@ func (r *runnerRepoPostgres) GetByToken(token string) (*Runner, error) {
 func (r *runnerRepoPostgres) Update(runner *Runner) error {
 	_, err := r.db.Exec(
 		`UPDATE runners SET token = $1, name = $2, tags = $3, max_parallel_tasks = $4, status = $5,
-			public_key = $6, url = $7, updated_at = $8
-		WHERE id = $9`,
-		runner.Token, runner.Name, runner.Tags, runner.MaxParallelTasks, runner.Status,
-		runner.PublicKey, runner.URL, time.Now().UTC(), runner.ID.String(),
+			url = $6, updated_at = $7
+		WHERE id = $8`,
+		runner.Token,
+		runner.Name,
+		runner.Tags,
+		runner.MaxParallelTasks,
+		runner.Status,
+		runner.URL,
+		time.Now().UTC(),
+		runner.ID.String(),
 	)
 	return err
 }
@@ -284,7 +338,7 @@ func (r *runnerRepoPostgres) Delete(id ID) error {
 // List returns a list of runners
 func (r *runnerRepoPostgres) List(limit, offset int) ([]*Runner, error) {
 	rows, err := r.db.Query(
-		`SELECT id, token, name, tags, max_parallel_tasks, status, public_key, url, created_at, updated_at
+		`SELECT id, token, name, tags, max_parallel_tasks, status, url, created_at, updated_at
 		FROM runners ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
 		limit, offset,
 	)
@@ -298,7 +352,7 @@ func (r *runnerRepoPostgres) List(limit, offset int) ([]*Runner, error) {
 // ListActive returns a list of active runners
 func (r *runnerRepoPostgres) ListActive() ([]*Runner, error) {
 	rows, err := r.db.Query(
-		`SELECT id, token, name, tags, max_parallel_tasks, status, public_key, url, created_at, updated_at
+		`SELECT id, token, name, tags, max_parallel_tasks, status, url, created_at, updated_at
 		FROM runners WHERE status = 'active' ORDER BY created_at DESC`,
 	)
 	if err != nil {

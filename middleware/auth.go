@@ -11,7 +11,7 @@ import (
 
 	"github.com/clivern/finn/db"
 	"github.com/clivern/finn/module"
-	"github.com/clivern/finn/service/util"
+	"github.com/clivern/finn/pkg/util"
 
 	"github.com/rs/zerolog/log"
 )
@@ -26,7 +26,9 @@ func SessionAuth() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if shouldSkipAuth(r.URL.Path) {
-				log.Info().Str("path", r.URL.Path).Msg("Skipping authentication for API route")
+				log.Info().
+					Str("path", r.URL.Path).
+					Msg("Skipping authentication for API route")
 				next.ServeHTTP(w, r)
 				return
 			}
@@ -35,13 +37,18 @@ func SessionAuth() func(http.Handler) http.Handler {
 			if apiKey != "" {
 				user, err := db.NewUserRepository(db.GetDB()).GetByAPIKey(apiKey)
 				if err != nil {
-					log.Info().Err(err).Str("path", r.URL.Path).Msg("API key validation failed")
+					log.Info().
+						Err(err).
+						Str("path", r.URL.Path).
+						Msg("API key validation failed")
 					util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
 						"errorMessage": "Invalid API key",
 					})
 					return
 				}
-				log.Info().Str("path", r.URL.Path).Msg("API key validation successful")
+				log.Info().
+					Str("path", r.URL.Path).
+					Msg("API key validation successful")
 				ctx := context.WithValue(r.Context(), ContextKeyUser, user)
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
@@ -49,7 +56,9 @@ func SessionAuth() func(http.Handler) http.Handler {
 
 			sessionToken := util.GetCookie(r, "_finn_session")
 			if sessionToken == "" {
-				log.Info().Str("path", r.URL.Path).Msg("No session cookie found")
+				log.Info().
+					Str("path", r.URL.Path).
+					Msg("No session cookie found")
 				util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
 					"errorMessage": "Not authenticated",
 				})
@@ -64,15 +73,22 @@ func SessionAuth() func(http.Handler) http.Handler {
 			user, _, err := sessionManager.ValidateSession(sessionToken)
 			if err != nil {
 				util.DeleteCookie(w, "_finn_session")
-				sessionManager.RevokeUserSessions(user.ID)
-				log.Info().Err(err).Str("path", r.URL.Path).Msg("Session validation failed")
+				if user != nil {
+					sessionManager.RevokeUserSessions(user.ID)
+				}
+				log.Info().
+					Err(err).
+					Str("path", r.URL.Path).
+					Msg("Session validation failed")
 				util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
 					"errorMessage": "Invalid or expired session",
 				})
 				return
 			}
 
-			log.Info().Str("path", r.URL.Path).Msg("Session validation successful")
+			log.Info().
+				Str("path", r.URL.Path).
+				Msg("Session validation successful")
 			ctx := context.WithValue(r.Context(), ContextKeyUser, user)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

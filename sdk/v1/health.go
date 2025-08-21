@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-// HealthResponse represents the health check response
+// HealthResponse is what the health endpoint returns.
 type HealthResponse struct {
 	Status string `json:"status"`
 }

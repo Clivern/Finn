@@ -18,13 +18,13 @@ type SystemEvent struct {
 	CreatedAt time.Time
 }
 
-// SystemEventPlatformInstalled is the payload for type "platform_installed"
+// SystemEventPlatformInstalled is the event data for "platform_installed".
 type SystemEventPlatformInstalled struct {
 	UserID    string `json:"user_id"`
 	UserEmail string `json:"user_email"`
 }
 
-// SystemEventRepository defines system event persistence
+// SystemEventRepository is the interface for system event persistence.
 type SystemEventRepository interface {
 	Create(eventType string, data interface{}) error
 	GetByID(id ID) (*SystemEvent, error)

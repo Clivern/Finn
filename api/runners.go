@@ -12,37 +12,35 @@ import (
 
 	"github.com/clivern/finn/db"
 	"github.com/clivern/finn/locale"
-	"github.com/clivern/finn/service/runner"
-	"github.com/clivern/finn/service/util"
+	"github.com/clivern/finn/pkg/runner"
+	"github.com/clivern/finn/pkg/util"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
-// CreateRunnerRequest represents the create runner request payload
+// CreateRunnerRequest is the body for creating a runner.
 type CreateRunnerRequest struct {
 	Name             string `json:"name" validate:"required" label:"Name"`
 	Tags             string `json:"tags" label:"Tags"`
-	MaxParallelTasks int    `json:"maxParallelTasks" label:"Max parallel tasks"`
-	Status           string `json:"status" validate:"omitempty,oneof=active inactive maintenance" label:"Status"`
+	MaxParallelTasks int    `json:"maxParallelTasks" validate:"required,min=1" label:"Max parallel tasks"`
+	Status           string `json:"status" validate:"required,oneof=active inactive maintenance" label:"Status"`
 	URL              string `json:"url" validate:"required" label:"URL"`
 	Token            string `json:"token" validate:"required,min=1" label:"Token (UUID)"`
-	PublicKey        string `json:"publicKey" label:"Public key"`
 }
 
-// UpdateRunnerRequest represents the update runner request payload
+// UpdateRunnerRequest is the body for updating a runner.
 type UpdateRunnerRequest struct {
-	Name             *string `json:"name" label:"Name"`
-	Tags             *string `json:"tags" label:"Tags"`
-	MaxParallelTasks *int    `json:"maxParallelTasks" label:"Max parallel tasks"`
-	Status           *string `json:"status" validate:"omitempty,oneof=active inactive maintenance" label:"Status"`
-	URL              *string `json:"url" label:"URL"`
-	Token            *string `json:"token" label:"Token (UUID)"`
-	PublicKey        *string `json:"publicKey" label:"Public key"`
+	Name             string `json:"name" validate:"required" label:"Name"`
+	Tags             string `json:"tags" label:"Tags"`
+	MaxParallelTasks int    `json:"maxParallelTasks" validate:"required,min=1" label:"Max parallel tasks"`
+	Status           string `json:"status" validate:"required,oneof=active inactive maintenance" label:"Status"`
+	URL              string `json:"url" validate:"required" label:"URL"`
+	Token            string `json:"token" validate:"required,min=1" label:"Token (UUID)"`
 }
 
-// ListRunnersAction handles listing all runners (platform admin only)
+// ListRunnersAction returns all runners (admin only).
 func ListRunnersAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("List runners endpoint called")
 
@@ -64,7 +62,9 @@ func ListRunnersAction(w http.ResponseWriter, r *http.Request) {
 	repo := db.NewRunnerRepository(db.GetDB())
 	total, err := repo.Count()
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to count runners")
+		log.Error().
+			Err(err).
+			Msg("Failed to count runners")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedListRunners"),
 		})
@@ -73,7 +73,9 @@ func ListRunnersAction(w http.ResponseWriter, r *http.Request) {
 
 	runners, err := repo.List(limit, offset)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to list runners")
+		log.Error().
+			Err(err).
+			Msg("Failed to list runners")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedListRunners"),
 		})
@@ -90,7 +92,6 @@ func ListRunnersAction(w http.ResponseWriter, r *http.Request) {
 			"maxParallelTasks": run.MaxParallelTasks,
 			"status":           run.Status,
 			"url":              run.URL,
-			"publicKey":        run.PublicKey,
 			"createdAt":        run.CreatedAt.UTC().Format(time.RFC3339),
 			"updatedAt":        run.UpdatedAt.UTC().Format(time.RFC3339),
 		}
@@ -107,7 +108,7 @@ func ListRunnersAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetRunnerAction handles get runner by ID (platform admin only)
+// GetRunnerAction returns one runner by ID (admin only).
 func GetRunnerAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Get runner endpoint called")
 
@@ -122,7 +123,9 @@ func GetRunnerAction(w http.ResponseWriter, r *http.Request) {
 	repo := db.NewRunnerRepository(db.GetDB())
 	runner, err := repo.GetByID(db.ID(idStr))
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get runner")
+		log.Error().
+			Err(err).
+			Msg("Failed to get runner")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetRunner"),
 		})
@@ -143,13 +146,12 @@ func GetRunnerAction(w http.ResponseWriter, r *http.Request) {
 		"maxParallelTasks": runner.MaxParallelTasks,
 		"status":           runner.Status,
 		"url":              runner.URL,
-		"publicKey":        runner.PublicKey,
 		"createdAt":        runner.CreatedAt.UTC().Format(time.RFC3339),
 		"updatedAt":        runner.UpdatedAt.UTC().Format(time.RFC3339),
 	})
 }
 
-// CreateRunnerAction handles runner creation (platform admin only)
+// CreateRunnerAction creates a runner (admin only).
 func CreateRunnerAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Create runner endpoint called")
 
@@ -186,27 +188,28 @@ func CreateRunnerAction(w http.ResponseWriter, r *http.Request) {
 
 	runner := &db.Runner{
 		Token:            token,
-		Name:             &req.Name,
-		URL:              &req.URL,
+		Name:             req.Name,
+		URL:              req.URL,
 		MaxParallelTasks: req.MaxParallelTasks,
 		Status:           status,
 	}
 	if req.Tags != "" {
-		runner.Tags = &req.Tags
-	}
-	if req.PublicKey != "" {
-		runner.PublicKey = &req.PublicKey
+		runner.Tags = req.Tags
 	}
 
 	if err := repo.Create(runner); err != nil {
-		log.Error().Err(err).Msg("Failed to create runner")
+		log.Error().
+			Err(err).
+			Msg("Failed to create runner")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCreateRunner"),
 		})
 		return
 	}
 
-	log.Info().Str("runnerID", runner.ID.String()).Msg("Runner created successfully")
+	log.Info().
+		Str("runnerID", runner.ID.String()).
+		Msg("Runner created successfully")
 	util.WriteJSON(w, http.StatusCreated, map[string]interface{}{
 		"id":               runner.ID,
 		"token":            token,
@@ -215,13 +218,12 @@ func CreateRunnerAction(w http.ResponseWriter, r *http.Request) {
 		"maxParallelTasks": runner.MaxParallelTasks,
 		"status":           runner.Status,
 		"url":              runner.URL,
-		"publicKey":        runner.PublicKey,
 		"createdAt":        runner.CreatedAt.UTC().Format(time.RFC3339),
 		"updatedAt":        runner.UpdatedAt.UTC().Format(time.RFC3339),
 	})
 }
 
-// UpdateRunnerAction handles runner update (platform admin only)
+// UpdateRunnerAction updates a runner (admin only).
 func UpdateRunnerAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Update runner endpoint called")
 
@@ -242,7 +244,9 @@ func UpdateRunnerAction(w http.ResponseWriter, r *http.Request) {
 	repo := db.NewRunnerRepository(db.GetDB())
 	runner, err := repo.GetByID(db.ID(idStr))
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get runner for update")
+		log.Error().
+			Err(err).
+			Msg("Failed to get runner for update")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedUpdateRunner"),
 		})
@@ -255,14 +259,8 @@ func UpdateRunnerAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Token != nil {
-		token := strings.TrimSpace(*req.Token)
-		if token == "" {
-			util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-				"errorMessage": locale.TR(r, "tokenCannotBeEmpty"),
-			})
-			return
-		}
+	if req.Token != "" {
+		token := strings.TrimSpace(req.Token)
 		if _, err := uuid.Parse(token); err != nil {
 			util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
 				"errorMessage": locale.TR(r, "tokenMustBeValidUUID"),
@@ -278,34 +276,26 @@ func UpdateRunnerAction(w http.ResponseWriter, r *http.Request) {
 		}
 		runner.Token = token
 	}
-	if req.Name != nil {
-		runner.Name = req.Name
-	}
-	if req.Tags != nil {
-		runner.Tags = req.Tags
-	}
-	if req.MaxParallelTasks != nil && *req.MaxParallelTasks > 0 {
-		runner.MaxParallelTasks = *req.MaxParallelTasks
-	}
-	if req.Status != nil {
-		runner.Status = *req.Status
-	}
-	if req.URL != nil {
-		runner.URL = req.URL
-	}
-	if req.PublicKey != nil {
-		runner.PublicKey = req.PublicKey
-	}
+
+	runner.Name = req.Name
+	runner.Tags = req.Tags
+	runner.MaxParallelTasks = req.MaxParallelTasks
+	runner.Status = req.Status
+	runner.URL = req.URL
 
 	if err := repo.Update(runner); err != nil {
-		log.Error().Err(err).Msg("Failed to update runner")
+		log.Error().
+			Err(err).
+			Msg("Failed to update runner")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedUpdateRunner"),
 		})
 		return
 	}
 
-	log.Info().Str("runnerID", runner.ID.String()).Msg("Runner updated successfully")
+	log.Info().
+		Str("runnerID", runner.ID.String()).
+		Msg("Runner updated successfully")
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"id":               runner.ID,
 		"token":            runner.Token,
@@ -314,13 +304,12 @@ func UpdateRunnerAction(w http.ResponseWriter, r *http.Request) {
 		"maxParallelTasks": runner.MaxParallelTasks,
 		"status":           runner.Status,
 		"url":              runner.URL,
-		"publicKey":        runner.PublicKey,
 		"createdAt":        runner.CreatedAt.UTC().Format(time.RFC3339),
 		"updatedAt":        runner.UpdatedAt.UTC().Format(time.RFC3339),
 	})
 }
 
-// DeleteRunnerAction handles runner deletion (platform admin only)
+// DeleteRunnerAction deletes a runner (admin only).
 func DeleteRunnerAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Delete runner endpoint called")
 
@@ -335,7 +324,9 @@ func DeleteRunnerAction(w http.ResponseWriter, r *http.Request) {
 	repo := db.NewRunnerRepository(db.GetDB())
 	existing, err := repo.GetByID(db.ID(idStr))
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get runner for delete")
+		log.Error().
+			Err(err).
+			Msg("Failed to get runner for delete")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedDeleteRunner"),
 		})
@@ -349,18 +340,22 @@ func DeleteRunnerAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := repo.Delete(db.ID(idStr)); err != nil {
-		log.Error().Err(err).Msg("Failed to delete runner")
+		log.Error().
+			Err(err).
+			Msg("Failed to delete runner")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedDeleteRunner"),
 		})
 		return
 	}
 
-	log.Info().Str("runnerID", idStr).Msg("Runner deleted successfully")
+	log.Info().
+		Str("runnerID", idStr).
+		Msg("Runner deleted successfully")
 	util.WriteJSON(w, http.StatusNoContent, map[string]interface{}{})
 }
 
-// PingRunnerAction pings a runner by ID using its URL, public key and token, and returns status.
+// PingRunnerAction pings a runner to check it's reachable.
 func PingRunnerAction(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	if idStr == "" {
@@ -373,7 +368,9 @@ func PingRunnerAction(w http.ResponseWriter, r *http.Request) {
 	repo := db.NewRunnerRepository(db.GetDB())
 	run, err := repo.GetByID(db.ID(idStr))
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get runner for ping")
+		log.Error().
+			Err(err).
+			Msg("Failed to get runner for ping")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetRunnerForPing"),
 		})
@@ -386,28 +383,29 @@ func PingRunnerAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if run.URL == nil || strings.TrimSpace(*run.URL) == "" {
-		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": locale.TR(r, "runnerUrlNotConfigured"),
-		})
-		return
-	}
-	if run.PublicKey == nil || strings.TrimSpace(*run.PublicKey) == "" {
-		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
-			"errorMessage": locale.TR(r, "runnerPublicKeyNotConfigured"),
-		})
-		return
-	}
-
-	client := &runner.Client{
-		BaseURL:      strings.TrimSpace(*run.URL),
-		PublicKeyPEM: []byte(*run.PublicKey),
-		Token:        run.Token,
-	}
-	if err := client.Ping(r.Context()); err != nil {
-		log.Info().Err(err).Str("runnerID", idStr).Msg("Runner ping failed")
+	client, err := runner.NewGRPCClient(
+		r.Context(),
+		strings.TrimSpace(run.URL),
+		run.Token,
+	)
+	if err != nil {
+		log.Info().
+			Err(err).
+			Str("runnerID", idStr).
+			Msg("Runner ping: grpc client failed")
 		util.WriteJSON(w, http.StatusOK, map[string]interface{}{
-			"status":       "failed",
+			"errorMessage": err.Error(),
+		})
+		return
+	}
+	defer client.Close()
+
+	if err := client.Ping(r.Context()); err != nil {
+		log.Info().
+			Err(err).
+			Str("runnerID", idStr).
+			Msg("Runner ping failed")
+		util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 			"errorMessage": err.Error(),
 		})
 		return

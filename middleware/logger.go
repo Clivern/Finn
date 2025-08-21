@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// responseWriter wraps http.ResponseWriter to capture status code
+// responseWriter wraps the response so we can capture status code and size.
 type responseWriter struct {
 	http.ResponseWriter
 	statusCode int
@@ -41,11 +41,13 @@ func Logger(next http.Handler) http.Handler {
 
 		next.ServeHTTP(wrapped, r)
 
+		elapsed := time.Since(start)
 		log.Info().
 			Str("method", r.Method).
 			Str("path", r.URL.Path).
 			Int("status", wrapped.statusCode).
-			Dur("duration", time.Since(start)).
+			Dur("duration", elapsed).
+			Int64("latency_ms", elapsed.Milliseconds()).
 			Msg("HTTP Request")
 	})
 }

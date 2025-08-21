@@ -232,8 +232,8 @@
                 <input id="cred-committerEmail" v-model="credForm.committerEmail" type="email" required maxlength="100" class="input-field" placeholder="you@example.com" />
               </div>
               <div>
-                <label for="cred-username" class="form-label">{{ $t('secretsPage.usernameOptional') }}</label>
-                <input id="cred-username" v-model="credForm.username" type="text" maxlength="100" class="input-field" placeholder="git or your username" />
+                <label for="cred-username" class="form-label">{{ $t('secretsPage.username') }}</label>
+                <input id="cred-username" v-model="credForm.username" type="text" maxlength="100" class="input-field" placeholder="git or your username" required />
               </div>
               <div>
                 <label for="cred-passwordOrToken" class="form-label">Password or token {{ editingCred ? $t('secretsPage.passwordLeaveBlank') : '' }}</label>
@@ -460,7 +460,7 @@ function openEditCredModal(c) {
 async function saveCred() {
   if (!workspace.value?.id) return
   const { name, committerName, committerEmail, username, passwordOrToken } = credForm.value
-  if (!name?.trim() || !committerName?.trim() || !committerEmail?.trim()) return
+  if (!name?.trim() || !committerName?.trim() || !committerEmail?.trim() || !username?.trim()) return
   if (!editingCred.value && !passwordOrToken) return
   credFormSaving.value = true
   errorMessage.value = ''
@@ -470,7 +470,7 @@ async function saveCred() {
       name: name.trim(),
       committerName: committerName.trim(),
       committerEmail: committerEmail.trim(),
-      username: username?.trim() || undefined
+      username: username.trim(),
     }
     if (passwordOrToken) payload.passwordOrToken = passwordOrToken
     if (editingCred.value) {

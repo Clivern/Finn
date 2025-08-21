@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// APIKey represents a user API key in the database (raw key stored)
+// APIKey is the DB row for a user API key.
 type APIKey struct {
 	ID        ID
 	UserID    ID
@@ -21,7 +21,7 @@ type APIKey struct {
 	UpdatedAt time.Time
 }
 
-// APIKeyRepository defines API key CRUD
+// APIKeyRepository is the interface for API key CRUD.
 type APIKeyRepository interface {
 	Create(apiKey *APIKey) error
 	GetByID(id ID) (*APIKey, error)
@@ -71,7 +71,7 @@ type apiKeyRepoSQLite struct {
 	db *sql.DB
 }
 
-// Create inserts a row
+// Create inserts a row and fills ID and timestamps on apiKey.
 func (r *apiKeyRepoSQLite) Create(apiKey *APIKey) error {
 	result, err := r.db.Exec(
 		`INSERT INTO user_api_keys (user_id, name, key, expires_at)
@@ -86,7 +86,11 @@ func (r *apiKeyRepoSQLite) Create(apiKey *APIKey) error {
 		return err
 	}
 	apiKey.ID = ID(strconv.FormatInt(lid, 10))
-	return nil
+	row := r.db.QueryRow(
+		`SELECT created_at, updated_at FROM user_api_keys WHERE id = ?`,
+		apiKey.ID.String(),
+	)
+	return row.Scan(&apiKey.CreatedAt, &apiKey.UpdatedAt)
 }
 
 // GetByID returns a API key by ID

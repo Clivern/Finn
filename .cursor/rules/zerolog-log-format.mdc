@@ -1,0 +1,33 @@
+---
+description: Format zerolog log calls on multiple lines
+globs: **/*.go
+alwaysApply: false
+---
+
+# Zerolog Log Formatting
+
+Always split zerolog log calls across multiple lines when they chain `.Str()`, `.Err()`, `.Int()`, or similar fields with `.Msg()`.
+
+Put the level (e.g. `log.Error()`, `log.Info()`) on the first line, each field on its own line, and `.Msg("...")` on the last line.
+
+**Wrong** (single line):
+
+```go
+log.Error().Str("userID", user.ID.String()).Err(err).Msg("Failed to revoke session")
+log.Info().Str("userID", user.ID.String()).Msg("Session revoked successfully")
+```
+
+**Correct** (multi-line):
+
+```go
+log.Error().
+	Str("userID", user.ID.String()).
+	Err(err).
+	Msg("Failed to revoke session")
+
+log.Info().
+	Str("userID", user.ID.String()).
+	Msg("Session revoked successfully")
+```
+
+Apply this pattern to `log.Error()`, `log.Info()`, `log.Warn()`, `log.Debug()`, and any other zerolog level when there is more than one chained call before `.Msg()`.

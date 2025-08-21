@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// Session represents a user session in the database
+// Session is the DB row for a user session.
 type Session struct {
 	ID        ID
 	Token     string
@@ -22,7 +22,7 @@ type Session struct {
 	UpdatedAt time.Time
 }
 
-// SessionRepository defines session CRUD
+// SessionRepository is the interface for session CRUD.
 type SessionRepository interface {
 	Create(session *Session) error
 	GetByToken(token string) (*Session, error)

@@ -96,10 +96,10 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { authAPI } from '@/api'
+import { authAPI, setupAPI } from '@/api'
 import { saveUser } from '@/lib/auth'
 
 const { t } = useI18n()
@@ -112,6 +112,17 @@ const form = reactive({
 
 const loading = ref(false)
 const error = ref(null)
+
+onMounted(async () => {
+  try {
+    const response = await setupAPI.checkInstalled()
+    if (!response.data.installed) {
+      router.push('/setup')
+    }
+  } catch (err) {
+    console.error('Failed to check setup status:', err)
+  }
+})
 
 const handleLogin = async () => {
   loading.value = true

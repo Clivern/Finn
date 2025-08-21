@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// SystemIntegration represents a system-wide integration (webhook, Slack, etc.) in the database
+// SystemIntegration is the DB row for a system-wide integration (webhook, Slack, etc.).
 type SystemIntegration struct {
 	ID        ID
 	Type      string
@@ -20,7 +20,7 @@ type SystemIntegration struct {
 	UpdatedAt time.Time
 }
 
-// SystemIntegrationRepository defines system integration CRUD
+// SystemIntegrationRepository is the interface for system integration CRUD.
 type SystemIntegrationRepository interface {
 	Create(integration *SystemIntegration) error
 	GetByID(id ID) (*SystemIntegration, error)

@@ -200,10 +200,6 @@
                   <label for="create-token" class="block text-sm font-medium text-theme-text mb-2">Token</label>
                   <input id="create-token" v-model="createForm.token" type="text" class="input-field font-mono text-sm" placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000" />
                 </div>
-                <div>
-                  <label for="create-publicKey" class="block text-sm font-medium text-theme-text mb-2">Public key</label>
-                  <textarea id="create-publicKey" v-model="createForm.publicKey" class="input-field min-h-[80px] font-mono text-xs" placeholder="Paste runner public key (e.g. SSH or PEM)" rows="4" />
-                </div>
               </div>
             </div>
             <div class="bg-theme-hover px-6 py-4 flex justify-end space-x-3">
@@ -267,10 +263,6 @@
                 <div>
                   <label for="edit-token" class="block text-sm font-medium text-theme-text mb-2">Token</label>
                   <input id="edit-token" v-model="editForm.token" type="text" class="input-field font-mono text-sm" placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000" />
-                </div>
-                <div>
-                  <label for="edit-publicKey" class="block text-sm font-medium text-theme-text mb-2">Public key</label>
-                  <textarea id="edit-publicKey" v-model="editForm.publicKey" class="input-field min-h-[80px] font-mono text-xs" placeholder="Paste runner public key (e.g. SSH or PEM)" rows="4" />
                 </div>
               </div>
             </div>
@@ -368,8 +360,7 @@ const createForm = reactive({
   tags: '',
   maxParallelTasks: 10,
   status: 'active',
-  url: '',
-  publicKey: ''
+  url: ''
 })
 
 const editForm = reactive({
@@ -378,15 +369,14 @@ const editForm = reactive({
   tags: '',
   maxParallelTasks: 10,
   status: 'active',
-  url: '',
-  publicKey: ''
+  url: ''
 })
 
 const showingFrom = computed(() => (total.value === 0 ? 0 : offset.value + 1))
 const showingTo = computed(() => Math.min(offset.value + runners.value.length, total.value))
 
 function canPingRunner(runner) {
-  return runner?.url && runner?.publicKey
+  return runner?.url && runner?.token
 }
 
 function connectionStatus(runnerId) {
@@ -467,7 +457,6 @@ function openCreateModal() {
   createForm.maxParallelTasks = 10
   createForm.status = 'active'
   createForm.url = ''
-  createForm.publicKey = ''
   showCreateModal.value = true
 }
 
@@ -477,13 +466,12 @@ function closeCreateModal() {
 
 function openEditModal(runner) {
   runnerToEdit.value = runner
-  editForm.token = runner.token || ''
-  editForm.name = runner.name || ''
-  editForm.tags = runner.tags || ''
+  editForm.token = runner.token
+  editForm.name = runner.name
+  editForm.tags = runner.tags
   editForm.maxParallelTasks = runner.maxParallelTasks ?? 10
-  editForm.status = runner.status || 'active'
-  editForm.url = runner.url || ''
-  editForm.publicKey = runner.publicKey || ''
+  editForm.status = runner.status
+  editForm.url = runner.url
   showEditModal.value = true
 }
 
@@ -514,8 +502,7 @@ async function handleCreate() {
       tags: createForm.tags,
       maxParallelTasks: createForm.maxParallelTasks,
       status: createForm.status,
-      url: createForm.url,
-      publicKey: createForm.publicKey || undefined
+      url: createForm.url
     })
     successMessage.value = t('runnersPage.runnerCreated')
     closeCreateModal()
@@ -536,13 +523,12 @@ async function handleUpdate() {
 
   try {
     await runnersAPI.update(runnerToEdit.value.id, {
-      token: editForm.token.trim() || null,
-      name: editForm.name || null,
-      tags: editForm.tags || null,
+      token: editForm.token.trim(),
+      name: editForm.name,
+      tags: editForm.tags,
       maxParallelTasks: editForm.maxParallelTasks,
       status: editForm.status,
-      url: editForm.url || null,
-      publicKey: editForm.publicKey || null
+      url: editForm.url
     })
     successMessage.value = t('runnersPage.runnerUpdated')
     closeEditModal()

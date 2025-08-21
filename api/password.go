@@ -13,24 +13,24 @@ import (
 	"github.com/clivern/finn/db"
 	"github.com/clivern/finn/locale"
 	"github.com/clivern/finn/module"
-	"github.com/clivern/finn/service/util"
+	"github.com/clivern/finn/pkg/util"
 	"github.com/google/uuid"
 
 	"github.com/rs/zerolog/log"
 )
 
-// ForgotPasswordRequest represents the forgot password request body
+// ForgotPasswordRequest is the body for requesting a password reset (just email).
 type ForgotPasswordRequest struct {
 	Email string `json:"email" validate:"required,email,min=4,max=255" label:"Email"`
 }
 
-// ResetPasswordRequest represents the reset password request body
+// ResetPasswordRequest is the body for resetting password (token + new password).
 type ResetPasswordRequest struct {
 	Token    string `json:"token" validate:"required,min=1" label:"Token"`
 	Password string `json:"password" validate:"required,strong_password,min=8,max=60" label:"Password"`
 }
 
-// ForgotPasswordAction handles forgot password requests.
+// ForgotPasswordAction sends a password reset email.
 func ForgotPasswordAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Forgot password endpoint called")
 
@@ -43,7 +43,9 @@ func ForgotPasswordAction(w http.ResponseWriter, r *http.Request) {
 	userRepo := db.NewUserRepository(db.GetDB())
 	user, err := userRepo.GetByEmail(req.Email)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to look up user for forgot password")
+		log.Error().
+			Err(err).
+			Msg("Failed to look up user for forgot password")
 		util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 			"successMessage": locale.TR(r, "forgotPasswordSuccess"),
 		})
@@ -67,7 +69,9 @@ func ForgotPasswordAction(w http.ResponseWriter, r *http.Request) {
 		ExpiresAt: expiresAt,
 	}
 	if err := resetRepo.Create(resetToken); err != nil {
-		log.Error().Err(err).Msg("Failed to create password reset token")
+		log.Error().
+			Err(err).
+			Msg("Failed to create password reset token")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedProcessRequest"),
 		})
@@ -86,7 +90,10 @@ func ForgotPasswordAction(w http.ResponseWriter, r *http.Request) {
 	mailer := util.NewMailer(optRepo)
 
 	if err := mailer.SendPasswordResetEmail(user.Email, resetLink, platformName); err != nil {
-		log.Warn().Err(err).Str("email", user.Email).Msg("Failed to send password reset email; token was created")
+		log.Warn().
+			Err(err).
+			Str("email", user.Email).
+			Msg("Failed to send password reset email; token was created")
 	}
 
 	log.Info().
@@ -99,7 +106,7 @@ func ForgotPasswordAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// ResetPasswordAction handles reset password requests (token + new password)
+// ResetPasswordAction resets the password using the token from the email.
 func ResetPasswordAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Reset password endpoint called")
 
@@ -112,7 +119,9 @@ func ResetPasswordAction(w http.ResponseWriter, r *http.Request) {
 	resetRepo := db.NewPasswordResetTokenRepository(db.GetDB())
 	tok, err := resetRepo.GetByToken(req.Token)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to look up password reset token")
+		log.Error().
+			Err(err).
+			Msg("Failed to look up password reset token")
 		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
 			"errorMessage": locale.TR(r, "resetLinkInvalidOrExpired"),
 		})
@@ -144,7 +153,9 @@ func ResetPasswordAction(w http.ResponseWriter, r *http.Request) {
 		IsActive: user.IsActive,
 	})
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to update password on reset")
+		log.Error().
+			Err(err).
+			Msg("Failed to update password on reset")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedResetPassword"),
 		})
@@ -152,10 +163,14 @@ func ResetPasswordAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := resetRepo.DeleteByToken(req.Token); err != nil {
-		log.Error().Err(err).Msg("Failed to delete password reset token")
+		log.Error().
+			Err(err).
+			Msg("Failed to delete password reset token")
 	}
 
-	log.Info().Str("userID", tok.UserID.String()).Msg("Password reset successfully")
+	log.Info().
+		Str("userID", tok.UserID.String()).
+		Msg("Password reset successfully")
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"successMessage": locale.TR(r, "passwordResetSuccess"),
 	})

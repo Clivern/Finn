@@ -173,10 +173,28 @@ func GetAll() []Migration {
 			Down:        dropWorkspaceBackendLockTable,
 		},
 		{
-			Version:     "20250101000027",
-			Description: "Add lock_id to workspace_backend_lock for Terraform client lock ID",
-			Up:          addLockIDToWorkspaceBackendLock,
-			Down:        dropLockIDFromWorkspaceBackendLock,
+			Version:     "20250101000028",
+			Description: "Create user_ai_messages table",
+			Up:          createUserAIMessagesTable,
+			Down:        dropUserAIMessagesTable,
+		},
+		{
+			Version:     "20250101000029",
+			Description: "Create workspace_repository_clone_tasks table",
+			Up:          createWorkspaceRepositoryCloneTasksTable,
+			Down:        dropWorkspaceRepositoryCloneTasksTable,
+		},
+		{
+			Version:     "20250101000030",
+			Description: "Create workspace_events_deliverables table",
+			Up:          createWorkspaceEventsDeliverablesTable,
+			Down:        dropWorkspaceEventsDeliverablesTable,
+		},
+		{
+			Version:     "20250101000031",
+			Description: "Create system_events_deliverables table",
+			Up:          createSystemEventsDeliverablesTable,
+			Down:        dropSystemEventsDeliverablesTable,
 		},
 	}
 }
@@ -736,6 +754,58 @@ func dropWorkspaceRepositoriesTable(db *sql.DB) error {
 	return err
 }
 
+// createWorkspaceRepositoryCloneTasksTable creates the workspace_repository_clone_tasks table (clone tasks per repository).
+func createWorkspaceRepositoryCloneTasksTable(db *sql.DB) error {
+	driver := detectDriver(db)
+	var query string
+
+	switch driver {
+	case "sqlite":
+		query = `
+		CREATE TABLE workspace_repository_clone_tasks (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			repository_id INTEGER NOT NULL,
+			runner_id INTEGER NULL,
+			status VARCHAR(50) NOT NULL DEFAULT 'pending',
+			runner_task_id VARCHAR(64) NULL,
+			result TEXT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (repository_id) REFERENCES workspace_repositories(id) ON DELETE CASCADE,
+			FOREIGN KEY (runner_id) REFERENCES runners(id) ON DELETE SET NULL
+		);
+		CREATE INDEX idx_workspace_repository_clone_tasks_repository_id ON workspace_repository_clone_tasks(repository_id);
+		CREATE INDEX idx_workspace_repository_clone_tasks_runner_id ON workspace_repository_clone_tasks(runner_id);
+		CREATE INDEX idx_workspace_repository_clone_tasks_status ON workspace_repository_clone_tasks(status)`
+	case "postgres":
+		query = `
+		CREATE TABLE workspace_repository_clone_tasks (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			repository_id UUID NOT NULL REFERENCES workspace_repositories(id) ON DELETE CASCADE,
+			runner_id UUID NULL REFERENCES runners(id) ON DELETE SET NULL,
+			status VARCHAR(50) NOT NULL DEFAULT 'pending',
+			runner_task_id VARCHAR(64) NULL,
+			result TEXT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		);
+		CREATE INDEX idx_workspace_repository_clone_tasks_repository_id ON workspace_repository_clone_tasks(repository_id);
+		CREATE INDEX idx_workspace_repository_clone_tasks_runner_id ON workspace_repository_clone_tasks(runner_id);
+		CREATE INDEX idx_workspace_repository_clone_tasks_status ON workspace_repository_clone_tasks(status)`
+	default:
+		return fmt.Errorf("unsupported database driver: %s", driver)
+	}
+
+	_, err := db.Exec(query)
+	return err
+}
+
+// dropWorkspaceRepositoryCloneTasksTable drops the workspace_repository_clone_tasks table.
+func dropWorkspaceRepositoryCloneTasksTable(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE IF EXISTS workspace_repository_clone_tasks")
+	return err
+}
+
 // createWorkspaceIntegrationsTable creates the integrations table
 func createWorkspaceIntegrationsTable(db *sql.DB) error {
 	driver := detectDriver(db)
@@ -966,7 +1036,6 @@ func createRunnersTable(db *sql.DB) error {
 			tags VARCHAR(128),
 			max_parallel_tasks INTEGER DEFAULT 10,
 			status VARCHAR(50) NOT NULL DEFAULT 'active',
-			public_key TEXT,
 			url VARCHAR(255),
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -980,7 +1049,6 @@ func createRunnersTable(db *sql.DB) error {
 			tags VARCHAR(128),
 			max_parallel_tasks INTEGER DEFAULT 10,
 			status VARCHAR(50) NOT NULL DEFAULT 'active',
-			public_key TEXT,
 			url VARCHAR(255),
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -1218,6 +1286,7 @@ func createWorkspaceBackendLockTable(db *sql.DB) error {
 			who VARCHAR(255),
 			version VARCHAR(64),
 			path VARCHAR(512),
+			lock_id VARCHAR(128),
 			is_active INTEGER NOT NULL DEFAULT 1,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -1233,6 +1302,7 @@ func createWorkspaceBackendLockTable(db *sql.DB) error {
 			who VARCHAR(255),
 			version VARCHAR(64),
 			path VARCHAR(512),
+			lock_id VARCHAR(128),
 			is_active BOOLEAN NOT NULL DEFAULT true,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -1253,31 +1323,155 @@ func dropWorkspaceBackendLockTable(db *sql.DB) error {
 	return err
 }
 
-func addLockIDToWorkspaceBackendLock(db *sql.DB) error {
+// createAIMessagesTable creates the user_ai_messages table (user chat history with the AI assistant).
+func createUserAIMessagesTable(db *sql.DB) error {
 	driver := detectDriver(db)
 	var query string
+
 	switch driver {
 	case "sqlite":
-		query = `ALTER TABLE workspace_backend_lock ADD COLUMN lock_id VARCHAR(128)`
+		query = `
+		CREATE TABLE user_ai_messages (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			role VARCHAR(32) NOT NULL,
+			content TEXT NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		)`
 	case "postgres":
-		query = `ALTER TABLE workspace_backend_lock ADD COLUMN lock_id VARCHAR(128)`
+		query = `
+		CREATE TABLE user_ai_messages (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			role VARCHAR(32) NOT NULL,
+			content TEXT NOT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		);
+		CREATE INDEX idx_user_ai_messages_user_id ON user_ai_messages(user_id);
+		CREATE INDEX idx_user_ai_messages_created_at ON user_ai_messages(created_at)`
 	default:
 		return fmt.Errorf("unsupported database driver: %s", driver)
 	}
+
 	_, err := db.Exec(query)
 	return err
 }
 
-func dropLockIDFromWorkspaceBackendLock(db *sql.DB) error {
+// dropUserAIMessagesTable drops the user_ai_messages table.
+func dropUserAIMessagesTable(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE IF EXISTS user_ai_messages")
+	return err
+}
+
+// createWorkspaceEventsDeliverablesTable creates the workspace_events_deliverables table (events to deliver to workspace integrations).
+func createWorkspaceEventsDeliverablesTable(db *sql.DB) error {
 	driver := detectDriver(db)
+	var query string
+
 	switch driver {
 	case "sqlite":
-		// SQLite does not support DROP COLUMN in older versions; leave as no-op for safety
-		return nil
+		query = `
+		CREATE TABLE workspace_events_deliverables (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			event_id INTEGER NOT NULL,
+			integration_id INTEGER NOT NULL,
+			status VARCHAR(50) NOT NULL DEFAULT 'pending',
+			delivered_at DATETIME NULL,
+			error_message TEXT NULL,
+			retry_count INTEGER NOT NULL DEFAULT 0,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (event_id) REFERENCES workspace_events(id) ON DELETE CASCADE,
+			FOREIGN KEY (integration_id) REFERENCES workspace_integrations(id) ON DELETE CASCADE
+		);
+		CREATE INDEX idx_workspace_events_deliverables_event_id ON workspace_events_deliverables(event_id);
+		CREATE INDEX idx_workspace_events_deliverables_integration_id ON workspace_events_deliverables(integration_id);
+		CREATE INDEX idx_workspace_events_deliverables_status ON workspace_events_deliverables(status);
+		CREATE INDEX idx_workspace_events_deliverables_created_at ON workspace_events_deliverables(created_at)`
 	case "postgres":
-		_, err := db.Exec(`ALTER TABLE workspace_backend_lock DROP COLUMN IF EXISTS lock_id`)
-		return err
+		query = `
+		CREATE TABLE workspace_events_deliverables (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			event_id UUID NOT NULL REFERENCES workspace_events(id) ON DELETE CASCADE,
+			integration_id UUID NOT NULL REFERENCES workspace_integrations(id) ON DELETE CASCADE,
+			status VARCHAR(50) NOT NULL DEFAULT 'pending',
+			delivered_at TIMESTAMP NULL,
+			error_message TEXT NULL,
+			retry_count INTEGER NOT NULL DEFAULT 0,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		);
+		CREATE INDEX idx_workspace_events_deliverables_event_id ON workspace_events_deliverables(event_id);
+		CREATE INDEX idx_workspace_events_deliverables_integration_id ON workspace_events_deliverables(integration_id);
+		CREATE INDEX idx_workspace_events_deliverables_status ON workspace_events_deliverables(status);
+		CREATE INDEX idx_workspace_events_deliverables_created_at ON workspace_events_deliverables(created_at)`
 	default:
 		return fmt.Errorf("unsupported database driver: %s", driver)
 	}
+
+	_, err := db.Exec(query)
+	return err
+}
+
+// dropWorkspaceEventsDeliverablesTable drops the workspace_events_deliverables table.
+func dropWorkspaceEventsDeliverablesTable(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE IF EXISTS workspace_events_deliverables")
+	return err
+}
+
+// createSystemEventsDeliverablesTable creates the system_events_deliverables table (events to deliver to system integrations).
+func createSystemEventsDeliverablesTable(db *sql.DB) error {
+	driver := detectDriver(db)
+	var query string
+
+	switch driver {
+	case "sqlite":
+		query = `
+		CREATE TABLE system_events_deliverables (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			event_id INTEGER NOT NULL,
+			integration_id INTEGER NOT NULL,
+			status VARCHAR(50) NOT NULL DEFAULT 'pending',
+			delivered_at DATETIME NULL,
+			error_message TEXT NULL,
+			retry_count INTEGER NOT NULL DEFAULT 0,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (event_id) REFERENCES system_events(id) ON DELETE CASCADE,
+			FOREIGN KEY (integration_id) REFERENCES system_integrations(id) ON DELETE CASCADE
+		);
+		CREATE INDEX idx_system_events_deliverables_event_id ON system_events_deliverables(event_id);
+		CREATE INDEX idx_system_events_deliverables_integration_id ON system_events_deliverables(integration_id);
+		CREATE INDEX idx_system_events_deliverables_status ON system_events_deliverables(status);
+		CREATE INDEX idx_system_events_deliverables_created_at ON system_events_deliverables(created_at)`
+	case "postgres":
+		query = `
+		CREATE TABLE system_events_deliverables (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			event_id UUID NOT NULL REFERENCES system_events(id) ON DELETE CASCADE,
+			integration_id UUID NOT NULL REFERENCES system_integrations(id) ON DELETE CASCADE,
+			status VARCHAR(50) NOT NULL DEFAULT 'pending',
+			delivered_at TIMESTAMP NULL,
+			error_message TEXT NULL,
+			retry_count INTEGER NOT NULL DEFAULT 0,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		);
+		CREATE INDEX idx_system_events_deliverables_event_id ON system_events_deliverables(event_id);
+		CREATE INDEX idx_system_events_deliverables_integration_id ON system_events_deliverables(integration_id);
+		CREATE INDEX idx_system_events_deliverables_status ON system_events_deliverables(status);
+		CREATE INDEX idx_system_events_deliverables_created_at ON system_events_deliverables(created_at)`
+	default:
+		return fmt.Errorf("unsupported database driver: %s", driver)
+	}
+
+	_, err := db.Exec(query)
+	return err
+}
+
+// dropSystemEventsDeliverablesTable drops the system_events_deliverables table.
+func dropSystemEventsDeliverablesTable(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE IF EXISTS system_events_deliverables")
+	return err
 }

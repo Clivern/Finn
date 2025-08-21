@@ -8,8 +8,8 @@ import (
 	"crypto/subtle"
 	"net/http"
 
-	"github.com/clivern/finn/service/runner"
-	"github.com/clivern/finn/service/util"
+	"github.com/clivern/finn/pkg/runner"
+	"github.com/clivern/finn/pkg/util"
 )
 
 const runnerTokenHeader = "X-Runner-Token"

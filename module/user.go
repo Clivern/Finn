@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/clivern/finn/db"
-	"github.com/clivern/finn/service/util"
+	"github.com/clivern/finn/pkg/util"
 )
 
 var (
@@ -17,17 +17,17 @@ var (
 	ErrUserEmailAlreadyExists = errors.New("user with this email already exists")
 )
 
-// User handles user management operations.
+// User is the module for user CRUD.
 type User struct {
 	UserRepository db.UserRepository
 }
 
-// NewUser creates a new user module instance.
+// NewUser creates a user module with the given repo.
 func NewUser(repo db.UserRepository) *User {
 	return &User{UserRepository: repo}
 }
 
-// CreateUserOptions contains options for creating a user.
+// CreateUserOptions is what you pass when creating a user.
 type CreateUserOptions struct {
 	Name     string
 	Email    string
@@ -79,7 +79,7 @@ func (u *User) GetUser(userID db.ID) (*db.User, error) {
 	return user, nil
 }
 
-// UpdateUserOptions contains options for updating a user.
+// UpdateUserOptions is what you pass when updating a user.
 type UpdateUserOptions struct {
 	UserID   db.ID
 	Name     string
@@ -129,13 +129,13 @@ func (u *User) UpdateUser(options *UpdateUserOptions) (*db.User, error) {
 	return user, nil
 }
 
-// ListUsersOptions contains options for listing users.
+// ListUsersOptions is what you pass when listing users.
 type ListUsersOptions struct {
 	Limit  int
 	Offset int
 }
 
-// ListUsersResult contains the result of listing users.
+// ListUsersResult is what you get back when listing users.
 type ListUsersResult struct {
 	Users []*db.User
 	Total int64

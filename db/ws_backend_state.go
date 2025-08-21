@@ -21,7 +21,7 @@ type WorkspaceBackendState struct {
 	UpdatedAt time.Time
 }
 
-// WorkspaceBackendStateRepository defines workspace backend state CRUD.
+// WorkspaceBackendStateRepository is the interface for workspace backend state CRUD.
 type WorkspaceBackendStateRepository interface {
 	Create(s *WorkspaceBackendState) error
 	GetByID(id ID) (*WorkspaceBackendState, error)

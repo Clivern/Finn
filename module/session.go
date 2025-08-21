@@ -13,7 +13,7 @@ import (
 	"github.com/clivern/finn/db"
 )
 
-// SessionManager handles session operations.
+// SessionManager manages sessions (create, revoke, etc.).
 type SessionManager struct {
 	SessionRepo db.SessionRepository
 	UserRepo    db.UserRepository

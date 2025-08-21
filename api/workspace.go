@@ -14,22 +14,22 @@ import (
 	"github.com/clivern/finn/locale"
 	"github.com/clivern/finn/middleware"
 	"github.com/clivern/finn/module"
-	"github.com/clivern/finn/service/util"
+	"github.com/clivern/finn/pkg/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )
 
-// CreateWorkspaceRequest represents the create workspace request payload
+// CreateWorkspaceRequest is the body for creating a workspace.
 type CreateWorkspaceRequest struct {
 	Name string `json:"name" validate:"required,min=1,max=255" label:"Name"`
 }
 
-// UpdateWorkspaceRequest represents the update workspace request payload
+// UpdateWorkspaceRequest is the body for updating a workspace.
 type UpdateWorkspaceRequest struct {
 	Name string `json:"name" validate:"required,min=1,max=255" label:"Name"`
 }
 
-// CreateWorkspaceAction handles workspace creation requests
+// CreateWorkspaceAction creates a new workspace.
 func CreateWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Create workspace endpoint called")
 
@@ -51,16 +51,24 @@ func CreateWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 	workspace, err := wsModule.CreateWorkspace(&module.CreateWorkspaceOptions{Name: req.Name})
 
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to create workspace")
+		log.Error().
+			Err(err).
+			Msg("Failed to create workspace")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCreateWorkspace"),
 		})
 		return
 	}
 
-	log.Info().Str("workspaceID", workspace.ID.String()).Msg("Workspace created successfully")
+	log.Info().
+		Str("workspaceID", workspace.ID.String()).
+		Msg("Workspace created successfully")
+
 	wsModule.AddWorkspaceUser(workspace.ID, user.ID, db.UserRoleOwner)
-	log.Info().Str("workspaceID", workspace.ID.String()).Str("userID", user.ID.String()).Msg("User added to workspace as owner")
+	log.Info().
+		Str("workspaceID", workspace.ID.String()).
+		Str("userID", user.ID.String()).
+		Msg("User added to workspace as owner")
 
 	util.WriteJSON(w, http.StatusCreated, map[string]interface{}{
 		"id":           workspace.ID,
@@ -72,7 +80,7 @@ func CreateWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// ListWorkspacesAction handles workspace listing requests with pagination
+// ListWorkspacesAction returns workspaces (paginated; admins can get all).
 func ListWorkspacesAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("List workspaces endpoint called")
 
@@ -109,7 +117,9 @@ func ListWorkspacesAction(w http.ResponseWriter, r *http.Request) {
 	result, err := wsModule.ListWorkspaces(opts)
 
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to list workspaces")
+		log.Error().
+			Err(err).
+			Msg("Failed to list workspaces")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedListWorkspaces"),
 		})
@@ -144,7 +154,7 @@ func ListWorkspacesAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetWorkspaceAction handles get workspace by ID requests
+// GetWorkspaceAction returns one workspace by ID.
 func GetWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Get workspace endpoint called")
 
@@ -173,7 +183,9 @@ func GetWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		log.Error().Err(err).Msg("Failed to get workspace")
+		log.Error().
+			Err(err).
+			Msg("Failed to get workspace")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetWorkspace"),
 		})
@@ -187,7 +199,9 @@ func GetWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 		module.CanGetWorkspace,
 	)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to check workspace permission")
+		log.Error().
+			Err(err).
+			Msg("Failed to check workspace permission")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCheckAccess"),
 		})
@@ -211,7 +225,7 @@ func GetWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// UpdateWorkspaceAction handles workspace update requests
+// UpdateWorkspaceAction updates a workspace.
 func UpdateWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Update workspace endpoint called")
 
@@ -246,7 +260,9 @@ func UpdateWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		log.Error().Err(err).Msg("Failed to get workspace")
+		log.Error().
+			Err(err).
+			Msg("Failed to get workspace")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetWorkspace"),
 		})
@@ -260,7 +276,9 @@ func UpdateWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 		module.CanUpdateWorkspace,
 	)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to check workspace permission")
+		log.Error().
+			Err(err).
+			Msg("Failed to check workspace permission")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCheckAccess"),
 		})
@@ -284,7 +302,9 @@ func UpdateWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		log.Error().Err(err).Msg("Failed to update workspace")
+		log.Error().
+			Err(err).
+			Msg("Failed to update workspace")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedUpdateWorkspace"),
 		})
@@ -293,7 +313,9 @@ func UpdateWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 
 	membersCount, _ := wsModule.CountWorkspaceMembers(workspace.ID)
 
-	log.Info().Str("workspaceID", workspace.ID.String()).Msg("Workspace updated successfully")
+	log.Info().
+		Str("workspaceID", workspace.ID.String()).
+		Msg("Workspace updated successfully")
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"id":           workspace.ID,
 		"name":         workspace.Name,
@@ -303,7 +325,7 @@ func UpdateWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// DeleteWorkspaceAction handles workspace deletion requests
+// DeleteWorkspaceAction deletes a workspace.
 func DeleteWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Delete workspace endpoint called")
 
@@ -332,7 +354,9 @@ func DeleteWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		log.Error().Err(err).Msg("Failed to get workspace")
+		log.Error().
+			Err(err).
+			Msg("Failed to get workspace")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetWorkspace"),
 		})
@@ -346,7 +370,9 @@ func DeleteWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 		module.CanDeleteWorkspace,
 	)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to check workspace permission")
+		log.Error().
+			Err(err).
+			Msg("Failed to check workspace permission")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCheckAccess"),
 		})
@@ -359,7 +385,9 @@ func DeleteWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Info().Str("workspaceID", idStr).Msg("Deleting workspace")
+	log.Info().
+		Str("workspaceID", idStr).
+		Msg("Deleting workspace")
 
 	err = wsModule.DeleteWorkspace(db.ID(idStr))
 	if err != nil {
@@ -369,13 +397,17 @@ func DeleteWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		log.Error().Err(err).Msg("Failed to delete workspace")
+		log.Error().
+			Err(err).
+			Msg("Failed to delete workspace")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedDeleteWorkspace"),
 		})
 		return
 	}
 
-	log.Info().Str("workspaceID", idStr).Msg("Workspace deleted successfully")
+	log.Info().
+		Str("workspaceID", idStr).
+		Msg("Workspace deleted successfully")
 	util.WriteJSON(w, http.StatusNoContent, map[string]interface{}{})
 }

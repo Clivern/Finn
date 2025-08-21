@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package runner.v1;
+
+option go_package = "github.com/clivern/finn/proto/runner/v1;runv1";
+
+service RunnerService {
+  rpc Ping(PingRequest) returns (PingResponse);
+  rpc Clone(CloneRequest) returns (CloneResponse);
+  rpc GetTask(GetTaskRequest) returns (GetTaskResponse);
+}
+
+message PingRequest {}
+
+message PingResponse {
+  string status = 1;
+}
+
+message CloneRequest {
+  bytes payload = 1;
+}
+
+// TaskLogEntry is a single log line (e.g. stdout/stderr stream).
+message TaskLogEntry {
+  string stream = 1;  // e.g. "stdout", "stderr"
+  string line = 2;
+  string msg = 3;
+}
+
+message CloneResponse {
+  string id = 1;
+  string status = 2;
+  string type = 3;
+  repeated TaskLogEntry log = 5;
+  string created_at = 6;
+  string updated_at = 7;
+}
+
+message GetTaskRequest {
+  string task_id = 1;
+}
+
+message GetTaskResponse {
+  string id = 1;
+  string status = 2;
+  string type = 3;
+  repeated TaskLogEntry log = 5;
+  string created_at = 6;
+  string updated_at = 7;
+}

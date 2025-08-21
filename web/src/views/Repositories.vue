@@ -47,6 +47,7 @@
                   <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">{{ $t('repositoriesPage.gitUrl') }}</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">{{ $t('repositoriesPage.branch') }}</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">{{ $t('repositoriesPage.tag') }}</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">{{ $t('repositoriesPage.status') }}</th>
                   <th class="px-6 py-3 text-right text-xs font-medium text-theme-textLight uppercase tracking-wider">{{ $t('repositoriesPage.actions') }}</th>
                 </tr>
               </thead>
@@ -69,7 +70,28 @@
                     </span>
                     <span v-else class="text-theme-textLight text-xs">—</span>
                   </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span
+                      :class="[
+                        'inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium',
+                        repo.latestStatus === 'success' && 'bg-green-100 text-green-800',
+                        repo.latestStatus === 'failed' && 'bg-red-100 text-red-800',
+                        (repo.latestStatus === 'running' || repo.latestStatus === 'pending') && 'bg-amber-100 text-amber-800',
+                        (!repo.latestStatus || repo.latestStatus === 'unknown') && 'bg-theme-hover text-theme-textLight'
+                      ]"
+                    >
+                      {{ titleCase(repo.latestStatus) ?? 'Unknown' }}
+                    </span>
+                  </td>
                   <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                    <button
+                      type="button"
+                      @click="triggerClone(repo)"
+                      :disabled="cloningId === repo.id"
+                      class="text-primary-600 hover:text-primary-700 hover:underline mr-3 disabled:opacity-50"
+                    >
+                      {{ cloningId === repo.id ? $t('repositoriesPage.saving') : $t('repositoriesPage.testClone') }}
+                    </button>
                     <button
                       type="button"
                       @click="openEditModal(repo)"
@@ -215,11 +237,71 @@
         </div>
       </Transition>
     </Teleport>
+
+    <!-- Clone task logs modal -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div
+          v-show="cloneTaskModal"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+          role="dialog"
+          aria-modal="true"
+          :aria-labelledby="'clone-task-logs-title'"
+          @click.self="closeCloneTaskModal"
+        >
+          <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div class="px-6 py-4 border-b border-theme-border flex items-center justify-between">
+              <h2 id="clone-task-logs-title" class="text-lg font-semibold text-theme-text">
+                {{ $t('repositoriesPage.cloneTaskLogsTitle') }}
+              </h2>
+              <button type="button" @click="closeCloneTaskModal" class="text-theme-textLight hover:text-theme-text p-1 rounded">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div class="px-6 py-4 overflow-y-auto flex-1 space-y-4">
+              <div v-if="cloneTaskLoadError" class="text-sm text-red-600">{{ cloneTaskLoadError }}</div>
+              <template v-else-if="cloneTaskData">
+                <div class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+                  <span class="text-theme-textLight">{{ $t('repositoriesPage.cloneTaskStatus') }}:</span>
+                  <span
+                    :class="[
+                      'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
+                      cloneTaskData.status === 'success' && 'bg-green-100 text-green-800',
+                      cloneTaskData.status === 'failed' && 'bg-red-100 text-red-800',
+                      (cloneTaskData.status === 'running' || cloneTaskData.status === 'pending') && 'bg-amber-100 text-amber-800'
+                    ]"
+                  >
+                    {{ titleCase(cloneTaskData.status) || '—' }}
+                  </span>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-theme-text mb-2">{{ $t('repositoriesPage.cloneTaskLogs') }}</p>
+                  <div
+                    v-if="cloneTaskLogLines.length === 0"
+                    class="rounded-lg border border-theme-border bg-theme-hover px-4 py-3 text-sm text-theme-textLight"
+                  >
+                    {{ $t('repositoriesPage.noLogsYet') }}
+                  </div>
+                  <pre
+                    v-else
+                    class="rounded-lg border border-theme-border bg-theme-hover p-4 text-xs font-mono text-theme-text overflow-x-auto max-h-80 overflow-y-auto"
+                  >{{ cloneTaskLogText }}</pre>
+                </div>
+              </template>
+              <div v-else class="text-sm text-theme-textLight">{{ $t('repositoriesPage.loading') }}</div>
+            </div>
+            <div class="px-6 py-4 border-t border-theme-border">
+              <button type="button" @click="closeCloneTaskModal" class="btn-secondary">{{ $t('common.close') }}</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppNav from '@/components/AppNav.vue'
@@ -253,6 +335,12 @@ const credentialsList = ref([])
 
 const deleteModalRepo = ref(null)
 const deletingId = ref(null)
+const cloningId = ref(null)
+
+const cloneTaskModal = ref(null)
+const cloneTaskData = ref(null)
+const cloneTaskLoadError = ref('')
+let cloneTaskPollTimer = null
 
 function setWorkspace() {
   workspace.value = loadWorkspaceFromStorage()
@@ -311,7 +399,7 @@ function openEditModal(repo) {
   form.value = {
     name: repo.name,
     gitUrl: repo.gitUrl,
-    gitBranch: repo.gitBranch || 'main',
+    gitBranch: repo.gitBranch,
     gitTag: repo.gitTag ?? '',
     sshKeyId: repo.sshKeyId ?? '',
     gitCredentialsId: repo.gitCredentialsId ?? ''
@@ -331,10 +419,10 @@ async function saveRepo() {
     const payload = {
       name: name.trim(),
       gitUrl: gitUrl.trim(),
-      gitBranch: (gitBranch || 'main').trim(),
-      gitTag: (gitTag || '').trim() || undefined,
-      sshKeyId: sshKeyId || undefined,
-      gitCredentialsId: gitCredentialsId || undefined
+      gitBranch: gitBranch.trim(),
+      gitTag: gitTag.trim(),
+      sshKeyId: sshKeyId,
+      gitCredentialsId: gitCredentialsId,
     }
     if (editingRepo.value) {
       await repositoriesAPI.update(workspace.value.id, editingRepo.value.id, payload)
@@ -373,10 +461,97 @@ async function confirmDelete() {
   }
 }
 
+async function triggerClone(repo) {
+  if (!workspace.value?.id || !repo?.id) return
+  cloningId.value = repo.id
+  errorMessage.value = ''
+  successMessage.value = ''
+  try {
+    const res = await repositoriesAPI.clone(workspace.value.id, repo.id)
+    successMessage.value = t('repositoriesPage.cloneStarted')
+    await loadRepositories()
+    const taskId = res.data?.id
+    if (taskId) {
+      cloneTaskModal.value = { taskId, repo }
+      cloneTaskData.value = null
+      cloneTaskLoadError.value = ''
+      fetchCloneTask()
+    }
+  } catch (err) {
+    errorMessage.value = err.response?.data?.errorMessage || t('repositoriesPage.cloneFailed')
+  } finally {
+    cloningId.value = null
+  }
+}
+
+function closeCloneTaskModal() {
+  if (cloneTaskPollTimer) {
+    clearTimeout(cloneTaskPollTimer)
+    cloneTaskPollTimer = null
+  }
+  cloneTaskModal.value = null
+  cloneTaskData.value = null
+  cloneTaskLoadError.value = ''
+  loadRepositories()
+}
+
+async function fetchCloneTask() {
+  const { taskId, repo } = cloneTaskModal.value || {}
+  if (!workspace.value?.id || !repo?.id || !taskId) return
+  try {
+    const res = await repositoriesAPI.getCloneTask(workspace.value.id, repo.id, taskId)
+    cloneTaskData.value = res.data
+    cloneTaskLoadError.value = ''
+    const status = (res.data?.status || '').toLowerCase()
+    if (status === 'pending' || status === 'running') {
+      cloneTaskPollTimer = setTimeout(fetchCloneTask, 2000)
+    }
+  } catch (err) {
+    cloneTaskLoadError.value = err.response?.data?.errorMessage || t('repositoriesPage.failedLoad')
+    cloneTaskPollTimer = setTimeout(fetchCloneTask, 2000)
+  }
+}
+
+const cloneTaskLogLines = computed(() => {
+  const result = cloneTaskData.value?.result
+  if (result == null) return []
+  let arr = result
+  if (typeof result === 'string') {
+    try {
+      arr = JSON.parse(result)
+    } catch {
+      return [{ stream: '', text: result }]
+    }
+  }
+  if (!Array.isArray(arr)) return []
+  return arr.map((entry) => {
+    const stream = entry?.stream || ''
+    const line = entry?.line ?? ''
+    const msg = entry?.msg ?? ''
+    const text = line || msg || JSON.stringify(entry)
+    return { stream, text }
+  })
+})
+
+const cloneTaskLogText = computed(() => {
+  return cloneTaskLogLines.value.map((l) => l.text).join('\n')
+})
+
+function titleCase(s) {
+  if (!s || typeof s !== 'string') return s
+  return s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
 onMounted(() => {
   setWorkspace()
   if (workspace.value?.id) {
     loadRepositories()
+  }
+})
+
+onUnmounted(() => {
+  if (cloneTaskPollTimer) {
+    clearTimeout(cloneTaskPollTimer)
   }
 })
 

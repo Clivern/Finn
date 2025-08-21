@@ -10,12 +10,12 @@ import (
 	"github.com/clivern/finn/db"
 	"github.com/clivern/finn/locale"
 	"github.com/clivern/finn/module"
-	"github.com/clivern/finn/service/util"
+	"github.com/clivern/finn/pkg/util"
 
 	"github.com/rs/zerolog/log"
 )
 
-// UpdateSettingsRequest represents the payload for updating application settings.
+// UpdateSettingsRequest is the body for updating app settings.
 type UpdateSettingsRequest struct {
 	PlatformName    string `json:"platformName" validate:"required,max=100" label:"Platform Name"`
 	PlatformURL     string `json:"platformUrl" validate:"required,url,max=255" label:"Platform URL"`
@@ -29,7 +29,7 @@ type UpdateSettingsRequest struct {
 	MaintenanceMode bool   `json:"maintenanceMode" label:"Maintenance Mode"`
 }
 
-// UpdateSettingsAction handles application settings update requests
+// UpdateSettingsAction updates app settings (admin only).
 func UpdateSettingsAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Update settings endpoint called")
 
@@ -55,19 +55,23 @@ func UpdateSettingsAction(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to update settings")
+		log.Error().
+			Err(err).
+			Msg("Failed to update settings")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedUpdateSettings"),
 		})
 		return
 	}
 
+	log.Info().Msg("Settings updated successfully")
+
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"successMessage": locale.TR(r, "settingsUpdatedSuccessfully"),
 	})
 }
 
-// GetSettingsAction handles user settings get requests
+// GetSettingsAction returns current app settings.
 func GetSettingsAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Get settings endpoint called")
 
@@ -75,12 +79,16 @@ func GetSettingsAction(w http.ResponseWriter, r *http.Request) {
 	settings, err := settingsModule.GetSettings()
 
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get settings")
+		log.Error().
+			Err(err).
+			Msg("Failed to get settings")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetSettings"),
 		})
 		return
 	}
+
+	log.Info().Msg("Settings retrieved successfully")
 
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"settings": settings,

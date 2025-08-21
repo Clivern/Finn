@@ -10,21 +10,21 @@ import (
 
 	"github.com/clivern/finn/db"
 	"github.com/clivern/finn/locale"
-	"github.com/clivern/finn/service/util"
+	"github.com/clivern/finn/pkg/util"
 
 	"github.com/rs/zerolog/log"
 )
 
 const inviteStatusAccepted = "accepted"
 
-// RegisterRequest represents the register request body (invite token + name + password)
+// RegisterRequest is the body for signing up.
 type RegisterRequest struct {
 	Token    string `json:"token" validate:"required,min=1" label:"Token"`
 	Name     string `json:"name" validate:"required,min=1,max=255" label:"Name"`
 	Password string `json:"password" validate:"required,strong_password,min=8,max=60" label:"Password"`
 }
 
-// RegisterAction handles register requests. Requires a valid invite token.
+// RegisterAction creates an account using a valid invite token.
 func RegisterAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Register endpoint called")
 
@@ -37,7 +37,9 @@ func RegisterAction(w http.ResponseWriter, r *http.Request) {
 	repo := db.NewUserInviteRepository(db.GetDB())
 	invite, err := repo.GetByToken(req.Token)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get user invite by token")
+		log.Error().
+			Err(err).
+			Msg("Failed to get user invite by token")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCompleteRegistration"),
 		})
@@ -67,7 +69,9 @@ func RegisterAction(w http.ResponseWriter, r *http.Request) {
 	userRepo := db.NewUserRepository(db.GetDB())
 	existing, err := userRepo.GetByEmail(invite.Email)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to check existing user")
+		log.Error().
+			Err(err).
+			Msg("Failed to check existing user")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCompleteRegistration"),
 		})
@@ -82,7 +86,9 @@ func RegisterAction(w http.ResponseWriter, r *http.Request) {
 
 	hashedPassword, err := util.HashPassword(req.Password)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to hash password")
+		log.Error().
+			Err(err).
+			Msg("Failed to hash password")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCompleteRegistration"),
 		})
@@ -101,7 +107,9 @@ func RegisterAction(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt:   now,
 	}
 	if err := userRepo.Create(user); err != nil {
-		log.Error().Err(err).Msg("Failed to create user")
+		log.Error().
+			Err(err).
+			Msg("Failed to create user")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCompleteRegistration"),
 		})
@@ -109,7 +117,9 @@ func RegisterAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := repo.UpdateStatus(invite.ID, inviteStatusAccepted, &now); err != nil {
-		log.Error().Err(err).Msg("Failed to mark invite as accepted")
+		log.Error().
+			Err(err).
+			Msg("Failed to mark invite as accepted")
 		// User already created; continue and return success
 	}
 

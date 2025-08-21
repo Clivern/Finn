@@ -14,7 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// Connection represents a database connection
+// Connection is the database connection.
 type Connection struct {
 	DB     *sql.DB
 	Driver string

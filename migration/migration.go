@@ -13,7 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// Migration represents a database migration
+// Migration is one DB migration (version + up/down).
 type Migration struct {
 	Version     string
 	Description string
@@ -21,7 +21,7 @@ type Migration struct {
 	Down        func(*sql.DB) error
 }
 
-// Manager handles database migrations
+// Manager runs and tracks DB migrations.
 type Manager struct {
 	db         *sql.DB
 	driver     string

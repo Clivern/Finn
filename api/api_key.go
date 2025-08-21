@@ -11,19 +11,19 @@ import (
 	"github.com/clivern/finn/db"
 	"github.com/clivern/finn/locale"
 	"github.com/clivern/finn/middleware"
-	"github.com/clivern/finn/service/util"
+	"github.com/clivern/finn/pkg/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
-// CreateUserAPIKeyRequest represents the create API key request payload
+// CreateUserAPIKeyRequest is the body for creating an API key (name, optional expiry).
 type CreateUserAPIKeyRequest struct {
 	Name      string `json:"name" validate:"omitempty,max=255" label:"Name"`
 	ExpiresAt string `json:"expiresAt" validate:"omitempty,max=64" label:"Expires at"`
 }
 
-// CreateUserAPIKeyAction creates a new API key for the current user. The raw key is returned only once.
+// CreateUserAPIKeyAction creates an API key; raw key is returned only once.
 func CreateUserAPIKeyAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Create user API key endpoint called")
 
@@ -43,7 +43,9 @@ func CreateUserAPIKeyAction(w http.ResponseWriter, r *http.Request) {
 
 	id, err := uuid.NewRandom()
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to generate API key")
+		log.Error().
+			Err(err).
+			Msg("Failed to generate API key")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCreateApiKey"),
 		})
@@ -75,36 +77,35 @@ func CreateUserAPIKeyAction(w http.ResponseWriter, r *http.Request) {
 	}
 	repo := db.NewAPIKeyRepository(db.GetDB())
 	if err := repo.Create(apiKey); err != nil {
-		log.Error().Err(err).Msg("Failed to create API key")
+		log.Error().
+			Err(err).
+			Msg("Failed to create API key")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCreateApiKey"),
 		})
 		return
 	}
 
-	// Refetch to get createdAt from DB
-	created, _ := repo.GetByID(apiKey.ID)
-	if created == nil {
-		created = apiKey
-	}
-
 	resp := map[string]interface{}{
-		"id":        created.ID,
+		"id":        apiKey.ID,
 		"name":      name,
 		"expiresAt": nil,
-		"createdAt": created.CreatedAt.UTC().Format(time.RFC3339),
-		"updatedAt": created.UpdatedAt.UTC().Format(time.RFC3339),
+		"createdAt": apiKey.CreatedAt.UTC().Format(time.RFC3339),
+		"updatedAt": apiKey.UpdatedAt.UTC().Format(time.RFC3339),
 		"key":       id.String(),
 	}
-	if created.ExpiresAt != nil {
-		resp["expiresAt"] = created.ExpiresAt.UTC().Format(time.RFC3339)
+	if apiKey.ExpiresAt != nil {
+		resp["expiresAt"] = apiKey.ExpiresAt.UTC().Format(time.RFC3339)
 	}
 
-	log.Info().Str("userID", user.ID.String()).Str("apiKeyID", created.ID.String()).Msg("User API key created")
+	log.Info().
+		Str("userID", user.ID.String()).
+		Str("apiKeyID", apiKey.ID.String()).
+		Msg("User API key created")
 	util.WriteJSON(w, http.StatusCreated, resp)
 }
 
-// ListUserAPIKeysAction lists API keys for the current user (metadata only, never the key).
+// ListUserAPIKeysAction lists your API keys (metadata only, never the secret).
 func ListUserAPIKeysAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("List user API keys endpoint called")
 
@@ -119,18 +120,21 @@ func ListUserAPIKeysAction(w http.ResponseWriter, r *http.Request) {
 	repo := db.NewAPIKeyRepository(db.GetDB())
 
 	if _, err := repo.DeleteExpired(); err != nil {
-		log.Warn().Err(err).Msg("Failed to delete expired API keys")
+		log.Warn().
+			Err(err).
+			Msg("Failed to delete expired API keys")
 	}
 	keys, err := repo.GetByUserID(user.ID)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to list API keys")
+		log.Error().
+			Err(err).
+			Msg("Failed to list API keys")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedListApiKeys"),
 		})
 		return
 	}
 
-	// Only return non-expired keys, or all if you prefer; returning all so user can revoke expired
 	list := make([]map[string]interface{}, 0, len(keys))
 	for _, k := range keys {
 		item := map[string]interface{}{
@@ -152,7 +156,7 @@ func ListUserAPIKeysAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetUserAPIKeyAction returns a single API key metadata for the current user.
+// GetUserAPIKeyAction returns one API key's metadata (never the key itself).
 func GetUserAPIKeyAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Get user API key endpoint called")
 
@@ -175,11 +179,15 @@ func GetUserAPIKeyAction(w http.ResponseWriter, r *http.Request) {
 	repo := db.NewAPIKeyRepository(db.GetDB())
 
 	if _, err := repo.DeleteExpired(); err != nil {
-		log.Warn().Err(err).Msg("Failed to delete expired API keys")
+		log.Warn().
+			Err(err).
+			Msg("Failed to delete expired API keys")
 	}
 	k, err := repo.GetByID(db.ID(idStr))
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get API key")
+		log.Error().
+			Err(err).
+			Msg("Failed to get API key")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetApiKey"),
 		})
@@ -206,7 +214,7 @@ func GetUserAPIKeyAction(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, http.StatusOK, resp)
 }
 
-// DeleteUserAPIKeyAction deletes an API key for the current user.
+// DeleteUserAPIKeyAction deletes one of your API keys.
 func DeleteUserAPIKeyAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Delete user API key endpoint called")
 
@@ -229,7 +237,9 @@ func DeleteUserAPIKeyAction(w http.ResponseWriter, r *http.Request) {
 	repo := db.NewAPIKeyRepository(db.GetDB())
 	k, err := repo.GetByID(db.ID(idStr))
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get API key")
+		log.Error().
+			Err(err).
+			Msg("Failed to get API key")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedDeleteApiKey"),
 		})
@@ -243,13 +253,18 @@ func DeleteUserAPIKeyAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := repo.Delete(k.ID); err != nil {
-		log.Error().Err(err).Msg("Failed to delete API key")
+		log.Error().
+			Err(err).
+			Msg("Failed to delete API key")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedDeleteApiKey"),
 		})
 		return
 	}
 
-	log.Info().Str("userID", user.ID.String()).Str("apiKeyID", k.ID.String()).Msg("User API key deleted")
+	log.Info().
+		Str("userID", user.ID.String()).
+		Str("apiKeyID", k.ID.String()).
+		Msg("User API key deleted")
 	w.WriteHeader(http.StatusNoContent)
 }

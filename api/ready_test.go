@@ -16,7 +16,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestIntegrationReadyEndpoint tests the readiness check endpoint
 func TestIntegrationReadyEndpoint(t *testing.T) {
 	t.Run("ReadyAction should return OK when database is available", func(t *testing.T) {
 		db.CloseDB()

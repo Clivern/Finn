@@ -10,12 +10,12 @@ import (
 	"github.com/clivern/finn/db"
 	"github.com/clivern/finn/locale"
 	"github.com/clivern/finn/module"
-	"github.com/clivern/finn/service/util"
+	"github.com/clivern/finn/pkg/util"
 
 	"github.com/rs/zerolog/log"
 )
 
-// SetupRequest represents the setup request payload
+// SetupRequest is the body you send when running setup.
 type SetupRequest struct {
 	PlatformURL   string `json:"platformURL" validate:"required,url,min=4,max=60" label:"Platform URL"`
 	PlatformEmail string `json:"platformEmail" validate:"required,email,min=4,max=60" label:"Platform Email"`
@@ -24,8 +24,10 @@ type SetupRequest struct {
 	AdminPassword string `json:"adminPassword" validate:"required,strong_password,min=8,max=60" label:"Admin Password"`
 }
 
-// SetupAction handles the setup installation
+// SetupAction runs the initial platform setup.
 func SetupAction(w http.ResponseWriter, r *http.Request) {
+	log.Info().Msg("Setup endpoint called")
+
 	var req SetupRequest
 
 	if err := util.DecodeAndValidate(r, &req); err != nil {
@@ -55,7 +57,9 @@ func SetupAction(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to complete setup")
+		log.Error().
+			Err(err).
+			Msg("Failed to complete setup")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCompleteSetup"),
 		})
@@ -68,13 +72,16 @@ func SetupAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// SetupStatusAction checks if the platform is already installed
+// SetupStatusAction returns whether the platform is already installed.
 func SetupStatusAction(w http.ResponseWriter, _ *http.Request) {
+	log.Info().Msg("Setup status endpoint called")
+
 	setupModule := module.NewSetup(
 		db.NewOptionRepository(db.GetDB()),
 		db.NewUserRepository(db.GetDB()),
 		db.NewSystemEventRepository(db.GetDB()),
 	)
+
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"installed": setupModule.IsInstalled(),
 	})

@@ -18,7 +18,7 @@ type Workspace struct {
 	UpdatedAt time.Time
 }
 
-// WorkspaceRepository defines workspace CRUD
+// WorkspaceRepository is the interface for workspace CRUD.
 type WorkspaceRepository interface {
 	Create(workspace *Workspace) error
 	GetByID(id ID) (*Workspace, error)

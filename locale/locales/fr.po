@@ -298,6 +298,30 @@ msgstr "Vous n'avez pas la permission de modifier cet espace de travail"
 msgid "notAuthenticated"
 msgstr "Non authentifié"
 
+msgid "failedLoadMessages"
+msgstr "Échec du chargement des messages"
+
+msgid "aiNotEnabled"
+msgstr "L'IA n'est pas activée"
+
+msgid "messageContentRequired"
+msgstr "Le contenu du message est requis"
+
+msgid "failedSaveMessage"
+msgstr "Échec de l'enregistrement du message"
+
+msgid "failedLoadConversation"
+msgstr "Échec du chargement de la conversation"
+
+msgid "aiNotConfigured"
+msgstr "L'IA n'est pas configurée"
+
+msgid "failedGenerateResponse"
+msgstr "Échec de la génération de la réponse"
+
+msgid "failedSaveResponse"
+msgstr "Échec de l'enregistrement de la réponse"
+
 msgid "passwordResetSuccess"
 msgstr "Votre mot de passe a été réinitialisé avec succès."
 
@@ -330,6 +354,9 @@ msgstr "Runner introuvable"
 
 msgid "runnerPublicKeyNotConfigured"
 msgstr "Clé publique du runner non configurée"
+
+msgid "runnerTokenNotConfigured"
+msgstr "Jeton du runner non configuré"
 
 msgid "runnerUrlNotConfigured"
 msgstr "URL du runner non configurée"
