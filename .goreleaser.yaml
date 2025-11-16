@@ -7,7 +7,7 @@ before:
     - "go mod tidy"
     - "go generate ./..."
 builds:
-  - id: tivo
+  - id: lapin
     env:
       - CGO_ENABLED=0
     goarch:
@@ -47,4 +47,4 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
-project_name: tivo
+project_name: lapin

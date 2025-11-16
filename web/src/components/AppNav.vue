@@ -5,7 +5,7 @@
         <div class="flex items-center">
           <div class="flex-shrink-0 flex items-center">
             <router-link to="/">
-              <img src="/logo.png" alt="Tivo Logo" class="h-8 w-auto">
+              <img src="/logo.png" alt="Lapin Logo" class="h-8 w-auto">
             </router-link>
           </div>
           <div class="hidden md:ml-8 md:flex md:space-x-1">
@@ -153,9 +153,11 @@ const navItems = computed(() => {
   const items = [
     { to: '/dashboard', label: 'Dashboard' },
     { to: '/templates', label: 'Templates' },
+    { to: '/flows', label: 'Flows' },
     { to: '/inventory', label: 'Inventory' },
     { to: '/environment', label: 'Environment' },
     { to: '/repositories', label: 'Repositories' },
+    { to: '/secrets', label: 'Secrets' },
     { to: '/backends', label: 'Backends' }
   ]
   if (isWorkspaceAdminOrOwner.value) {

@@ -7,7 +7,7 @@ package core
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/drone/envsubst"
 	"github.com/spf13/viper"
@@ -15,7 +15,7 @@ import (
 
 // Load reads and parses the configuration file
 func Load(configPath string) error {
-	configUnparsed, err := ioutil.ReadFile(configPath)
+	configUnparsed, err := os.ReadFile(configPath)
 
 	if err != nil {
 		return fmt.Errorf("error while reading config file [%s]: %w", configPath, err)

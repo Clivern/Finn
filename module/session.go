@@ -10,7 +10,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/clivern/tivo/db"
+	"github.com/clivern/lapin/db"
 )
 
 // SessionManager handles session operations.

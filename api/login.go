@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/clivern/tivo/db"
-	"github.com/clivern/tivo/module"
-	"github.com/clivern/tivo/service"
+	"github.com/clivern/lapin/db"
+	"github.com/clivern/lapin/module"
+	"github.com/clivern/lapin/service"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -37,7 +37,6 @@ func LoginAction(w http.ResponseWriter, r *http.Request) {
 	userRepo := db.NewUserRepository(db.GetDB())
 	sessionRepo := db.NewSessionRepository(db.GetDB())
 	authModule := module.NewAuth(userRepo)
-
 	user, err := authModule.Login(req.Email, req.Password)
 	if err != nil {
 		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
@@ -97,7 +96,7 @@ func LoginAction(w http.ResponseWriter, r *http.Request) {
 		cookieOptions.MaxAge = 0
 	}
 
-	service.SetCookie(w, "_pers_session", session.Token, cookieOptions)
+	service.SetCookie(w, "_lapin_session", session.Token, cookieOptions)
 	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"successMessage": "Login successful",
 		"user": map[string]interface{}{

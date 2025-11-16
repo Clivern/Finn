@@ -123,3 +123,30 @@ export const apiKeysAPI = {
   create: (data) => api.post('/apiKeys', data),
   delete: (id) => api.delete(`/apiKeys/${id}`),
 }
+
+// API endpoints for workspace repositories
+export const repositoriesAPI = {
+  list: (workspaceId, params = {}) => api.get(`/workspaces/${workspaceId}/repositories`, { params }),
+  get: (workspaceId, id) => api.get(`/workspaces/${workspaceId}/repositories/${id}`),
+  create: (workspaceId, data) => api.post(`/workspaces/${workspaceId}/repositories`, data),
+  update: (workspaceId, id, data) => api.put(`/workspaces/${workspaceId}/repositories/${id}`, data),
+  delete: (workspaceId, id) => api.delete(`/workspaces/${workspaceId}/repositories/${id}`),
+}
+
+// API endpoints for workspace SSH keys
+export const sshKeysAPI = {
+  list: (workspaceId, params = {}) => api.get(`/workspaces/${workspaceId}/keys`, { params }),
+  get: (workspaceId, id) => api.get(`/workspaces/${workspaceId}/keys/${id}`),
+  create: (workspaceId, data) => api.post(`/workspaces/${workspaceId}/keys`, data),
+  update: (workspaceId, id, data) => api.put(`/workspaces/${workspaceId}/keys/${id}`, data),
+  delete: (workspaceId, id) => api.delete(`/workspaces/${workspaceId}/keys/${id}`),
+}
+
+// API endpoints for workspace git credentials
+export const credentialsAPI = {
+  list: (workspaceId, params = {}) => api.get(`/workspaces/${workspaceId}/credentials`, { params }),
+  get: (workspaceId, id) => api.get(`/workspaces/${workspaceId}/credentials/${id}`),
+  create: (workspaceId, data) => api.post(`/workspaces/${workspaceId}/credentials`, data),
+  update: (workspaceId, id, data) => api.put(`/workspaces/${workspaceId}/credentials/${id}`, data),
+  delete: (workspaceId, id) => api.delete(`/workspaces/${workspaceId}/credentials/${id}`),
+}

@@ -55,3 +55,11 @@ func (id ID) ValueOrNil() interface{} {
 	}
 	return string(id)
 }
+
+// ValueOrNilPtr returns the ID as interface{} for nullable columns; returns nil if the pointer is nil or ID is empty.
+func (id *ID) ValueOrNilPtr() interface{} {
+	if id == nil || *id == "" {
+		return nil
+	}
+	return string(*id)
+}

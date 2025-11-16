@@ -1,0 +1,49 @@
+# Server configs
+app:
+  # Server name
+  name: ${LAPIN_SERVER_NAME:-lapin}
+  # Env mode (dev or prod)
+  mode: ${LAPIN_SERVER_MODE:-prod}
+  # HTTP port
+  port: ${LAPIN_SERVER_PORT:-8000}
+  # Hostname
+  hostname: ${LAPIN_SERVER_HOSTNAME:-127.0.0.1}
+  # TLS configs
+  tls:
+    status: ${LAPIN_SERVER_TLS_STATUS:-off}
+    crt_path: ${LAPIN_SERVER_TLS_PEMPATH:-cert/server.crt}
+    key_path: ${LAPIN_SERVER_TLS_KEYPATH:-cert/server.key}
+
+  # Global timeout
+  timeout: ${LAPIN_SERVER_TIMEOUT:-50}
+
+  # Prometheus metrics endpoint
+  metrics:
+    username: ${LAPIN_SERVER_PROM_METRICS_USERNAME:-admin}
+    secret: ${LAPIN_SERVER_PROM_METRICS_SECRET:-secret}
+
+  # Log configs
+  log:
+    # Log level, it can be debug, info, warn, error, panic, fatal
+    level: ${LAPIN_SERVER_LOG_LEVEL:-info}
+    # Output can be stdout or abs path to log file /var/logs/lapin.log
+    output: ${LAPIN_SERVER_LOG_OUTPUT:-stdout}
+    # Format can be json
+    format: ${LAPIN_SERVER_LOG_FORMAT:-json}
+
+  # Database configs
+  database:
+    # Database driver (postgres, postgresql, or sqlite)
+    driver: ${LAPIN_DATABASE_DRIVER:-sqlite}
+    # PostgreSQL specific configs
+    host: ${LAPIN_DATABASE_HOST:-localhost}
+    port: ${LAPIN_DATABASE_PORT:-5432}
+    username: ${LAPIN_DATABASE_USERNAME:-postgres}
+    password: ${LAPIN_DATABASE_PASSWORD:-postgres}
+    name: ${LAPIN_DATABASE_NAME:-lapin}
+    # Connection pool settings
+    max_open_conns: ${LAPIN_DATABASE_MAX_OPEN_CONNS:-25}
+    max_idle_conns: ${LAPIN_DATABASE_MAX_IDLE_CONNS:-10}
+    conn_max_lifetime: ${LAPIN_DATABASE_CONN_MAX_LIFETIME:-300}
+    # SQLite specific config (path to database file)
+    datasource: ${LAPIN_DATABASE_DATASOURCE:-./cache/lapin.db}

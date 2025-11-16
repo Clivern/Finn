@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/clivern/tivo/db"
+	"github.com/clivern/lapin/db"
 )
 
 // Settings manages application configuration options.

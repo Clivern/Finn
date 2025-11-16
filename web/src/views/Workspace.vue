@@ -27,9 +27,7 @@
         </div>
 
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
-          <!-- Left column: name + danger zone -->
           <div class="xl:col-span-1 space-y-6">
-            <!-- Workspace name -->
             <section class="rounded-xl bg-white border border-theme-border shadow-sm overflow-hidden">
               <form @submit.prevent="saveName" class="block">
                 <div class="px-6 py-4 border-b border-theme-border bg-primary-50/50">
@@ -235,7 +233,7 @@
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-sm p-6">
             <h2 id="edit-role-title" class="text-lg font-semibold text-theme-text">Edit role</h2>
             <p class="mt-1 text-sm text-theme-textLight">
-              {{ editRoleModalUser?.user?.name || editRoleModalUser?.user?.email || editRoleModalUser?.userId }}
+              {{ editRoleModalUser?.user?.name || editRoleModalUser?.user?.email }}
             </p>
             <form @submit.prevent="saveRole" class="mt-4 space-y-4">
               <div>
@@ -421,7 +419,7 @@ function canEditOrRemoveUser(wu) {
 const currentUserId = ref(null)
 function setCurrentUserId() {
   try {
-    const user = JSON.parse(localStorage.getItem('tivo_user') || '{}')
+    const user = JSON.parse(localStorage.getItem('lapin_user') || '{}')
     currentUserId.value = user?.id ?? null
   } catch {
     currentUserId.value = null
@@ -439,8 +437,11 @@ async function loadAllUsers() {
   if (!workspace.value?.id) return
   allUsersLoading.value = true
   try {
-    const res = await workspaceUsersAPI.listAllUsers(workspace.value.id, { excludeMembers: 'true', limit: 200 })
-    allUsersList.value = res.data?.users ?? []
+    const res = await workspaceUsersAPI.listAllUsers(
+      workspace.value.id,
+      { excludeMembers: 'true', limit: 200 }
+    )
+    allUsersList.value = res.data.users
   } catch {
     allUsersList.value = []
   } finally {

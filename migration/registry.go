@@ -173,7 +173,7 @@ func createOptionsTable(db *sql.DB) error {
 		query = `
 		CREATE TABLE options (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			key VARCHAR(255) NOT NULL UNIQUE,
+			key VARCHAR(128) NOT NULL UNIQUE,
 			value TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -182,7 +182,7 @@ func createOptionsTable(db *sql.DB) error {
 		query = `
 		CREATE TABLE options (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			key VARCHAR(255) NOT NULL UNIQUE,
+			key VARCHAR(128) NOT NULL UNIQUE,
 			value TEXT,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -213,8 +213,8 @@ func createUsersTable(db *sql.DB) error {
 		query = `
 		CREATE TABLE users (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			name VARCHAR(255) NOT NULL,
-			email VARCHAR(255) NOT NULL UNIQUE,
+			name VARCHAR(100) NOT NULL,
+			email VARCHAR(191) NOT NULL UNIQUE,
 			password_hash VARCHAR(255) NOT NULL,
 			role VARCHAR(50) NOT NULL DEFAULT 'regular',
 			is_active BOOLEAN DEFAULT 1,
@@ -226,8 +226,8 @@ func createUsersTable(db *sql.DB) error {
 		query = `
 		CREATE TABLE users (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			name VARCHAR(255) NOT NULL,
-			email VARCHAR(255) NOT NULL UNIQUE,
+			name VARCHAR(100) NOT NULL,
+			email VARCHAR(191) NOT NULL UNIQUE,
 			password_hash VARCHAR(255) NOT NULL,
 			role VARCHAR(50) NOT NULL DEFAULT 'regular',
 			is_active BOOLEAN DEFAULT true,
@@ -260,7 +260,7 @@ func createUsersMetaTable(db *sql.DB) error {
 		query = `
 		CREATE TABLE users_meta (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			key VARCHAR(255) NOT NULL,
+			key VARCHAR(128) NOT NULL,
 			value TEXT,
 			user_id INTEGER NOT NULL,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -272,7 +272,7 @@ func createUsersMetaTable(db *sql.DB) error {
 		query = `
 		CREATE TABLE users_meta (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			key VARCHAR(255) NOT NULL,
+			key VARCHAR(128) NOT NULL,
 			value TEXT,
 			user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -308,7 +308,7 @@ func createUserSessionsTable(db *sql.DB) error {
 			token VARCHAR(255) NOT NULL UNIQUE,
 			user_id INTEGER NOT NULL,
 			ip_address VARCHAR(45),
-			user_agent VARCHAR(500),
+			user_agent VARCHAR(255),
 			expires_at DATETIME NOT NULL,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -321,7 +321,7 @@ func createUserSessionsTable(db *sql.DB) error {
 			token VARCHAR(255) NOT NULL UNIQUE,
 			user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 			ip_address VARCHAR(45),
-			user_agent VARCHAR(500),
+			user_agent VARCHAR(255),
 			expires_at TIMESTAMP NOT NULL,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -354,7 +354,7 @@ func createUserAPIKeysTable(db *sql.DB) error {
 		CREATE TABLE user_api_keys (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			user_id INTEGER NOT NULL,
-			name VARCHAR(255),
+			name VARCHAR(100),
 			key VARCHAR(512) NOT NULL,
 			expires_at DATETIME NULL,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -366,7 +366,7 @@ func createUserAPIKeysTable(db *sql.DB) error {
 		CREATE TABLE user_api_keys (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-			name VARCHAR(255),
+			name VARCHAR(100),
 			key VARCHAR(512) NOT NULL,
 			expires_at TIMESTAMP NULL,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -399,7 +399,7 @@ func createUserInvitesTable(db *sql.DB) error {
 		query = `
 		CREATE TABLE user_invites (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			email VARCHAR(255) NOT NULL,
+			email VARCHAR(191) NOT NULL,
 			role VARCHAR(50) NOT NULL DEFAULT 'regular',
 			token VARCHAR(255) NOT NULL UNIQUE,
 			status VARCHAR(50) NOT NULL DEFAULT 'pending',
@@ -414,7 +414,7 @@ func createUserInvitesTable(db *sql.DB) error {
 		query = `
 		CREATE TABLE user_invites (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			email VARCHAR(255) NOT NULL,
+			email VARCHAR(191) NOT NULL,
 			role VARCHAR(50) NOT NULL DEFAULT 'regular',
 			token VARCHAR(255) NOT NULL UNIQUE,
 			status VARCHAR(50) NOT NULL DEFAULT 'pending',
@@ -451,7 +451,7 @@ func createWorkspacesTable(db *sql.DB) error {
 		query = `
 		CREATE TABLE workspaces (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			name VARCHAR(255) NOT NULL,
+			name VARCHAR(100) NOT NULL,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`
@@ -459,7 +459,7 @@ func createWorkspacesTable(db *sql.DB) error {
 		query = `
 		CREATE TABLE workspaces (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			name VARCHAR(255) NOT NULL,
+			name VARCHAR(100) NOT NULL,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		)`
@@ -488,7 +488,7 @@ func createWorkspacesMetaTable(db *sql.DB) error {
 		CREATE TABLE workspaces_meta (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			workspace_id INTEGER NOT NULL,
-			key VARCHAR(255) NOT NULL,
+			key VARCHAR(128) NOT NULL,
 			value TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -500,7 +500,7 @@ func createWorkspacesMetaTable(db *sql.DB) error {
 		CREATE TABLE workspaces_meta (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
-			key VARCHAR(255) NOT NULL,
+			key VARCHAR(128) NOT NULL,
 			value TEXT,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -579,7 +579,9 @@ func createWorkspaceSSHKeysTable(db *sql.DB) error {
 		CREATE TABLE workspace_ssh_keys (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			workspace_id INTEGER NOT NULL,
-			name VARCHAR(255) NOT NULL,
+			name VARCHAR(100) NOT NULL,
+			committer_name VARCHAR(100) NOT NULL,
+			committer_email VARCHAR(100) NOT NULL,
 			private_key TEXT,
 			public_key TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -591,7 +593,9 @@ func createWorkspaceSSHKeysTable(db *sql.DB) error {
 		CREATE TABLE workspace_ssh_keys (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
-			name VARCHAR(255) NOT NULL,
+			name VARCHAR(100) NOT NULL,
+			committer_name VARCHAR(100) NOT NULL,
+			committer_email VARCHAR(100) NOT NULL,
 			private_key TEXT,
 			public_key TEXT,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -623,8 +627,10 @@ func createWorkspaceGitCredentialsTable(db *sql.DB) error {
 		CREATE TABLE workspace_git_credentials (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			workspace_id INTEGER NOT NULL,
-			name VARCHAR(255) NOT NULL,
-			username VARCHAR(255) NULL,
+			name VARCHAR(100) NOT NULL,
+			committer_name VARCHAR(100) NOT NULL,
+			committer_email VARCHAR(100) NOT NULL,
+			username VARCHAR(100) NULL,
 			password_or_token TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -635,8 +641,10 @@ func createWorkspaceGitCredentialsTable(db *sql.DB) error {
 		CREATE TABLE workspace_git_credentials (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
-			name VARCHAR(255) NOT NULL,
-			username VARCHAR(255) NULL,
+			name VARCHAR(100) NOT NULL,
+			committer_name VARCHAR(100) NOT NULL,
+			committer_email VARCHAR(100) NOT NULL,
+			username VARCHAR(100) NULL,
 			password_or_token TEXT,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -667,9 +675,10 @@ func createWorkspaceRepositoriesTable(db *sql.DB) error {
 		CREATE TABLE workspace_repositories (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			workspace_id INTEGER NOT NULL,
-			name VARCHAR(255) NOT NULL,
+			name VARCHAR(100) NOT NULL,
 			git_url VARCHAR(500) NOT NULL,
-			git_branch VARCHAR(255) DEFAULT 'main',
+			git_branch VARCHAR(100) NULL,
+			git_tag VARCHAR(100) NULL,
 			ssh_key_id INTEGER NULL,
 			git_credentials_id INTEGER NULL,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -683,9 +692,10 @@ func createWorkspaceRepositoriesTable(db *sql.DB) error {
 		CREATE TABLE workspace_repositories (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
-			name VARCHAR(255) NOT NULL,
+			name VARCHAR(100) NOT NULL,
 			git_url VARCHAR(500) NOT NULL,
-			git_branch VARCHAR(255) DEFAULT 'main',
+			git_branch VARCHAR(100) NULL,
+			git_tag VARCHAR(100) NULL,
 			ssh_key_id UUID NULL REFERENCES workspace_ssh_keys(id) ON DELETE SET NULL,
 			git_credentials_id UUID NULL REFERENCES workspace_git_credentials(id) ON DELETE SET NULL,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -720,7 +730,7 @@ func createWorkspaceIntegrationsTable(db *sql.DB) error {
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			workspace_id INTEGER NOT NULL,
 			type VARCHAR(50) NOT NULL DEFAULT 'webhook',
-			name VARCHAR(255) NOT NULL,
+			name VARCHAR(100) NOT NULL,
 			config TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -734,7 +744,7 @@ func createWorkspaceIntegrationsTable(db *sql.DB) error {
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
 			type VARCHAR(50) NOT NULL DEFAULT 'webhook',
-			name VARCHAR(255) NOT NULL,
+			name VARCHAR(100) NOT NULL,
 			config TEXT,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -766,7 +776,7 @@ func createSystemIntegrationsTable(db *sql.DB) error {
 		CREATE TABLE system_integrations (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			type VARCHAR(50) NOT NULL DEFAULT 'webhook',
-			name VARCHAR(255) NOT NULL,
+			name VARCHAR(100) NOT NULL,
 			config TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -777,7 +787,7 @@ func createSystemIntegrationsTable(db *sql.DB) error {
 		CREATE TABLE system_integrations (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			type VARCHAR(50) NOT NULL DEFAULT 'webhook',
-			name VARCHAR(255) NOT NULL,
+			name VARCHAR(100) NOT NULL,
 			config TEXT,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -934,8 +944,8 @@ func createRunnersTable(db *sql.DB) error {
 		CREATE TABLE runners (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			token VARCHAR(255) NOT NULL UNIQUE,
-			name VARCHAR(255),
-			tags VARCHAR(255),
+			name VARCHAR(100),
+			tags VARCHAR(128),
 			max_parallel_tasks INTEGER DEFAULT 10,
 			status VARCHAR(50) NOT NULL DEFAULT 'active',
 			public_key TEXT,
@@ -948,8 +958,8 @@ func createRunnersTable(db *sql.DB) error {
 		CREATE TABLE runners (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			token VARCHAR(255) NOT NULL UNIQUE,
-			name VARCHAR(255),
-			tags VARCHAR(255),
+			name VARCHAR(100),
+			tags VARCHAR(128),
 			max_parallel_tasks INTEGER DEFAULT 10,
 			status VARCHAR(50) NOT NULL DEFAULT 'active',
 			public_key TEXT,
@@ -984,13 +994,13 @@ func createWorkspaceInventoriesTable(db *sql.DB) error {
 		CREATE TABLE workspace_inventories (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			workspace_id INTEGER NOT NULL,
-			name VARCHAR(255) NOT NULL,
+			name VARCHAR(100) NOT NULL,
 			inventory TEXT,
 			type VARCHAR(50) NOT NULL DEFAULT 'static',
 			ssh_key_id INTEGER NULL,
 			become_key_id INTEGER NULL,
 			repository_id INTEGER NULL,
-			runner_tag VARCHAR(255),
+			runner_tag VARCHAR(128),
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
@@ -1003,13 +1013,13 @@ func createWorkspaceInventoriesTable(db *sql.DB) error {
 		CREATE TABLE workspace_inventories (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
-			name VARCHAR(255) NOT NULL,
+			name VARCHAR(100) NOT NULL,
 			inventory TEXT,
 			type VARCHAR(50) NOT NULL DEFAULT 'static',
 			ssh_key_id UUID NULL REFERENCES workspace_ssh_keys(id) ON DELETE SET NULL,
 			become_key_id UUID NULL REFERENCES workspace_ssh_keys(id) ON DELETE SET NULL,
 			repository_id UUID NULL REFERENCES workspace_repositories(id) ON DELETE SET NULL,
-			runner_tag VARCHAR(255),
+			runner_tag VARCHAR(128),
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
@@ -1040,11 +1050,11 @@ func createWorkspaceEnvironmentsTable(db *sql.DB) error {
 		CREATE TABLE workspace_environments (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			workspace_id INTEGER NOT NULL,
-			name VARCHAR(255) NOT NULL,
+			name VARCHAR(100) NOT NULL,
 			password TEXT,
 			json TEXT,
 			env TEXT,
-			secret_storage_key_prefix VARCHAR(255),
+			secret_storage_key_prefix VARCHAR(128),
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
@@ -1054,11 +1064,11 @@ func createWorkspaceEnvironmentsTable(db *sql.DB) error {
 		CREATE TABLE workspace_environments (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
-			name VARCHAR(255) NOT NULL,
+			name VARCHAR(100) NOT NULL,
 			password TEXT,
 			json TEXT,
 			env TEXT,
-			secret_storage_key_prefix VARCHAR(255),
+			secret_storage_key_prefix VARCHAR(128),
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
@@ -1089,7 +1099,7 @@ func createWorkspaceBackendsTable(db *sql.DB) error {
 		CREATE TABLE workspace_backends (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			workspace_id INTEGER NOT NULL,
-			name VARCHAR(255) NOT NULL,
+			name VARCHAR(100) NOT NULL,
 			type VARCHAR(50) NOT NULL DEFAULT 'local',
 			config TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -1101,7 +1111,7 @@ func createWorkspaceBackendsTable(db *sql.DB) error {
 		CREATE TABLE workspace_backends (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
-			name VARCHAR(255) NOT NULL,
+			name VARCHAR(100) NOT NULL,
 			type VARCHAR(50) NOT NULL DEFAULT 'local',
 			config TEXT,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

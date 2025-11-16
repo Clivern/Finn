@@ -10,10 +10,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/clivern/tivo/db"
-	"github.com/clivern/tivo/middleware"
-	"github.com/clivern/tivo/module"
-	"github.com/clivern/tivo/service"
+	"github.com/clivern/lapin/db"
+	"github.com/clivern/lapin/middleware"
+	"github.com/clivern/lapin/module"
+	"github.com/clivern/lapin/service"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )
@@ -30,7 +30,7 @@ type UpdateWorkspaceRequest struct {
 
 // CreateWorkspaceAction handles workspace creation requests
 func CreateWorkspaceAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Create workspace endpoint called")
+	log.Info().Msg("Create workspace endpoint called")
 
 	var req CreateWorkspaceRequest
 	if err := service.DecodeAndValidate(r, &req); err != nil {
@@ -58,7 +58,6 @@ func CreateWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Info().Str("workspaceID", workspace.ID.String()).Msg("Workspace created successfully")
-
 	wsModule.AddWorkspaceUser(workspace.ID, user.ID, db.UserRoleOwner)
 	log.Info().Str("workspaceID", workspace.ID.String()).Str("userID", user.ID.String()).Msg("User added to workspace as owner")
 
@@ -70,9 +69,9 @@ func CreateWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// ListWorkspacesAction handles workspace listing requests with pagination.
+// ListWorkspacesAction handles workspace listing requests with pagination
 func ListWorkspacesAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("List workspaces endpoint called")
+	log.Info().Msg("List workspaces endpoint called")
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
@@ -84,7 +83,6 @@ func ListWorkspacesAction(w http.ResponseWriter, r *http.Request) {
 
 	limitStr := r.URL.Query().Get("limit")
 	offsetStr := r.URL.Query().Get("offset")
-
 	limit := 50
 	offset := 0
 
@@ -100,7 +98,6 @@ func ListWorkspacesAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	opts := &module.ListWorkspacesOptions{Limit: limit, Offset: offset}
-	// By default load only user's workspaces; admins can pass ?all=true to get all workspaces
 	if user.Role != db.UserRoleAdmin || r.URL.Query().Get("all") != "true" {
 		opts.UserID = &user.ID
 	}
@@ -144,9 +141,9 @@ func ListWorkspacesAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetWorkspaceAction handles get workspace by ID requests. Allowed for app admins and workspace members.
+// GetWorkspaceAction handles get workspace by ID requests
 func GetWorkspaceAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Get workspace endpoint called")
+	log.Info().Msg("Get workspace endpoint called")
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
@@ -181,7 +178,11 @@ func GetWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	permModule := module.NewPermission(db.GetDB())
-	allowed, err := permModule.CheckWorkspacePermission(user, workspace, module.CanGetWorkspace)
+	allowed, err := permModule.CheckWorkspacePermission(
+		user,
+		workspace,
+		module.CanGetWorkspace,
+	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
 		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
@@ -204,9 +205,9 @@ func GetWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// UpdateWorkspaceAction handles workspace update requests. Allowed for app admins and workspace admin/owner.
+// UpdateWorkspaceAction handles workspace update requests
 func UpdateWorkspaceAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Update workspace endpoint called")
+	log.Info().Msg("Update workspace endpoint called")
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
@@ -247,7 +248,11 @@ func UpdateWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	permModule := module.NewPermission(db.GetDB())
-	allowed, err := permModule.CheckWorkspacePermission(user, workspace, module.CanUpdateWorkspace)
+	allowed, err := permModule.CheckWorkspacePermission(
+		user,
+		workspace,
+		module.CanUpdateWorkspace,
+	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
 		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
@@ -289,9 +294,9 @@ func UpdateWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// DeleteWorkspaceAction handles workspace deletion requests. Allowed for app admins and workspace admin/owner.
+// DeleteWorkspaceAction handles workspace deletion requests
 func DeleteWorkspaceAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Delete workspace endpoint called")
+	log.Info().Msg("Delete workspace endpoint called")
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
@@ -326,7 +331,11 @@ func DeleteWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	permModule := module.NewPermission(db.GetDB())
-	allowed, err := permModule.CheckWorkspacePermission(user, workspace, module.CanDeleteWorkspace)
+	allowed, err := permModule.CheckWorkspacePermission(
+		user,
+		workspace,
+		module.CanDeleteWorkspace,
+	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
 		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{

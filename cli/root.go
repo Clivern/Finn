@@ -14,12 +14,12 @@ import (
 var config string
 
 var rootCmd = &cobra.Command{
-	Use: "tivo",
+	Use: "lapin",
 	Short: `🐀 A Platform to Run, Schedule, and Automate Ansible and Terraform Workflows
 
 
 If you have any suggestions, bug reports, or annoyances please report
-them to our issue tracker at <https://github.com/clivern/tivo/issues>`,
+them to our issue tracker at <https://github.com/clivern/lapin/issues>`,
 }
 
 // Execute runs cmd tool

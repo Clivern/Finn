@@ -3,7 +3,7 @@
     <div class="max-w-md w-full">
       <div class="text-center mb-10">
         <div class="flex justify-center mb-8">
-          <img src="/logo.png" alt="Tivo Logo" class="h-24 w-auto">
+          <img src="/logo.png" alt="Lapin Logo" class="h-24 w-auto">
         </div>
       </div>
 
@@ -144,7 +144,7 @@
       </div>
 
       <p class="text-center text-xs text-theme-textLight mt-8">
-        Copyright © 2025 Tivo. All rights reserved.
+        Copyright © 2025 Lapin. All rights reserved.
       </p>
     </div>
   </div>

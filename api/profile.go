@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/clivern/tivo/db"
-	"github.com/clivern/tivo/middleware"
-	"github.com/clivern/tivo/module"
-	"github.com/clivern/tivo/service"
+	"github.com/clivern/lapin/db"
+	"github.com/clivern/lapin/middleware"
+	"github.com/clivern/lapin/module"
+	"github.com/clivern/lapin/service"
 
 	"github.com/rs/zerolog/log"
 )

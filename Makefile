@@ -5,7 +5,7 @@ pkgs          = ./...
 
 help: Makefile
 	@echo
-	@echo " Choose a command run in Tivo:"
+	@echo " Choose a command run in Lapin:"
 	@echo
 	@sed -n 's/^##//p' $< | column -t -s ':' |  sed -e 's/^/ /'
 	@echo
@@ -116,8 +116,8 @@ coverage:
 .PHONY: run
 run:
 	@echo ">> ============= Run API Server ============= <<"
-	$(go) run tivo.go migrate up -c config.dist.yml
-	$(go) run tivo.go server -c config.dist.yml
+	$(go) run lapin.go migrate up -c mgmt_config.dist.yml
+	$(go) run lapin.go server -c mgmt_config.dist.yml
 
 
 ## ci: Run all CI tests.

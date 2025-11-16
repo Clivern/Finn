@@ -1,7 +1,7 @@
 {
-  "name": "tivo",
+  "name": "lapin",
   "version": "0.1.0",
-  "description": "Tivo - Run Ansible, Terraform, OpenTofu with AI-powered Platform",
+  "description": "Lapin - Run Ansible, Terraform, OpenTofu with AI-powered Platform",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "axios": "^1.13.2",
+    "axios": "^1.13.5",
     "marked": "^17.0.1",
     "pinia": "^2.2.6",
     "vue": "^3.4.21",

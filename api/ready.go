@@ -7,8 +7,8 @@ package api
 import (
 	"net/http"
 
-	"github.com/clivern/tivo/db"
-	"github.com/clivern/tivo/service"
+	"github.com/clivern/lapin/db"
+	"github.com/clivern/lapin/service"
 
 	"github.com/rs/zerolog/log"
 )

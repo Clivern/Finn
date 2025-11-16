@@ -7,7 +7,6 @@ package pkg
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -35,7 +34,7 @@ func GetBaseDir(dirName string) string {
 
 // LoadConfigs load configs for testing purposes using viper
 func LoadConfigs(path string) error {
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 
 	if err != nil {
 		return err

@@ -79,12 +79,20 @@
                 {{ formatDate(workspace.createdAt) }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-theme-text">
-                {{ workspace.membersCount ?? '—' }}
+                {{ workspace.membersCount }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                <span class="inline-flex gap-3">
+                <span class="inline-flex items-center gap-3">
                   <button
-                    v-if="canEditWorkspace(workspace)"
+                    type="button"
+                    @click="switchToWorkspace(workspace)"
+                    class="text-emerald-600 hover:text-emerald-700 hover:underline disabled:opacity-50 text-sm"
+                    :disabled="switchLoadingId === workspace.id"
+                    title="Switch into this workspace"
+                  >
+                    {{ switchLoadingId === workspace.id ? 'Switching…' : 'Switch into' }}
+                  </button>
+                  <button
                     type="button"
                     @click="openEditModal(workspace)"
                     class="text-primary-600 hover:text-primary-700 hover:underline disabled:opacity-50"
@@ -110,25 +118,25 @@
 
         <!-- Pagination footer -->
         <div
-          v-if="workspaces.length > 0"
+          v-if="total > 0"
           class="bg-white px-6 py-4 border-t border-theme-border flex items-center justify-between"
         >
           <div class="text-sm text-theme-textLight">
-            Showing {{ (page - 1) * limit + 1 }} to {{ Math.min(page * limit, meta.total) }} of {{ meta.total }} workspaces
+            Showing {{ offset + 1 }} to {{ Math.min(offset + limit, total) }} of {{ total }} workspaces
           </div>
           <div class="flex items-center gap-2">
             <button
               type="button"
-              @click="goToPage(page - 1)"
-              :disabled="page <= 1 || loading"
+              @click="goToPage(offset - limit)"
+              :disabled="offset === 0"
               class="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Previous
             </button>
             <button
               type="button"
-              @click="goToPage(page + 1)"
-              :disabled="page >= totalPages || loading"
+              @click="goToPage(offset + limit)"
+              :disabled="offset + limit >= total"
               class="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
@@ -250,16 +258,19 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import AppNav from '@/components/AppNav.vue'
 import { workspaceAPI } from '@/api'
 import { loadWorkspaceFromStorage, saveWorkspaceToStorage, removeWorkspaceFromStorage } from '@/utils/storage'
+
+const router = useRouter()
 const workspaces = ref([])
 const loading = ref(false)
-const meta = ref({ limit: 50, offset: 0, total: 0 })
+const total = ref(0)
+const limit = ref(50)
+const offset = ref(0)
 const successMessage = ref(null)
 const errorMessage = ref(null)
-const page = ref(1)
-const limit = ref(10)
 
 const editModalWorkspace = ref(null)
 const editWorkspaceName = ref('')
@@ -268,50 +279,56 @@ const deleteModalWorkspace = ref(null)
 const deleteConfirmName = ref('')
 const deleting = ref(false)
 const deletingId = ref(null)
+const switchLoadingId = ref(null)
 
-function canEditWorkspace(workspace) {
-  const role = workspace?.role
-  return role === 'admin' || role === 'owner'
+async function switchToWorkspace(workspace) {
+  if (!workspace?.id) return
+  switchLoadingId.value = workspace.id
+  errorMessage.value = null
+
+  try {
+    const res = await workspaceAPI.get(workspace.id)
+    saveWorkspaceToStorage({ ...workspace, ...res.data, role: res.data.role })
+    router.push('/dashboard')
+  } catch (err) {
+    errorMessage.value = err.response?.data?.errorMessage || 'Failed to switch into workspace'
+  } finally {
+    switchLoadingId.value = null
+  }
 }
 
 function openEditModal(workspace) {
   editModalWorkspace.value = workspace
-  editWorkspaceName.value = workspace?.name ?? ''
+  editWorkspaceName.value = workspace.name
 }
 
 async function handleUpdate() {
   const workspace = editModalWorkspace.value
-  const name = editWorkspaceName.value?.trim()
+  const name = editWorkspaceName.value.trim()
+
   if (!workspace || !name) return
   updateLoadingId.value = workspace.id
   errorMessage.value = null
+
   try {
-    const response = await workspaceAPI.update(workspace.id, { name })
-    const updated = response.data
-    if (updated) {
-      const i = workspaces.value.findIndex((w) => w.id === workspace.id)
-      if (i !== -1) workspaces.value[i] = { ...workspaces.value[i], ...updated }
-      if (loadWorkspaceFromStorage()?.id === workspace.id) {
-        saveWorkspaceToStorage({ ...loadWorkspaceFromStorage(), ...updated })
-      }
-      editModalWorkspace.value = null
-      editWorkspaceName.value = ''
-    } else {
-      errorMessage.value = 'Failed to update workspace'
+    const res = await workspaceAPI.update(workspace.id, { name })
+    const updated = res.data
+    if (updated && loadWorkspaceFromStorage()?.id === workspace.id) {
+      saveWorkspaceToStorage({ ...loadWorkspaceFromStorage(), ...updated })
     }
+    editModalWorkspace.value = null
+    editWorkspaceName.value = ''
+    await loadPage()
+    successMessage.value = 'Workspace name updated.'
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || err.message || 'Failed to update workspace'
+    errorMessage.value = err.response?.data?.errorMessage || 'Failed to update workspace name'
   } finally {
     updateLoadingId.value = null
   }
 }
 
-const totalPages = computed(() =>
-  Math.ceil((meta.value.total || 0) / limit.value) || 1
-)
-
 const canConfirmDelete = computed(() => {
-  const name = deleteModalWorkspace.value?.name
+  const name = deleteModalWorkspace.value.name
   return name && deleteConfirmName.value.trim() === name
 })
 
@@ -332,22 +349,27 @@ function isCurrent(workspace) {
 async function loadPage() {
   loading.value = true
   errorMessage.value = null
+
   try {
-    const params = { all: 'true', limit: limit.value, offset: (page.value - 1) * limit.value }
-    const response = await workspaceAPI.list(params)
-    workspaces.value = response.data?.workspaces ?? []
-    const m = response.data?._meta
-    if (m) meta.value = { limit: m.limit ?? 50, offset: m.offset ?? 0, total: m.total ?? 0 }
+    const res = await workspaceAPI.list({
+      all: 'true',
+      limit: limit.value,
+      offset: offset.value
+    })
+    workspaces.value = res.data.workspaces
+    total.value = res.data._meta.total
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || err.message || 'Failed to load workspaces'
+    errorMessage.value = err.response?.data?.errorMessage || 'Failed to load workspaces'
     workspaces.value = []
   } finally {
     loading.value = false
   }
 }
 
-function goToPage(p) {
-  page.value = p
+function goToPage(newOffset) {
+  if (newOffset < 0) return
+  if (newOffset >= total.value) return
+  offset.value = newOffset
   loadPage()
 }
 
@@ -370,6 +392,7 @@ async function confirmDelete() {
   deletingId.value = workspace.id
   errorMessage.value = null
   successMessage.value = null
+
   try {
     await workspaceAPI.delete(workspace.id)
     if (loadWorkspaceFromStorage()?.id === workspace.id) {
@@ -377,26 +400,20 @@ async function confirmDelete() {
     }
     deleteModalWorkspace.value = null
     deleteConfirmName.value = ''
-    workspaces.value = workspaces.value.filter((w) => w.id !== workspace.id)
-    if (workspaces.value.length === 0 && page.value > 1) {
-      page.value = page.value - 1
-      await loadPage()
-    } else {
-      meta.value = { ...meta.value, total: Math.max(0, (meta.value.total ?? 0) - 1) }
-    }
+    await loadPage()
     successMessage.value = 'Workspace deleted successfully.'
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || err.message || 'Failed to delete workspace'
+    errorMessage.value = err.response?.data?.errorMessage || 'Failed to delete workspace'
   } finally {
     deleting.value = false
     deletingId.value = null
   }
 }
 
-onMounted(async () => {
+onMounted(() => {
   successMessage.value = null
   errorMessage.value = null
-  page.value = 1
-  await loadPage()
+  offset.value = 0
+  loadPage()
 })
 </script>

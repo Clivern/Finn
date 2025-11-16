@@ -7,7 +7,7 @@ package main
 import (
 	"embed"
 
-	"github.com/clivern/tivo/cli"
+	"github.com/clivern/lapin/cli"
 )
 
 var (

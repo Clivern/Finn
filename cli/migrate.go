@@ -5,9 +5,9 @@
 package cli
 
 import (
-	"github.com/clivern/tivo/core"
-	"github.com/clivern/tivo/db"
-	"github.com/clivern/tivo/migration"
+	"github.com/clivern/lapin/core"
+	"github.com/clivern/lapin/db"
+	"github.com/clivern/lapin/migration"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

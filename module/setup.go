@@ -8,8 +8,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/clivern/tivo/db"
-	"github.com/clivern/tivo/service"
+	"github.com/clivern/lapin/db"
+	"github.com/clivern/lapin/service"
 )
 
 // Setup handles the initial installation and configuration of the gateway.
@@ -112,7 +112,7 @@ func (s *Setup) Install(options *SetupOptions) error {
 		return err
 	}
 
-	err = s.OptionRepository.Create("smtp_from_email", "noreply@tivo.io")
+	err = s.OptionRepository.Create("smtp_from_email", "noreply@lapin.io")
 	if err != nil {
 		return err
 	}

@@ -7,8 +7,8 @@ package module
 import (
 	"errors"
 
-	"github.com/clivern/tivo/db"
-	"github.com/clivern/tivo/service"
+	"github.com/clivern/lapin/db"
+	"github.com/clivern/lapin/service"
 )
 
 // Auth is a module that handles authentication.

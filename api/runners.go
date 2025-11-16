@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/clivern/tivo/db"
-	"github.com/clivern/tivo/service"
+	"github.com/clivern/lapin/db"
+	"github.com/clivern/lapin/service"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -38,7 +38,7 @@ type UpdateRunnerRequest struct {
 
 // ListRunnersAction handles listing all runners (platform admin only)
 func ListRunnersAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("List runners endpoint called")
+	log.Info().Msg("List runners endpoint called")
 
 	limitStr := r.URL.Query().Get("limit")
 	offsetStr := r.URL.Query().Get("offset")
@@ -76,7 +76,17 @@ func ListRunnersAction(w http.ResponseWriter, r *http.Request) {
 
 	list := make([]map[string]interface{}, 0, len(runners))
 	for _, run := range runners {
-		item := runnerToMap(run)
+		item := map[string]interface{}{
+			"id":               run.ID,
+			"name":             run.Name,
+			"tags":             run.Tags,
+			"maxParallelTasks": run.MaxParallelTasks,
+			"status":           run.Status,
+			"url":              run.URL,
+			"publicKey":        run.PublicKey,
+			"createdAt":        run.CreatedAt.UTC().Format(time.RFC3339),
+			"updatedAt":        run.UpdatedAt.UTC().Format(time.RFC3339),
+		}
 		list = append(list, item)
 	}
 
@@ -92,7 +102,7 @@ func ListRunnersAction(w http.ResponseWriter, r *http.Request) {
 
 // GetRunnerAction handles get runner by ID (platform admin only)
 func GetRunnerAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Get runner endpoint called")
+	log.Info().Msg("Get runner endpoint called")
 
 	idStr := chi.URLParam(r, "id")
 	if idStr == "" {
@@ -118,12 +128,22 @@ func GetRunnerAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	service.WriteJSON(w, http.StatusOK, runnerToMap(runner))
+	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"id":               runner.ID,
+		"name":             runner.Name,
+		"tags":             runner.Tags,
+		"maxParallelTasks": runner.MaxParallelTasks,
+		"status":           runner.Status,
+		"url":              runner.URL,
+		"publicKey":        runner.PublicKey,
+		"createdAt":        runner.CreatedAt.UTC().Format(time.RFC3339),
+		"updatedAt":        runner.UpdatedAt.UTC().Format(time.RFC3339),
+	})
 }
 
 // CreateRunnerAction handles runner creation (platform admin only)
 func CreateRunnerAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Create runner endpoint called")
+	log.Info().Msg("Create runner endpoint called")
 
 	var req CreateRunnerRequest
 	if err := service.DecodeAndValidate(r, &req); err != nil {
@@ -138,16 +158,16 @@ func CreateRunnerAction(w http.ResponseWriter, r *http.Request) {
 	if req.Status != "" {
 		status = req.Status
 	}
-	maxParallel := req.MaxParallelTasks
-	if maxParallel <= 0 {
-		maxParallel = 10
+
+	if req.MaxParallelTasks <= 0 {
+		req.MaxParallelTasks = 10
 	}
 
 	runner := &db.Runner{
 		Token:            token,
 		Name:             &req.Name,
 		URL:              &req.URL,
-		MaxParallelTasks: maxParallel,
+		MaxParallelTasks: req.MaxParallelTasks,
 		Status:           status,
 	}
 	if req.Tags != "" {
@@ -167,12 +187,22 @@ func CreateRunnerAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Info().Str("runnerID", runner.ID.String()).Msg("Runner created successfully")
-	service.WriteJSON(w, http.StatusCreated, runnerToMap(runner))
+	service.WriteJSON(w, http.StatusCreated, map[string]interface{}{
+		"id":               runner.ID,
+		"name":             runner.Name,
+		"tags":             runner.Tags,
+		"maxParallelTasks": runner.MaxParallelTasks,
+		"status":           runner.Status,
+		"url":              runner.URL,
+		"publicKey":        runner.PublicKey,
+		"createdAt":        runner.CreatedAt.UTC().Format(time.RFC3339),
+		"updatedAt":        runner.UpdatedAt.UTC().Format(time.RFC3339),
+	})
 }
 
 // UpdateRunnerAction handles runner update (platform admin only)
 func UpdateRunnerAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Update runner endpoint called")
+	log.Info().Msg("Update runner endpoint called")
 
 	idStr := chi.URLParam(r, "id")
 	if idStr == "" {
@@ -232,12 +262,22 @@ func UpdateRunnerAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Info().Str("runnerID", runner.ID.String()).Msg("Runner updated successfully")
-	service.WriteJSON(w, http.StatusOK, runnerToMap(runner))
+	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"id":               runner.ID,
+		"name":             runner.Name,
+		"tags":             runner.Tags,
+		"maxParallelTasks": runner.MaxParallelTasks,
+		"status":           runner.Status,
+		"url":              runner.URL,
+		"publicKey":        runner.PublicKey,
+		"createdAt":        runner.CreatedAt.UTC().Format(time.RFC3339),
+		"updatedAt":        runner.UpdatedAt.UTC().Format(time.RFC3339),
+	})
 }
 
 // DeleteRunnerAction handles runner deletion (platform admin only)
 func DeleteRunnerAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Delete runner endpoint called")
+	log.Info().Msg("Delete runner endpoint called")
 
 	idStr := chi.URLParam(r, "id")
 	if idStr == "" {
@@ -272,29 +312,5 @@ func DeleteRunnerAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Info().Str("runnerID", idStr).Msg("Runner deleted successfully")
-	service.WriteJSON(w, http.StatusNoContent, nil)
-}
-
-func runnerToMap(run *db.Runner) map[string]interface{} {
-	m := map[string]interface{}{
-		"id":               run.ID.String(),
-		"token":            run.Token,
-		"maxParallelTasks": run.MaxParallelTasks,
-		"status":           run.Status,
-		"createdAt":        run.CreatedAt.UTC().Format(time.RFC3339),
-		"updatedAt":        run.UpdatedAt.UTC().Format(time.RFC3339),
-	}
-	if run.Name != nil {
-		m["name"] = *run.Name
-	}
-	if run.Tags != nil {
-		m["tags"] = *run.Tags
-	}
-	if run.URL != nil {
-		m["url"] = *run.URL
-	}
-	if run.PublicKey != nil {
-		m["publicKey"] = *run.PublicKey
-	}
-	return m
+	service.WriteJSON(w, http.StatusNoContent, map[string]interface{}{})
 }

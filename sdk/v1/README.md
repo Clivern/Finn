@@ -1,11 +1,11 @@
-# Tivo SDK v1
+# Lapin SDK v1
 
-A Go SDK for interacting with the Tivo API.
+A Go SDK for interacting with the Lapin API.
 
 ## Installation
 
 ```bash
-go get github.com/clivern/tivo/sdk/v1
+go get github.com/clivern/lapin/sdk/v1
 ```
 
 ## Usage
@@ -19,7 +19,7 @@ import (
     "fmt"
     "log"
 
-    "github.com/clivern/tivo/sdk/v1"
+    "github.com/clivern/lapin/sdk/v1"
 )
 
 func main() {

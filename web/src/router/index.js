@@ -16,8 +16,10 @@ import TaskTemplates from '@/views/TaskTemplates.vue'
 import Inventory from '@/views/Inventory.vue'
 import Environment from '@/views/Environment.vue'
 import Repositories from '@/views/Repositories.vue'
+import Secrets from '@/views/Secrets.vue'
 import Backends from '@/views/Backends.vue'
 import Runners from '@/views/Runners.vue'
+import Flows from '@/views/Flows.vue'
 import Integrations from '@/views/Integrations.vue'
 import Profile from '@/views/Profile.vue'
 import Settings from '@/views/Settings.vue'
@@ -105,6 +107,12 @@ const routes = [
     meta: { requiresAuth: true, requiresWorkspace: true, title: 'Task Templates', description: 'Manage task templates' }
   },
   {
+    path: '/flows',
+    name: 'Flows',
+    component: Flows,
+    meta: { requiresAuth: true, requiresWorkspace: true, title: 'Flows', description: 'Build flows visually' }
+  },
+  {
     path: '/inventory',
     name: 'Inventory',
     component: Inventory,
@@ -121,6 +129,12 @@ const routes = [
     name: 'Repositories',
     component: Repositories,
     meta: { requiresAuth: true, requiresWorkspace: true, title: 'Repositories', description: 'Manage repositories' }
+  },
+  {
+    path: '/secrets',
+    name: 'Secrets',
+    component: Secrets,
+    meta: { requiresAuth: true, requiresWorkspace: true, title: 'Secrets', description: 'SSH keys and Git credentials' }
   },
   {
     path: '/backends',

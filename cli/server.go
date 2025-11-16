@@ -7,14 +7,14 @@ package cli
 import (
 	"fmt"
 
-	"github.com/clivern/tivo/core"
+	"github.com/clivern/lapin/core"
 
 	"github.com/spf13/cobra"
 )
 
 var serverCmd = &cobra.Command{
 	Use:   "server",
-	Short: "Start the tivo backend server",
+	Short: "Start the lapin backend server",
 	Run: func(_ *cobra.Command, _ []string) {
 		// Load configuration
 		if err := core.Load(config); err != nil {

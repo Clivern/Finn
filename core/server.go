@@ -17,9 +17,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/clivern/tivo/api"
-	"github.com/clivern/tivo/db"
-	"github.com/clivern/tivo/middleware"
+	"github.com/clivern/lapin/api"
+	"github.com/clivern/lapin/db"
+	"github.com/clivern/lapin/middleware"
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
@@ -41,7 +41,6 @@ func Setup(Static embed.FS) http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware.RequestSizeLimit(int64(10 * 1024 * 1024)))
 	r.Use(middleware.SessionAuth())
-
 	r.Get("/favicon.ico", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
@@ -115,6 +114,30 @@ func Setup(Static embed.FS) http.Handler {
 		r.Put("/api/v1/workspaces/{workspaceID}/users/{userID}", api.UpdateWorkspaceUserRoleAction)
 		r.Delete("/api/v1/workspaces/{workspaceID}/users/{userID}", api.RemoveWorkspaceUserAction)
 	})
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))
+		r.Post("/api/v1/workspaces/{workspaceID}/repositories", api.CreateWorkspaceRepositoryAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/repositories", api.ListWorkspaceRepositoriesAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/repositories/{id}", api.GetWorkspaceRepositoryAction)
+		r.Put("/api/v1/workspaces/{workspaceID}/repositories/{id}", api.UpdateWorkspaceRepositoryAction)
+		r.Delete("/api/v1/workspaces/{workspaceID}/repositories/{id}", api.DeleteWorkspaceRepositoryAction)
+	})
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))
+		r.Post("/api/v1/workspaces/{workspaceID}/keys", api.CreateWorkspaceSSHKeyAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/keys", api.ListWorkspaceSSHKeysAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/keys/{id}", api.GetWorkspaceSSHKeyAction)
+		r.Put("/api/v1/workspaces/{workspaceID}/keys/{id}", api.UpdateWorkspaceSSHKeyAction)
+		r.Delete("/api/v1/workspaces/{workspaceID}/keys/{id}", api.DeleteWorkspaceSSHKeyAction)
+	})
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))
+		r.Post("/api/v1/workspaces/{workspaceID}/credentials", api.CreateWorkspaceGitCredAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/credentials", api.ListWorkspaceGitCredsAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/credentials/{id}", api.GetWorkspaceGitCredAction)
+		r.Put("/api/v1/workspaces/{workspaceID}/credentials/{id}", api.UpdateWorkspaceGitCredAction)
+		r.Delete("/api/v1/workspaces/{workspaceID}/credentials/{id}", api.DeleteWorkspaceGitCredAction)
+	})
 
 	r.With(middleware.BasicAuth(
 		viper.GetString("app.metrics.username"),
@@ -130,7 +153,6 @@ func Setup(Static embed.FS) http.Handler {
 	}
 
 	r.Handle("/assets/*", http.StripPrefix("/", http.FileServer(http.FS(dist))))
-
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		indexFile, err := dist.Open("index.html")
 		if err != nil {

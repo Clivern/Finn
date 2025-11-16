@@ -10,10 +10,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/clivern/tivo/db"
-	"github.com/clivern/tivo/middleware"
-	"github.com/clivern/tivo/module"
-	"github.com/clivern/tivo/service"
+	"github.com/clivern/lapin/db"
+	"github.com/clivern/lapin/middleware"
+	"github.com/clivern/lapin/module"
+	"github.com/clivern/lapin/service"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )
@@ -72,7 +72,11 @@ func AddWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	permModule := module.NewPermission(db.GetDB())
-	allowed, err := permModule.CheckWorkspaceUserPermission(user, &db.WorkspaceUser{WorkspaceID: workspace.ID}, module.CanAddWorkspaceUser)
+	allowed, err := permModule.CheckWorkspaceUserPermission(
+		user,
+		&db.WorkspaceUser{WorkspaceID: workspace.ID},
+		module.CanAddWorkspaceUser,
+	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
 		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
@@ -105,7 +109,9 @@ func AddWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	workspaceUser, err := wsModule.AddWorkspaceUser(db.ID(workspaceIDStr), db.ID(req.UserID), req.Role)
+	workspaceUser, err := wsModule.AddWorkspaceUser(
+		db.ID(workspaceIDStr), db.ID(req.UserID), req.Role,
+	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to add workspace user")
 		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
@@ -186,7 +192,11 @@ func ListWorkspaceUsersAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	permModule := module.NewPermission(db.GetDB())
-	allowed, err := permModule.CheckWorkspaceUserPermission(user, &db.WorkspaceUser{WorkspaceID: workspace.ID}, module.CanGetWorkspaceUsers)
+	allowed, err := permModule.CheckWorkspaceUserPermission(
+		user,
+		&db.WorkspaceUser{WorkspaceID: workspace.ID},
+		module.CanGetWorkspaceUsers,
+	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
 		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
@@ -237,7 +247,7 @@ func ListWorkspaceUsersAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"workspaceUsers": workspaceUserList,
+		"users": workspaceUserList,
 		"_meta": map[string]interface{}{
 			"limit":  limit,
 			"offset": offset,
@@ -299,7 +309,11 @@ func GetWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	permModule := module.NewPermission(db.GetDB())
-	allowed, err := permModule.CheckWorkspaceUserPermission(user, workspaceUser, module.CanGetWorkspaceUser)
+	allowed, err := permModule.CheckWorkspaceUserPermission(
+		user,
+		workspaceUser,
+		module.CanGetWorkspaceUser,
+	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
 		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
@@ -393,7 +407,11 @@ func UpdateWorkspaceUserRoleAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	permModule := module.NewPermission(db.GetDB())
-	allowed, err := permModule.CheckWorkspaceUserPermission(user, workspaceUser, module.CanUpdateWorkspaceUser)
+	allowed, err := permModule.CheckWorkspaceUserPermission(
+		user,
+		workspaceUser,
+		module.CanUpdateWorkspaceUser,
+	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
 		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
@@ -413,6 +431,7 @@ func UpdateWorkspaceUserRoleAction(w http.ResponseWriter, r *http.Request) {
 		UserID:      db.ID(userIDStr),
 		Role:        req.Role,
 	})
+
 	if err != nil {
 		if errors.Is(err, module.ErrWorkspaceUserNotFound) {
 			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
@@ -500,7 +519,11 @@ func RemoveWorkspaceUserAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	permModule := module.NewPermission(db.GetDB())
-	allowed, err := permModule.CheckWorkspaceUserPermission(user, workspaceUser, module.CanDeleteWorkspaceUser)
+	allowed, err := permModule.CheckWorkspaceUserPermission(
+		user,
+		workspaceUser,
+		module.CanDeleteWorkspaceUser,
+	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
 		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
@@ -592,7 +615,11 @@ func ListAllUsersAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	permModule := module.NewPermission(db.GetDB())
-	allowed, err := permModule.CheckWorkspacePermission(user, workspace, module.CanUpdateWorkspace)
+	allowed, err := permModule.CheckWorkspacePermission(
+		user,
+		workspace,
+		module.CanUpdateWorkspace,
+	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check workspace permission")
 		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{

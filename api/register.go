@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/clivern/tivo/db"
-	"github.com/clivern/tivo/service"
+	"github.com/clivern/lapin/db"
+	"github.com/clivern/lapin/service"
 
 	"github.com/rs/zerolog/log"
 )
@@ -25,7 +25,7 @@ type RegisterRequest struct {
 
 // RegisterAction handles register requests. Requires a valid invite token.
 func RegisterAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Register endpoint called")
+	log.Info().Msg("Register endpoint called")
 
 	var req RegisterRequest
 	if err := service.DecodeAndValidate(r, &req); err != nil {

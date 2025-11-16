@@ -8,7 +8,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/clivern/tivo/db"
+	"github.com/clivern/lapin/db"
 )
 
 var (
