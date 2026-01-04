@@ -64,6 +64,8 @@ func ListRunnersAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Int("limit", limit).
+			Int("offset", offset).
 			Msg("Failed to count runners")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedListRunners"),
@@ -71,10 +73,12 @@ func ListRunnersAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	runners, err := repo.List(limit, offset)
+	result, err := repo.List(limit, offset)
 	if err != nil {
 		log.Error().
 			Err(err).
+			Int("limit", limit).
+			Int("offset", offset).
 			Msg("Failed to list runners")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedListRunners"),
@@ -82,24 +86,23 @@ func ListRunnersAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	list := make([]map[string]interface{}, 0, len(runners))
-	for _, run := range runners {
-		item := map[string]interface{}{
-			"id":               run.ID,
-			"token":            run.Token,
-			"name":             run.Name,
-			"tags":             run.Tags,
-			"maxParallelTasks": run.MaxParallelTasks,
-			"status":           run.Status,
-			"url":              run.URL,
-			"createdAt":        run.CreatedAt.UTC().Format(time.RFC3339),
-			"updatedAt":        run.UpdatedAt.UTC().Format(time.RFC3339),
-		}
-		list = append(list, item)
+	runners := make([]map[string]interface{}, 0, len(result))
+	for _, runner := range result {
+		runners = append(runners, map[string]interface{}{
+			"id":               runner.ID,
+			"token":            runner.Token,
+			"name":             runner.Name,
+			"tags":             runner.Tags,
+			"maxParallelTasks": runner.MaxParallelTasks,
+			"status":           runner.Status,
+			"url":              runner.URL,
+			"createdAt":        runner.CreatedAt.UTC().Format(time.RFC3339),
+			"updatedAt":        runner.UpdatedAt.UTC().Format(time.RFC3339),
+		})
 	}
 
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"runners": list,
+		"runners": runners,
 		"_meta": map[string]interface{}{
 			"limit":  limit,
 			"offset": offset,
@@ -110,8 +113,6 @@ func ListRunnersAction(w http.ResponseWriter, r *http.Request) {
 
 // GetRunnerAction returns one runner by ID (admin only).
 func GetRunnerAction(w http.ResponseWriter, r *http.Request) {
-	log.Info().Msg("Get runner endpoint called")
-
 	idStr := chi.URLParam(r, "id")
 	if idStr == "" {
 		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
@@ -120,11 +121,16 @@ func GetRunnerAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Info().
+		Str("runnerID", idStr).
+		Msg("Get runner endpoint called")
+
 	repo := db.NewRunnerRepository(db.GetDB())
 	runner, err := repo.GetByID(db.ID(idStr))
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("runnerID", idStr).
 			Msg("Failed to get runner")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetRunner"),
@@ -200,6 +206,8 @@ func CreateRunnerAction(w http.ResponseWriter, r *http.Request) {
 	if err := repo.Create(runner); err != nil {
 		log.Error().
 			Err(err).
+			Str("name", req.Name).
+			Str("url", req.URL).
 			Msg("Failed to create runner")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCreateRunner"),
@@ -225,8 +233,6 @@ func CreateRunnerAction(w http.ResponseWriter, r *http.Request) {
 
 // UpdateRunnerAction updates a runner (admin only).
 func UpdateRunnerAction(w http.ResponseWriter, r *http.Request) {
-	log.Info().Msg("Update runner endpoint called")
-
 	idStr := chi.URLParam(r, "id")
 	if idStr == "" {
 		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
@@ -234,6 +240,10 @@ func UpdateRunnerAction(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
+	log.Info().
+		Str("runnerID", idStr).
+		Msg("Update runner endpoint called")
 
 	var req UpdateRunnerRequest
 	if err := util.DecodeAndValidate(r, &req); err != nil {
@@ -246,6 +256,7 @@ func UpdateRunnerAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("runnerID", idStr).
 			Msg("Failed to get runner for update")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedUpdateRunner"),
@@ -286,6 +297,7 @@ func UpdateRunnerAction(w http.ResponseWriter, r *http.Request) {
 	if err := repo.Update(runner); err != nil {
 		log.Error().
 			Err(err).
+			Str("runnerID", idStr).
 			Msg("Failed to update runner")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedUpdateRunner"),
@@ -311,8 +323,6 @@ func UpdateRunnerAction(w http.ResponseWriter, r *http.Request) {
 
 // DeleteRunnerAction deletes a runner (admin only).
 func DeleteRunnerAction(w http.ResponseWriter, r *http.Request) {
-	log.Info().Msg("Delete runner endpoint called")
-
 	idStr := chi.URLParam(r, "id")
 	if idStr == "" {
 		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
@@ -321,11 +331,16 @@ func DeleteRunnerAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Info().
+		Str("runnerID", idStr).
+		Msg("Delete runner endpoint called")
+
 	repo := db.NewRunnerRepository(db.GetDB())
 	existing, err := repo.GetByID(db.ID(idStr))
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("runnerID", idStr).
 			Msg("Failed to get runner for delete")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedDeleteRunner"),
@@ -342,6 +357,7 @@ func DeleteRunnerAction(w http.ResponseWriter, r *http.Request) {
 	if err := repo.Delete(db.ID(idStr)); err != nil {
 		log.Error().
 			Err(err).
+			Str("runnerID", idStr).
 			Msg("Failed to delete runner")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedDeleteRunner"),
@@ -370,6 +386,7 @@ func PingRunnerAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("runnerID", idStr).
 			Msg("Failed to get runner for ping")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetRunnerForPing"),
@@ -388,6 +405,7 @@ func PingRunnerAction(w http.ResponseWriter, r *http.Request) {
 		strings.TrimSpace(run.URL),
 		run.Token,
 	)
+
 	if err != nil {
 		log.Info().
 			Err(err).

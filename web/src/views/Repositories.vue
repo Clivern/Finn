@@ -61,12 +61,12 @@
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <span class="inline-flex rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-theme-text">
-                      {{ repo.gitBranch || 'main' }}
+                      {{ repo.gitBranch || '-' }}
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <span v-if="repo.gitTag" class="inline-flex rounded-full bg-theme-hover px-2.5 py-0.5 text-xs font-medium text-theme-text">
-                      {{ repo.gitTag }}
+                      {{ repo.gitTag || '-' }}
                     </span>
                     <span v-else class="text-theme-textLight text-xs">—</span>
                   </td>
@@ -77,10 +77,10 @@
                         repo.latestStatus === 'success' && 'bg-green-100 text-green-800',
                         repo.latestStatus === 'failed' && 'bg-red-100 text-red-800',
                         (repo.latestStatus === 'running' || repo.latestStatus === 'pending') && 'bg-amber-100 text-amber-800',
-                        (!repo.latestStatus || repo.latestStatus === 'unknown') && 'bg-theme-hover text-theme-textLight'
+                        (repo.latestStatus === 'unknown') && 'bg-theme-hover text-theme-textLight'
                       ]"
                     >
-                      {{ titleCase(repo.latestStatus) ?? 'Unknown' }}
+                      {{ titleCase(repo.latestStatus) }}
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
@@ -111,34 +111,57 @@
               </tbody>
             </table>
           </div>
-          <div v-if="_meta?.total" class="px-6 py-4 border-t border-theme-border text-sm text-theme-textLight">
-            {{ _meta.total === 1 ? $t('repositoriesPage.countOne') : $t('repositoriesPage.countMany', { count: _meta.total }) }}
+          <div class="px-6 py-4 border-t border-theme-border flex flex-wrap items-center justify-between gap-3">
+            <div class="text-sm text-theme-textLight">
+              <template v-if="hasPagination">
+                {{ $t('repositoriesPage.showing', { from: showingFrom, to: showingTo, total: totalRepos }) }}
+              </template>
+              <template v-else-if="_meta?.total">
+                {{ _meta.total === 1 ? $t('repositoriesPage.countOne') : $t('repositoriesPage.countMany', { count: _meta.total }) }}
+              </template>
+            </div>
+            <div v-if="hasPagination" class="flex items-center gap-2">
+              <button
+                type="button"
+                @click="goToPage(offset - limit)"
+                :disabled="offset === 0"
+                class="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {{ $t('repositoriesPage.previous') }}
+              </button>
+              <button
+                type="button"
+                @click="goToPage(offset + limit)"
+                :disabled="offset + limit >= totalRepos"
+                class="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {{ $t('repositoriesPage.next') }}
+              </button>
+            </div>
           </div>
         </template>
       </section>
     </main>
 
-    <!-- Add / Edit repository modal -->
+    <!-- Add repository modal -->
     <Teleport to="body">
       <Transition name="modal">
         <div
-          v-show="formModalOpen"
+          v-show="showAddModal"
           class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
           role="dialog"
           aria-modal="true"
-          :aria-labelledby="editingRepo ? 'edit-repo-title' : 'add-repo-title'"
-          @click.self="formModalOpen = false"
+          aria-labelledby="add-repo-title"
+          @click.self="closeAddModal"
         >
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
-            <h2 :id="editingRepo ? 'edit-repo-title' : 'add-repo-title'" class="text-lg font-semibold text-theme-text">
-              {{ editingRepo ? $t('repositoriesPage.editRepo') : $t('repositoriesPage.addRepo') }}
-            </h2>
-            <form @submit.prevent="saveRepo" class="mt-4 space-y-4">
+            <h2 id="add-repo-title" class="text-lg font-semibold text-theme-text">{{ $t('repositoriesPage.addRepo') }}</h2>
+            <form @submit.prevent="handleCreate" class="mt-4 space-y-4">
               <div>
-                <label for="repo-name" class="form-label">{{ $t('repositoriesPage.name') }}</label>
+                <label for="add-repo-name" class="form-label">{{ $t('repositoriesPage.name') }}</label>
                 <input
-                  id="repo-name"
-                  v-model="form.name"
+                  id="add-repo-name"
+                  v-model="addForm.name"
                   type="text"
                   required
                   maxlength="100"
@@ -147,10 +170,10 @@
                 />
               </div>
               <div>
-                <label for="repo-gitUrl" class="form-label">{{ $t('repositoriesPage.gitUrl') }}</label>
+                <label for="add-repo-gitUrl" class="form-label">{{ $t('repositoriesPage.gitUrl') }}</label>
                 <input
-                  id="repo-gitUrl"
-                  v-model="form.gitUrl"
+                  id="add-repo-gitUrl"
+                  v-model="addForm.gitUrl"
                   type="text"
                   required
                   class="input-field"
@@ -158,10 +181,10 @@
                 />
               </div>
               <div>
-                <label for="repo-gitBranch" class="form-label">{{ $t('repositoriesPage.branch') }}</label>
+                <label for="add-repo-gitBranch" class="form-label">{{ $t('repositoriesPage.branch') }}</label>
                 <input
-                  id="repo-gitBranch"
-                  v-model="form.gitBranch"
+                  id="add-repo-gitBranch"
+                  v-model="addForm.gitBranch"
                   type="text"
                   maxlength="100"
                   class="input-field"
@@ -169,10 +192,10 @@
                 />
               </div>
               <div>
-                <label for="repo-gitTag" class="form-label">{{ $t('repositoriesPage.tagOptional') }}</label>
+                <label for="add-repo-gitTag" class="form-label">{{ $t('repositoriesPage.tagOptional') }}</label>
                 <input
-                  id="repo-gitTag"
-                  v-model="form.gitTag"
+                  id="add-repo-gitTag"
+                  v-model="addForm.gitTag"
                   type="text"
                   maxlength="100"
                   class="input-field"
@@ -181,23 +204,109 @@
                 <p class="mt-1 text-xs text-theme-textLight">{{ $t('repositoriesPage.tagHint') }}</p>
               </div>
               <div>
-                <label for="repo-sshKeyId" class="form-label">{{ $t('repositoriesPage.sshKeyOptional') }}</label>
-                <select id="repo-sshKeyId" v-model="form.sshKeyId" class="input-field w-full">
+                <label for="add-repo-sshKeyId" class="form-label">{{ $t('repositoriesPage.sshKeyOptional') }}</label>
+                <select id="add-repo-sshKeyId" v-model="addForm.sshKeyId" class="input-field w-full">
                   <option value="">{{ $t('repositoriesPage.none') }}</option>
                   <option v-for="k in sshKeysList" :key="k.id" :value="k.id">{{ k.name }}</option>
                 </select>
               </div>
               <div>
-                <label for="repo-gitCredentialsId" class="form-label">{{ $t('repositoriesPage.gitCredentialsOptional') }}</label>
-                <select id="repo-gitCredentialsId" v-model="form.gitCredentialsId" class="input-field w-full">
+                <label for="add-repo-gitCredentialsId" class="form-label">{{ $t('repositoriesPage.gitCredentialsOptional') }}</label>
+                <select id="add-repo-gitCredentialsId" v-model="addForm.gitCredentialsId" class="input-field w-full">
                   <option value="">{{ $t('repositoriesPage.none') }}</option>
                   <option v-for="c in credentialsList" :key="c.id" :value="c.id">{{ c.name }}</option>
                 </select>
               </div>
               <div class="flex gap-3 justify-end pt-2">
-                <button type="button" @click="formModalOpen = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
-                <button type="submit" :disabled="formSaving" class="btn-primary">
-                  {{ formSaving ? $t('repositoriesPage.saving') : (editingRepo ? $t('common.save') : $t('repositoriesPage.add')) }}
+                <button type="button" @click="closeAddModal" class="btn-secondary">{{ $t('common.cancel') }}</button>
+                <button type="submit" :disabled="addSaving" class="btn-primary">
+                  {{ addSaving ? $t('repositoriesPage.saving') : $t('repositoriesPage.add') }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- Edit repository modal -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div
+          v-show="showEditModal"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-repo-title"
+          @click.self="closeEditModal"
+        >
+          <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+            <h2 id="edit-repo-title" class="text-lg font-semibold text-theme-text">{{ $t('repositoriesPage.editRepo') }}</h2>
+            <form @submit.prevent="handleUpdate" class="mt-4 space-y-4">
+              <div>
+                <label for="edit-repo-name" class="form-label">{{ $t('repositoriesPage.name') }}</label>
+                <input
+                  id="edit-repo-name"
+                  v-model="editForm.name"
+                  type="text"
+                  required
+                  maxlength="100"
+                  class="input-field"
+                  placeholder="e.g. my-app"
+                />
+              </div>
+              <div>
+                <label for="edit-repo-gitUrl" class="form-label">{{ $t('repositoriesPage.gitUrl') }}</label>
+                <input
+                  id="edit-repo-gitUrl"
+                  v-model="editForm.gitUrl"
+                  type="text"
+                  required
+                  class="input-field"
+                  placeholder="https://github.com/org/repo.git or git@github.com:org/repo.git"
+                />
+              </div>
+              <div>
+                <label for="edit-repo-gitBranch" class="form-label">{{ $t('repositoriesPage.branch') }}</label>
+                <input
+                  id="edit-repo-gitBranch"
+                  v-model="editForm.gitBranch"
+                  type="text"
+                  maxlength="100"
+                  class="input-field"
+                  placeholder="main"
+                />
+              </div>
+              <div>
+                <label for="edit-repo-gitTag" class="form-label">{{ $t('repositoriesPage.tagOptional') }}</label>
+                <input
+                  id="edit-repo-gitTag"
+                  v-model="editForm.gitTag"
+                  type="text"
+                  maxlength="100"
+                  class="input-field"
+                  placeholder="e.g. v1.0.0"
+                />
+                <p class="mt-1 text-xs text-theme-textLight">{{ $t('repositoriesPage.tagHint') }}</p>
+              </div>
+              <div>
+                <label for="edit-repo-sshKeyId" class="form-label">{{ $t('repositoriesPage.sshKeyOptional') }}</label>
+                <select id="edit-repo-sshKeyId" v-model="editForm.sshKeyId" class="input-field w-full">
+                  <option value="">{{ $t('repositoriesPage.none') }}</option>
+                  <option v-for="k in sshKeysList" :key="k.id" :value="k.id">{{ k.name }}</option>
+                </select>
+              </div>
+              <div>
+                <label for="edit-repo-gitCredentialsId" class="form-label">{{ $t('repositoriesPage.gitCredentialsOptional') }}</label>
+                <select id="edit-repo-gitCredentialsId" v-model="editForm.gitCredentialsId" class="input-field w-full">
+                  <option value="">{{ $t('repositoriesPage.none') }}</option>
+                  <option v-for="c in credentialsList" :key="c.id" :value="c.id">{{ c.name }}</option>
+                </select>
+              </div>
+              <div class="flex gap-3 justify-end pt-2">
+                <button type="button" @click="closeEditModal" class="btn-secondary">{{ $t('common.cancel') }}</button>
+                <button type="submit" :disabled="editSaving" class="btn-primary">
+                  {{ editSaving ? $t('repositoriesPage.saving') : $t('common.save') }}
                 </button>
               </div>
             </form>
@@ -301,7 +410,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed, onUnmounted } from 'vue'
+import { ref, reactive, onMounted, watch, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppNav from '@/components/AppNav.vue'
@@ -315,16 +424,28 @@ const workspace = ref(null)
 const repositories = ref([])
 const _meta = ref(null)
 const loading = ref(true)
+const limit = ref(20)
+const offset = ref(0)
 const errorMessage = ref('')
 const successMessage = ref('')
 
-const formModalOpen = ref(false)
-const formSaving = ref(false)
+const showAddModal = ref(false)
+const showEditModal = ref(false)
+const addSaving = ref(false)
+const editSaving = ref(false)
 const editingRepo = ref(null)
-const form = ref({
+const addForm = reactive({
   name: '',
   gitUrl: '',
-  gitBranch: 'main',
+  gitBranch: '',
+  gitTag: '',
+  sshKeyId: '',
+  gitCredentialsId: ''
+})
+const editForm = reactive({
+  name: '',
+  gitUrl: '',
+  gitBranch: '',
   gitTag: '',
   sshKeyId: '',
   gitCredentialsId: ''
@@ -349,14 +470,16 @@ function setWorkspace() {
   }
 }
 
-async function loadRepositories() {
-  if (!workspace.value?.id) return
+async function loadRepositories(overrideOffset) {
   loading.value = true
   errorMessage.value = ''
+  const off = overrideOffset !== undefined ? overrideOffset : offset.value
+
   try {
-    const res = await repositoriesAPI.list(workspace.value.id, { limit: 100, offset: 0 })
-    repositories.value = res.data?.repositories ?? []
-    _meta.value = res.data?._meta ?? null
+    const res = await repositoriesAPI.list(workspace.value.id, { limit: limit.value, offset: off })
+    repositories.value = res.data.repositories ?? []
+    _meta.value = res.data._meta ?? null
+    offset.value = off
   } catch (err) {
     errorMessage.value = err.response?.data?.errorMessage || t('repositoriesPage.failedLoad')
     repositories.value = []
@@ -365,15 +488,25 @@ async function loadRepositories() {
   }
 }
 
+const totalRepos = computed(() => _meta.value?.total ?? 0)
+const showingFrom = computed(() => (totalRepos.value === 0 ? 0 : offset.value + 1))
+const showingTo = computed(() => Math.min(offset.value + repositories.value.length, totalRepos.value))
+const hasPagination = computed(() => totalRepos.value > limit.value)
+
+function goToPage(newOffset) {
+  const maxOffset = Math.max(0, totalRepos.value - limit.value)
+  const off = Math.max(0, Math.min(newOffset, maxOffset))
+  loadRepositories(off)
+}
+
 async function loadSshKeysAndCredentials() {
-  if (!workspace.value?.id) return
   try {
     const [keysRes, credsRes] = await Promise.all([
       sshKeysAPI.list(workspace.value.id, { limit: 100 }),
       credentialsAPI.list(workspace.value.id, { limit: 100 })
     ])
-    sshKeysList.value = keysRes.data?.keys ?? []
-    credentialsList.value = credsRes.data?.credentials ?? []
+    sshKeysList.value = keysRes.data.keys ?? []
+    credentialsList.value = credsRes.data.credentials ?? []
   } catch {
     sshKeysList.value = []
     credentialsList.value = []
@@ -381,62 +514,86 @@ async function loadSshKeysAndCredentials() {
 }
 
 function openAddModal() {
-  editingRepo.value = null
-  form.value = {
-    name: '',
-    gitUrl: '',
-    gitBranch: 'main',
-    gitTag: '',
-    sshKeyId: '',
-    gitCredentialsId: ''
-  }
-  formModalOpen.value = true
+  addForm.name = ''
+  addForm.gitUrl = ''
+  addForm.gitBranch = 'main'
+  addForm.gitTag = ''
+  addForm.sshKeyId = ''
+  addForm.gitCredentialsId = ''
+  showAddModal.value = true
   loadSshKeysAndCredentials()
+}
+
+function closeAddModal() {
+  showAddModal.value = false
 }
 
 function openEditModal(repo) {
   editingRepo.value = repo
-  form.value = {
-    name: repo.name,
-    gitUrl: repo.gitUrl,
-    gitBranch: repo.gitBranch,
-    gitTag: repo.gitTag ?? '',
-    sshKeyId: repo.sshKeyId ?? '',
-    gitCredentialsId: repo.gitCredentialsId ?? ''
-  }
-  formModalOpen.value = true
+  editForm.name = repo.name
+  editForm.gitUrl = repo.gitUrl
+  editForm.gitBranch = repo.gitBranch
+  editForm.gitTag = repo.gitTag
+  editForm.sshKeyId = repo.sshKeyId ?? ''
+  editForm.gitCredentialsId = repo.gitCredentialsId ?? ''
+  showEditModal.value = true
   loadSshKeysAndCredentials()
 }
 
-async function saveRepo() {
-  if (!workspace.value?.id) return
-  const { name, gitUrl, gitBranch, gitTag, sshKeyId, gitCredentialsId } = form.value
-  if (!name?.trim() || !gitUrl?.trim()) return
-  formSaving.value = true
+function closeEditModal() {
+  showEditModal.value = false
+  editingRepo.value = null
+}
+
+async function handleCreate() {
+  if (!addForm.name?.trim() || !addForm.gitUrl?.trim()) return
+
+  addSaving.value = true
   errorMessage.value = ''
   successMessage.value = ''
+
   try {
-    const payload = {
-      name: name.trim(),
-      gitUrl: gitUrl.trim(),
-      gitBranch: gitBranch.trim(),
-      gitTag: gitTag.trim(),
-      sshKeyId: sshKeyId,
-      gitCredentialsId: gitCredentialsId,
-    }
-    if (editingRepo.value) {
-      await repositoriesAPI.update(workspace.value.id, editingRepo.value.id, payload)
-      successMessage.value = t('repositoriesPage.repoUpdated')
-    } else {
-      await repositoriesAPI.create(workspace.value.id, payload)
-      successMessage.value = t('repositoriesPage.repoAdded')
-    }
-    formModalOpen.value = false
+    await repositoriesAPI.create(workspace.value.id, {
+      name: addForm.name.trim(),
+      gitUrl: addForm.gitUrl.trim(),
+      gitBranch: addForm.gitBranch.trim(),
+      gitTag: addForm.gitTag.trim(),
+      sshKeyId: addForm.sshKeyId,
+      gitCredentialsId: addForm.gitCredentialsId
+    })
+    successMessage.value = t('repositoriesPage.repoAdded')
+    closeAddModal()
     await loadRepositories()
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || (editingRepo.value ? t('repositoriesPage.failedUpdate') : t('repositoriesPage.failedAdd'))
+    errorMessage.value = err.response?.data?.errorMessage || t('repositoriesPage.failedAdd')
   } finally {
-    formSaving.value = false
+    addSaving.value = false
+  }
+}
+
+async function handleUpdate() {
+  if (!editForm.name?.trim() || !editForm.gitUrl?.trim()) return
+
+  editSaving.value = true
+  errorMessage.value = ''
+  successMessage.value = ''
+
+  try {
+    await repositoriesAPI.update(workspace.value.id, editingRepo.value.id, {
+      name: editForm.name.trim(),
+      gitUrl: editForm.gitUrl.trim(),
+      gitBranch: editForm.gitBranch.trim(),
+      gitTag: editForm.gitTag.trim(),
+      sshKeyId: editForm.sshKeyId,
+      gitCredentialsId: editForm.gitCredentialsId
+    })
+    successMessage.value = t('repositoriesPage.repoUpdated')
+    closeEditModal()
+    await loadRepositories()
+  } catch (err) {
+    errorMessage.value = err.response?.data?.errorMessage || t('repositoriesPage.failedUpdate')
+  } finally {
+    editSaving.value = false
   }
 }
 
@@ -446,7 +603,7 @@ function openDeleteModal(repo) {
 
 async function confirmDelete() {
   const repo = deleteModalRepo.value
-  if (!workspace.value?.id || !repo?.id) return
+  if (!repo) return
   deletingId.value = repo.id
   errorMessage.value = ''
   try {
@@ -462,10 +619,10 @@ async function confirmDelete() {
 }
 
 async function triggerClone(repo) {
-  if (!workspace.value?.id || !repo?.id) return
   cloningId.value = repo.id
   errorMessage.value = ''
   successMessage.value = ''
+
   try {
     const res = await repositoriesAPI.clone(workspace.value.id, repo.id)
     successMessage.value = t('repositoriesPage.cloneStarted')
@@ -496,8 +653,10 @@ function closeCloneTaskModal() {
 }
 
 async function fetchCloneTask() {
-  const { taskId, repo } = cloneTaskModal.value || {}
-  if (!workspace.value?.id || !repo?.id || !taskId) return
+  const modal = cloneTaskModal.value
+  if (!modal) return
+  const { taskId, repo } = modal
+
   try {
     const res = await repositoriesAPI.getCloneTask(workspace.value.id, repo.id, taskId)
     cloneTaskData.value = res.data

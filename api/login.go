@@ -27,13 +27,15 @@ type LoginRequest struct {
 
 // LoginAction logs the user in and creates a session.
 func LoginAction(w http.ResponseWriter, r *http.Request) {
-	log.Info().Msg("Login endpoint called")
-
 	var req LoginRequest
 	if err := util.DecodeAndValidate(r, &req); err != nil {
 		util.WriteValidationError(w, err)
 		return
 	}
+
+	log.Info().
+		Str("email", req.Email).
+		Msg("Login endpoint called")
 
 	userRepo := db.NewUserRepository(db.GetDB())
 	sessionRepo := db.NewSessionRepository(db.GetDB())
@@ -59,6 +61,7 @@ func LoginAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get maintenance_mode option")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCheckMaintenance"),

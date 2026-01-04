@@ -81,6 +81,27 @@
                 </p>
               </div>
               <div class="border-b border-theme-border px-4 py-2">
+                <p class="text-xs font-medium text-theme-textLight uppercase tracking-wider mb-2">{{ $t('nav.theme') }}</p>
+                <div class="flex gap-2">
+                  <button
+                    type="button"
+                    :class="theme === 'default' ? 'bg-primary-100 text-primary-800 font-medium' : 'text-theme-text hover:bg-theme-hover'"
+                    class="rounded px-3 py-1.5 text-sm transition-colors"
+                    @click="setTheme('default')"
+                  >
+                    {{ $t('nav.themeDefault') }}
+                  </button>
+                  <button
+                    type="button"
+                    :class="theme === 'blue' ? 'bg-primary-100 text-primary-800 font-medium' : 'text-theme-text hover:bg-theme-hover'"
+                    class="rounded px-3 py-1.5 text-sm transition-colors"
+                    @click="setTheme('blue')"
+                  >
+                    {{ $t('nav.themeBlue') }}
+                  </button>
+                </div>
+              </div>
+              <div class="border-b border-theme-border px-4 py-2">
                 <p class="text-xs font-medium text-theme-textLight uppercase tracking-wider mb-2">{{ $t('nav.language') }}</p>
                 <div class="flex gap-2">
                   <button
@@ -173,6 +194,31 @@ const isWorkspaceAdminOrOwner = computed(() => {
 
 const { t, locale } = useI18n()
 
+const THEME_KEY = 'finn-theme'
+
+const theme = ref('default')
+
+function initTheme() {
+  try {
+    const stored = localStorage.getItem(THEME_KEY)
+    theme.value = stored === 'blue' ? 'blue' : 'default'
+  } catch (_) {
+    theme.value = 'default'
+  }
+}
+
+function setTheme(name) {
+  theme.value = name
+  try {
+    localStorage.setItem(THEME_KEY, name)
+  } catch (_) {}
+  if (name === 'blue') {
+    document.documentElement.classList.add('theme-blue')
+  } else {
+    document.documentElement.classList.remove('theme-blue')
+  }
+}
+
 function setLocale(newLocale) {
   locale.value = newLocale
   try {
@@ -231,6 +277,7 @@ function onClickOutside(event) {
 }
 
 onMounted(() => {
+  initTheme()
   updateWorkspaceFromStorage()
   checkMobile()
   window.addEventListener('resize', checkMobile)

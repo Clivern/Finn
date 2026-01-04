@@ -42,12 +42,14 @@ func Logger(next http.Handler) http.Handler {
 		next.ServeHTTP(wrapped, r)
 
 		elapsed := time.Since(start)
-		log.Info().
-			Str("method", r.Method).
-			Str("path", r.URL.Path).
-			Int("status", wrapped.statusCode).
-			Dur("duration", elapsed).
-			Int64("latency_ms", elapsed.Milliseconds()).
-			Msg("HTTP Request")
+		if !IsAssetPath(r.URL.Path) {
+			log.Info().
+				Str("method", r.Method).
+				Str("path", r.URL.Path).
+				Int("status", wrapped.statusCode).
+				Dur("duration", elapsed).
+				Int64("latency_ms", elapsed.Milliseconds()).
+				Msg("HTTP Request")
+		}
 	})
 }

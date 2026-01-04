@@ -25,6 +25,7 @@ const (
 	CanGetWorkspaceRepositories  = "CAN_GET_WORKSPACE_REPOSITORIES"
 	CanAddWorkspaceRepository    = "CAN_ADD_WORKSPACE_REPOSITORY"
 	CanGetWorkspaceRepository    = "CAN_GET_WORKSPACE_REPOSITORY"
+	CanCloneWorkspaceRepository  = "CAN_CLONE_WORKSPACE_REPOSITORY"
 	CanUpdateWorkspaceRepository = "CAN_UPDATE_WORKSPACE_REPOSITORY"
 	CanDeleteWorkspaceRepository = "CAN_DELETE_WORKSPACE_REPOSITORY"
 
@@ -134,7 +135,7 @@ func (p *Permission) CheckWorkspaceRepositoryPermission(user *db.User, workspace
 	switch permission {
 	case CanGetWorkspaceRepository, CanGetWorkspaceRepositories:
 		return true, nil
-	case CanUpdateWorkspaceRepository, CanDeleteWorkspaceRepository, CanAddWorkspaceRepository:
+	case CanUpdateWorkspaceRepository, CanDeleteWorkspaceRepository, CanAddWorkspaceRepository, CanCloneWorkspaceRepository:
 		return membership.Role == db.UserRoleAdmin || membership.Role == db.UserRoleOwner, nil
 	default:
 		return false, nil

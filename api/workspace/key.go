@@ -74,6 +74,8 @@ func CreateWorkspaceSSHKeyAction(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get workspace")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetWorkspace"),
@@ -90,6 +92,8 @@ func CreateWorkspaceSSHKeyAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to check workspace permission")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCheckAccess"),
@@ -118,6 +122,8 @@ func CreateWorkspaceSSHKeyAction(w http.ResponseWriter, r *http.Request) {
 	if err := repo.Create(key); err != nil {
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to create workspace SSH key")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCreateSshKey"),
@@ -168,6 +174,8 @@ func ListWorkspaceSSHKeysAction(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get workspace")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetWorkspace"),
@@ -184,6 +192,8 @@ func ListWorkspaceSSHKeysAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to check workspace permission")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCheckAccess"),
@@ -210,10 +220,12 @@ func ListWorkspaceSSHKeysAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	repo := db.NewWorkspaceSSHKeyRepository(db.GetDB())
-	list, err := repo.ListByWorkspaceID(workspace.ID, limit, offset)
+	result, err := repo.ListByWorkspaceID(workspace.ID, limit, offset)
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to list workspace SSH keys")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedListSshKeys"),
@@ -222,9 +234,9 @@ func ListWorkspaceSSHKeysAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	total, _ := repo.CountByWorkspaceID(workspace.ID)
-	items := make([]map[string]interface{}, 0, len(list))
-	for _, key := range list {
-		item := map[string]interface{}{
+	keys := make([]map[string]interface{}, 0, len(result))
+	for _, key := range result {
+		keys = append(keys, map[string]interface{}{
 			"id":             key.ID,
 			"workspaceId":    key.WorkspaceID,
 			"name":           key.Name,
@@ -232,12 +244,11 @@ func ListWorkspaceSSHKeysAction(w http.ResponseWriter, r *http.Request) {
 			"committerEmail": key.CommitterEmail,
 			"createdAt":      key.CreatedAt.UTC().Format(time.RFC3339),
 			"updatedAt":      key.UpdatedAt.UTC().Format(time.RFC3339),
-		}
-		items = append(items, item)
+		})
 	}
 
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"keys": items,
+		"keys": keys,
 		"_meta": map[string]interface{}{
 			"limit":  limit,
 			"offset": offset,
@@ -277,6 +288,8 @@ func GetWorkspaceSSHKeyAction(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get workspace")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetWorkspace"),
@@ -297,6 +310,9 @@ func GetWorkspaceSSHKeyAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("sshKeyID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get workspace SSH key")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetSshKey"),
@@ -320,6 +336,9 @@ func GetWorkspaceSSHKeyAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("sshKeyID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to check workspace permission")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCheckAccess"),
@@ -340,6 +359,7 @@ func GetWorkspaceSSHKeyAction(w http.ResponseWriter, r *http.Request) {
 		"name":           key.Name,
 		"committerName":  key.CommitterName,
 		"committerEmail": key.CommitterEmail,
+		"publicKey":      key.PublicKey,
 		"createdAt":      key.CreatedAt.UTC().Format(time.RFC3339),
 		"updatedAt":      key.UpdatedAt.UTC().Format(time.RFC3339),
 	})
@@ -382,6 +402,8 @@ func UpdateWorkspaceSSHKeyAction(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get workspace")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetWorkspace"),
@@ -415,6 +437,9 @@ func UpdateWorkspaceSSHKeyAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("sshKeyID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to check workspace permission")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCheckAccess"),
@@ -441,6 +466,9 @@ func UpdateWorkspaceSSHKeyAction(w http.ResponseWriter, r *http.Request) {
 	if err := repo.Update(key); err != nil {
 		log.Error().
 			Err(err).
+			Str("sshKeyID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to update workspace SSH key")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedUpdateSshKey"),
@@ -454,6 +482,7 @@ func UpdateWorkspaceSSHKeyAction(w http.ResponseWriter, r *http.Request) {
 		"name":           key.Name,
 		"committerName":  key.CommitterName,
 		"committerEmail": key.CommitterEmail,
+		"publicKey":      key.PublicKey,
 		"createdAt":      key.CreatedAt.UTC().Format(time.RFC3339),
 		"updatedAt":      key.UpdatedAt.UTC().Format(time.RFC3339),
 	})
@@ -490,6 +519,8 @@ func DeleteWorkspaceSSHKeyAction(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get workspace")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetWorkspace"),
@@ -524,6 +555,9 @@ func DeleteWorkspaceSSHKeyAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("sshKeyID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to check workspace permission")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCheckAccess"),
@@ -541,6 +575,9 @@ func DeleteWorkspaceSSHKeyAction(w http.ResponseWriter, r *http.Request) {
 	if err := repo.Delete(key.ID); err != nil {
 		log.Error().
 			Err(err).
+			Str("sshKeyID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to delete workspace SSH key")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedDeleteSshKey"),
@@ -550,6 +587,8 @@ func DeleteWorkspaceSSHKeyAction(w http.ResponseWriter, r *http.Request) {
 
 	log.Info().
 		Str("sshKeyID", idStr).
+		Str("workspaceID", workspaceIDStr).
+		Str("userID", user.ID.String()).
 		Msg("SSH key deleted successfully")
 	util.WriteJSON(w, http.StatusNoContent, map[string]interface{}{})
 }

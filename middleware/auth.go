@@ -26,9 +26,11 @@ func SessionAuth() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if shouldSkipAuth(r.URL.Path) {
-				log.Info().
-					Str("path", r.URL.Path).
-					Msg("Skipping authentication for API route")
+				if !IsAssetPath(r.URL.Path) {
+					log.Info().
+						Str("path", r.URL.Path).
+						Msg("Skipping authentication for API route")
+				}
 				next.ServeHTTP(w, r)
 				return
 			}

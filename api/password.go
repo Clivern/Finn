@@ -45,6 +45,7 @@ func ForgotPasswordAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("email", req.Email).
 			Msg("Failed to look up user for forgot password")
 		util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 			"successMessage": locale.TR(r, "forgotPasswordSuccess"),
@@ -71,6 +72,8 @@ func ForgotPasswordAction(w http.ResponseWriter, r *http.Request) {
 	if err := resetRepo.Create(resetToken); err != nil {
 		log.Error().
 			Err(err).
+			Str("userID", user.ID.String()).
+			Str("email", user.Email).
 			Msg("Failed to create password reset token")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedProcessRequest"),
@@ -121,6 +124,7 @@ func ResetPasswordAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("token", req.Token).
 			Msg("Failed to look up password reset token")
 		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
 			"errorMessage": locale.TR(r, "resetLinkInvalidOrExpired"),
@@ -155,6 +159,8 @@ func ResetPasswordAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("token", req.Token).
+			Str("userID", tok.UserID.String()).
 			Msg("Failed to update password on reset")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedResetPassword"),
@@ -165,6 +171,8 @@ func ResetPasswordAction(w http.ResponseWriter, r *http.Request) {
 	if err := resetRepo.DeleteByToken(req.Token); err != nil {
 		log.Error().
 			Err(err).
+			Str("token", req.Token).
+			Str("userID", tok.UserID.String()).
 			Msg("Failed to delete password reset token")
 	}
 

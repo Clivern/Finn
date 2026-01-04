@@ -65,6 +65,7 @@ func CreateUserAction(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().
 			Err(err).
+			Str("email", req.Email).
 			Msg("Failed to create user")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCreateUser"),
@@ -89,8 +90,6 @@ func CreateUserAction(w http.ResponseWriter, r *http.Request) {
 
 // GetUserAction returns one user by ID.
 func GetUserAction(w http.ResponseWriter, r *http.Request) {
-	log.Info().Msg("Get user endpoint called")
-
 	userIDStr := chi.URLParam(r, "id")
 	if userIDStr == "" {
 		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
@@ -98,6 +97,10 @@ func GetUserAction(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
+	log.Info().
+		Str("userID", userIDStr).
+		Msg("Get user endpoint called")
 
 	userModule := module.NewUser(db.NewUserRepository(db.GetDB()))
 	user, err := userModule.GetUser(db.ID(userIDStr))
@@ -110,6 +113,7 @@ func GetUserAction(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().
 			Err(err).
+			Str("userID", userIDStr).
 			Msg("Failed to get user")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetUser"),
@@ -131,8 +135,6 @@ func GetUserAction(w http.ResponseWriter, r *http.Request) {
 
 // UpdateUserAction updates a user.
 func UpdateUserAction(w http.ResponseWriter, r *http.Request) {
-	log.Info().Msg("Update user endpoint called")
-
 	userIDStr := chi.URLParam(r, "id")
 	if userIDStr == "" {
 		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
@@ -146,6 +148,10 @@ func UpdateUserAction(w http.ResponseWriter, r *http.Request) {
 		util.WriteValidationError(w, err)
 		return
 	}
+
+	log.Info().
+		Str("userID", userIDStr).
+		Msg("Update user endpoint called")
 
 	userModule := module.NewUser(db.NewUserRepository(db.GetDB()))
 	user, err := userModule.UpdateUser(&module.UpdateUserOptions{
@@ -172,6 +178,7 @@ func UpdateUserAction(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().
 			Err(err).
+			Str("userID", userIDStr).
 			Msg("Failed to update user")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedUpdateUser"),
@@ -225,6 +232,8 @@ func ListUsersAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Int("limit", limit).
+			Int("offset", offset).
 			Msg("Failed to list users")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedListUsers"),
@@ -232,9 +241,9 @@ func ListUsersAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userList := make([]map[string]interface{}, 0, len(result.Users))
+	users := make([]map[string]interface{}, 0, len(result.Users))
 	for _, user := range result.Users {
-		userList = append(userList, map[string]interface{}{
+		users = append(users, map[string]interface{}{
 			"id":          user.ID,
 			"name":        user.Name,
 			"email":       user.Email,
@@ -247,7 +256,7 @@ func ListUsersAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"users": userList,
+		"users": users,
 		"_meta": map[string]interface{}{
 			"limit":  limit,
 			"offset": offset,
@@ -258,8 +267,6 @@ func ListUsersAction(w http.ResponseWriter, r *http.Request) {
 
 // DeleteUserAction deletes a user.
 func DeleteUserAction(w http.ResponseWriter, r *http.Request) {
-	log.Info().Msg("Delete user endpoint called")
-
 	currentUser, _ := middleware.GetUserFromContext(r.Context())
 
 	userIDStr := chi.URLParam(r, "id")
@@ -270,6 +277,11 @@ func DeleteUserAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userID := db.ID(userIDStr)
+
+	log.Info().
+		Str("userID", userIDStr).
+		Str("actorID", currentUser.ID.String()).
+		Msg("Delete user endpoint called")
 
 	if currentUser.ID == userID {
 		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
@@ -290,6 +302,8 @@ func DeleteUserAction(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().
 			Err(err).
+			Str("userID", userIDStr).
+			Str("actorID", currentUser.ID.String()).
 			Msg("Failed to delete user")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedDeleteUser"),
@@ -299,6 +313,7 @@ func DeleteUserAction(w http.ResponseWriter, r *http.Request) {
 
 	log.Info().
 		Str("userID", userID.String()).
+		Str("actorID", currentUser.ID.String()).
 		Msg("User deleted successfully")
 	util.WriteJSON(w, http.StatusNoContent, map[string]interface{}{})
 }

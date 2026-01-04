@@ -16,9 +16,11 @@ func RequestSizeLimit(maxBytes int64) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if !strings.HasPrefix(r.URL.Path, "/api/v1/") {
-				log.Info().
-					Str("path", r.URL.Path).
-					Msg("Skipping request size limit for non-API route")
+				if !IsAssetPath(r.URL.Path) {
+					log.Info().
+						Str("path", r.URL.Path).
+						Msg("Skipping request size limit for non-API route")
+				}
 				next.ServeHTTP(w, r)
 				return
 			}

@@ -162,6 +162,7 @@ func CreateMessageAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("userID", user.ID.String()).
 			Msg("AI generate failed")
 		msg := locale.TR(r, "failedGenerateResponse")
 		if errStr := err.Error(); errStr != "" && len(errStr) < 500 {

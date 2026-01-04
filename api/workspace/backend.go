@@ -109,6 +109,8 @@ func CreateWorkspaceBackendAction(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get workspace")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetWorkspace"),
@@ -125,6 +127,8 @@ func CreateWorkspaceBackendAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to check workspace permission")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCheckAccess"),
@@ -146,6 +150,8 @@ func CreateWorkspaceBackendAction(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Error().
 				Err(err).
+				Str("workspaceID", workspaceIDStr).
+				Str("userID", user.ID.String()).
 				Msg("Failed to check backend slug")
 			util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 				"errorMessage": locale.TR(r, "failedCreateBackend"),
@@ -167,6 +173,8 @@ func CreateWorkspaceBackendAction(w http.ResponseWriter, r *http.Request) {
 	if err := repo.Create(backend); err != nil {
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to create workspace backend")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCreateBackend"),
@@ -217,6 +225,8 @@ func ListWorkspaceBackendsAction(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get workspace")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetWorkspace"),
@@ -233,6 +243,8 @@ func ListWorkspaceBackendsAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to check workspace permission")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCheckAccess"),
@@ -263,6 +275,8 @@ func ListWorkspaceBackendsAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to list workspace backends")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedListBackends"),
@@ -325,6 +339,8 @@ func GetWorkspaceBackendAction(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get workspace")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetWorkspace"),
@@ -345,6 +361,9 @@ func GetWorkspaceBackendAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("backendID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get workspace backend")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetBackend"),
@@ -363,6 +382,9 @@ func GetWorkspaceBackendAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("backendID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to check workspace permission")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCheckAccess"),
@@ -419,6 +441,8 @@ func RevealWorkspaceBackendPasswordAction(w http.ResponseWriter, r *http.Request
 		}
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get workspace")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetWorkspace"),
@@ -439,6 +463,9 @@ func RevealWorkspaceBackendPasswordAction(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("backendID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get workspace backend")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetBackend"),
@@ -457,6 +484,9 @@ func RevealWorkspaceBackendPasswordAction(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("backendID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to check workspace permission")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCheckAccess"),
@@ -512,6 +542,8 @@ func UpdateWorkspaceBackendAction(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get workspace")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetWorkspace"),
@@ -541,6 +573,9 @@ func UpdateWorkspaceBackendAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("backendID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to check workspace permission")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCheckAccess"),
@@ -563,6 +598,9 @@ func UpdateWorkspaceBackendAction(w http.ResponseWriter, r *http.Request) {
 	if err := repo.Update(backend); err != nil {
 		log.Error().
 			Err(err).
+			Str("backendID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to update workspace backend")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedUpdateBackend"),
@@ -613,6 +651,8 @@ func DeleteWorkspaceBackendAction(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get workspace")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetWorkspace"),
@@ -642,6 +682,9 @@ func DeleteWorkspaceBackendAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("backendID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to check workspace permission")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCheckAccess"),
@@ -658,6 +701,9 @@ func DeleteWorkspaceBackendAction(w http.ResponseWriter, r *http.Request) {
 	if err := repo.Delete(backend.ID); err != nil {
 		log.Error().
 			Err(err).
+			Str("backendID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to delete workspace backend")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedDeleteBackend"),
@@ -667,6 +713,8 @@ func DeleteWorkspaceBackendAction(w http.ResponseWriter, r *http.Request) {
 
 	log.Info().
 		Str("backendID", idStr).
+		Str("workspaceID", workspaceIDStr).
+		Str("userID", user.ID.String()).
 		Msg("Backend deleted successfully")
 	util.WriteJSON(w, http.StatusNoContent, map[string]interface{}{})
 }
@@ -744,6 +792,7 @@ func CreateBackendStateAction(w http.ResponseWriter, r *http.Request) {
 	if err := repo.Create(state); err != nil {
 		log.Error().
 			Err(err).
+			Str("backendID", backend.ID.String()).
 			Msg("Failed to create backend state")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCreateBackend"),
@@ -759,6 +808,7 @@ func CreateBackendStateAction(w http.ResponseWriter, r *http.Request) {
 	if _, err := w.Write([]byte(state.Value)); err != nil {
 		log.Error().
 			Err(err).
+			Str("backendID", backend.ID.String()).
 			Msg("Failed to write state response")
 	}
 }
@@ -777,6 +827,7 @@ func GetBackendStateAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("backendID", backend.ID.String()).
 			Msg("Failed to get backend state")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetBackend"),
@@ -821,6 +872,7 @@ func LockBackendStateAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("backendID", backend.ID.String()).
 			Msg("Failed to get active lock")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetBackend"),
@@ -845,6 +897,7 @@ func LockBackendStateAction(w http.ResponseWriter, r *http.Request) {
 	if err := repo.Create(lock); err != nil {
 		log.Error().
 			Err(err).
+			Str("backendID", backend.ID.String()).
 			Msg("Failed to create backend lock")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCreateBackend"),
@@ -869,6 +922,7 @@ func UnlockBackendStateAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("backendID", backend.ID.String()).
 			Msg("Failed to get lock")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetBackend"),
@@ -884,6 +938,7 @@ func UnlockBackendStateAction(w http.ResponseWriter, r *http.Request) {
 	if err := repo.SetInactive(lock.ID); err != nil {
 		log.Error().
 			Err(err).
+			Str("backendID", backend.ID.String()).
 			Msg("Failed to unlock backend")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedUpdateBackend"),

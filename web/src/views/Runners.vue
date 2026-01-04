@@ -81,14 +81,14 @@
                     'bg-gray-100 text-gray-800': runner.status === 'inactive',
                     'bg-yellow-100 text-yellow-800': runner.status === 'maintenance'
                   }">
-                  {{ runner.status === 'active' ? 'Active' : runner.status === 'inactive' ? 'Inactive' : 'Maintenance' }}
+                  {{ runner.status === 'active' ? $t('runnersPage.statusActive') : runner.status === 'inactive' ? $t('runnersPage.statusInactive') : $t('runnersPage.statusMaintenance') }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span
                   v-if="connectionStatus(runner.id) === null && canPingRunner(runner)"
                   class="inline-flex items-center gap-1.5 text-theme-textLight"
-                  title="Checking connection…"
+                  :title="$t('runnersPage.checkingTitle')"
                 >
                   <span class="inline-block w-2.5 h-2.5 rounded-full bg-theme-textLight/40 animate-pulse" aria-hidden="true" />
                   <span class="text-xs">{{ $t('runnersPage.checking') }}</span>
@@ -164,7 +164,7 @@
           <form @submit.prevent="handleCreate">
             <div class="bg-white px-6 pt-6 pb-4">
               <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-theme-text">Create Runner</h3>
+                <h3 class="text-lg font-semibold text-theme-text">{{ $t('runnersPage.createRunnerTitle') }}</h3>
                 <button type="button" @click="closeCreateModal" class="text-theme-textLight hover:text-theme-text">
                   <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -173,45 +173,45 @@
               </div>
               <div class="space-y-4">
                 <div>
-                  <label for="create-name" class="block text-sm font-medium text-theme-text mb-2">Name</label>
-                  <input id="create-name" v-model="createForm.name" type="text" class="input-field" placeholder="e.g. prod-runner-1" />
+                  <label for="create-name" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.name') }}</label>
+                  <input id="create-name" v-model="createForm.name" type="text" class="input-field" :placeholder="$t('runnersPage.namePlaceholder')" />
                 </div>
                 <div>
-                  <label for="create-tags" class="block text-sm font-medium text-theme-text mb-2">Tags</label>
-                  <input id="create-tags" v-model="createForm.tags" type="text" class="input-field" placeholder="e.g. linux, docker" />
+                  <label for="create-tags" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.tags') }}</label>
+                  <input id="create-tags" v-model="createForm.tags" type="text" class="input-field" :placeholder="$t('runnersPage.tagsPlaceholder')" />
                 </div>
                 <div>
-                  <label for="create-maxParallel" class="block text-sm font-medium text-theme-text mb-2">Max parallel tasks</label>
+                  <label for="create-maxParallel" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.maxParallelTasks') }}</label>
                   <input id="create-maxParallel" v-model.number="createForm.maxParallelTasks" type="number" min="1" class="input-field" />
                 </div>
                 <div>
-                  <label for="create-status" class="block text-sm font-medium text-theme-text mb-2">Status</label>
+                  <label for="create-status" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.status') }}</label>
                   <select id="create-status" v-model="createForm.status" class="input-field">
-                    <option value="active">Active</option>
-                    <option value="maintenance">Maintenance</option>
-                    <option value="inactive">Inactive</option>
+                    <option value="active">{{ $t('runnersPage.statusActive') }}</option>
+                    <option value="maintenance">{{ $t('runnersPage.statusMaintenance') }}</option>
+                    <option value="inactive">{{ $t('runnersPage.statusInactive') }}</option>
                   </select>
                 </div>
                 <div>
-                  <label for="create-url" class="block text-sm font-medium text-theme-text mb-2">URL</label>
-                  <input id="create-url" v-model="createForm.url" type="url" class="input-field" placeholder="https://runner.example.com" />
+                  <label for="create-url" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.url') }}</label>
+                  <input id="create-url" v-model="createForm.url" type="url" class="input-field" :placeholder="$t('runnersPage.urlPlaceholder')" />
                 </div>
                 <div>
-                  <label for="create-token" class="block text-sm font-medium text-theme-text mb-2">Token</label>
-                  <input id="create-token" v-model="createForm.token" type="text" class="input-field font-mono text-sm" placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000" />
+                  <label for="create-token" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.token') }}</label>
+                  <input id="create-token" v-model="createForm.token" type="text" class="input-field font-mono text-sm" :placeholder="$t('runnersPage.tokenPlaceholder')" />
                 </div>
               </div>
             </div>
             <div class="bg-theme-hover px-6 py-4 flex justify-end space-x-3">
-              <button type="button" @click="closeCreateModal" class="btn-secondary">Cancel</button>
+              <button type="button" @click="closeCreateModal" class="btn-secondary">{{ $t('common.cancel') }}</button>
               <button type="submit" class="btn-primary" :disabled="createLoading">
-                <span v-if="!createLoading">Create runner</span>
+                <span v-if="!createLoading">{{ $t('runnersPage.createRunnerSubmit') }}</span>
                 <span v-else class="inline-flex items-center gap-2">
                   <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Creating…
+                  {{ $t('runnersPage.creating') }}
                 </span>
               </button>
             </div>
@@ -228,7 +228,7 @@
           <form @submit.prevent="handleUpdate">
             <div class="bg-white px-6 pt-6 pb-4">
               <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-theme-text">Edit Runner</h3>
+                <h3 class="text-lg font-semibold text-theme-text">{{ $t('runnersPage.editRunnerTitle') }}</h3>
                 <button type="button" @click="closeEditModal" class="text-theme-textLight hover:text-theme-text">
                   <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -237,45 +237,45 @@
               </div>
               <div class="space-y-4">
                 <div>
-                  <label for="edit-name" class="block text-sm font-medium text-theme-text mb-2">Name</label>
-                  <input id="edit-name" v-model="editForm.name" type="text" class="input-field" placeholder="e.g. prod-runner-1" />
+                  <label for="edit-name" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.name') }}</label>
+                  <input id="edit-name" v-model="editForm.name" type="text" class="input-field" :placeholder="$t('runnersPage.namePlaceholder')" />
                 </div>
                 <div>
-                  <label for="edit-tags" class="block text-sm font-medium text-theme-text mb-2">Tags</label>
-                  <input id="edit-tags" v-model="editForm.tags" type="text" class="input-field" placeholder="e.g. linux, docker" />
+                  <label for="edit-tags" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.tags') }}</label>
+                  <input id="edit-tags" v-model="editForm.tags" type="text" class="input-field" :placeholder="$t('runnersPage.tagsPlaceholder')" />
                 </div>
                 <div>
-                  <label for="edit-maxParallel" class="block text-sm font-medium text-theme-text mb-2">Max parallel tasks</label>
+                  <label for="edit-maxParallel" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.maxParallelTasks') }}</label>
                   <input id="edit-maxParallel" v-model.number="editForm.maxParallelTasks" type="number" min="1" class="input-field" />
                 </div>
                 <div>
-                  <label for="edit-status" class="block text-sm font-medium text-theme-text mb-2">Status</label>
+                  <label for="edit-status" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.status') }}</label>
                   <select id="edit-status" v-model="editForm.status" class="input-field">
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="maintenance">Maintenance</option>
+                    <option value="active">{{ $t('runnersPage.statusActive') }}</option>
+                    <option value="inactive">{{ $t('runnersPage.statusInactive') }}</option>
+                    <option value="maintenance">{{ $t('runnersPage.statusMaintenance') }}</option>
                   </select>
                 </div>
                 <div>
-                  <label for="edit-url" class="block text-sm font-medium text-theme-text mb-2">URL</label>
-                  <input id="edit-url" v-model="editForm.url" type="url" class="input-field" placeholder="https://runner.example.com" />
+                  <label for="edit-url" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.url') }}</label>
+                  <input id="edit-url" v-model="editForm.url" type="url" class="input-field" :placeholder="$t('runnersPage.urlPlaceholder')" />
                 </div>
                 <div>
-                  <label for="edit-token" class="block text-sm font-medium text-theme-text mb-2">Token</label>
-                  <input id="edit-token" v-model="editForm.token" type="text" class="input-field font-mono text-sm" placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000" />
+                  <label for="edit-token" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.token') }}</label>
+                  <input id="edit-token" v-model="editForm.token" type="text" class="input-field font-mono text-sm" :placeholder="$t('runnersPage.tokenPlaceholder')" />
                 </div>
               </div>
             </div>
             <div class="bg-theme-hover px-6 py-4 flex justify-end space-x-3">
-              <button type="button" @click="closeEditModal" class="btn-secondary">Cancel</button>
+              <button type="button" @click="closeEditModal" class="btn-secondary">{{ $t('common.cancel') }}</button>
               <button type="submit" class="btn-primary" :disabled="updateLoading">
-                <span v-if="!updateLoading">Save</span>
+                <span v-if="!updateLoading">{{ $t('common.save') }}</span>
                 <span v-else class="inline-flex items-center gap-2">
                   <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Saving…
+                  {{ $t('runnersPage.saving') }}
                 </span>
               </button>
             </div>
@@ -291,7 +291,7 @@
         <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
           <div class="bg-white px-6 pt-6 pb-4">
             <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-semibold text-theme-text">Delete Runner</h3>
+              <h3 class="text-lg font-semibold text-theme-text">{{ $t('runnersPage.deleteRunnerTitle') }}</h3>
               <button type="button" @click="closeDeleteModal" class="text-theme-textLight hover:text-theme-text">
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -299,25 +299,23 @@
               </button>
             </div>
             <p class="text-sm text-theme-textLight">
-              Are you sure you want to delete the runner
-              <strong class="text-theme-text">{{ runnerToDelete?.name }}</strong>?
-              This action cannot be undone.
+              {{ $t('runnersPage.deleteConfirm', { name: runnerToDelete?.name }) }}
             </p>
           </div>
           <div class="bg-theme-hover px-6 py-4 flex justify-end space-x-3">
-            <button type="button" @click="closeDeleteModal" class="btn-secondary">Cancel</button>
+            <button type="button" @click="closeDeleteModal" class="btn-secondary">{{ $t('common.cancel') }}</button>
             <button
               @click="handleDelete"
               class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none transition-all duration-150"
               :disabled="deleteLoading"
             >
-              <span v-if="!deleteLoading">Delete</span>
+              <span v-if="!deleteLoading">{{ $t('common.delete') }}</span>
               <span v-else class="flex items-center">
                 <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                Deleting…
+                {{ $t('runnersPage.deleting') }}
               </span>
             </button>
           </div>
@@ -394,13 +392,13 @@ async function pingRunner(runnerId) {
     } else {
       connectionStatusMap.value[runnerId] = {
         failed: true,
-        error: res.data?.errorMessage || 'Ping failed'
+        error: res.data?.errorMessage || t('runnersPage.pingFailed')
       }
     }
   } catch (err) {
     connectionStatusMap.value[runnerId] = {
       failed: true,
-      error: err.response?.data?.errorMessage || 'Connection failed'
+      error: err.response?.data?.errorMessage || t('runnersPage.connectionFailed')
     }
   }
 }
@@ -416,12 +414,12 @@ function loadConnectionStatuses() {
 
 function maskToken(token) {
   if (!token || typeof token !== 'string') return '—'
-  const t = token.trim()
-  if (t.length < 12) return '••••••••'
-  if (t.length === 36 && /^[0-9a-f-]{36}$/i.test(t)) {
-    return t.slice(0, 8) + '…' + t.slice(-4)
+  const tkn = token.trim()
+  if (tkn.length < 12) return '••••••••'
+  if (tkn.length === 36 && /^[0-9a-f-]{36}$/i.test(tkn)) {
+    return tkn.slice(0, 8) + '…' + tkn.slice(-4)
   }
-  return t.slice(0, 4) + '…' + t.slice(-8)
+  return tkn.slice(0, 4) + '…' + tkn.slice(-8)
 }
 
 async function loadRunners(overrideOffset) {
@@ -432,8 +430,7 @@ async function loadRunners(overrideOffset) {
   try {
     const response = await runnersAPI.list({ limit: limit.value, offset: off })
     runners.value = response.data?.runners ?? []
-    const meta = response.data?._meta
-    total.value = meta?.total ?? runners.value.length
+    total.value = response.data?._meta?.total ?? runners.value.length
     offset.value = off
     loadConnectionStatuses()
   } catch (err) {

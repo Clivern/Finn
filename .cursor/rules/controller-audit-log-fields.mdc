@@ -1,0 +1,27 @@
+---
+description: Keep controller audit logs with contextual IDs
+globs: api/**/*.go
+alwaysApply: true
+---
+
+# Controller Audit Log Fields
+
+When logging controller actions (`*Action`) in `api/**/*.go`, include contextual IDs to keep logs traceable.
+
+Use the IDs that are available in that handler:
+
+- `workspaceID` when the action is workspace-scoped
+- `userID` for authenticated actions
+- Entity IDs relevant to the operation (for example `gitCredID`, `keyID`, `taskID`)
+
+Apply this to both success and error logs for create/update/delete/read flows.
+
+Example:
+
+```go
+log.Info().
+	Str("gitCredID", idStr).
+	Str("workspaceID", workspaceIDStr).
+	Str("userID", user.ID.String()).
+	Msg("Git credentials deleted successfully")
+```

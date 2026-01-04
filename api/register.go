@@ -26,19 +26,22 @@ type RegisterRequest struct {
 
 // RegisterAction creates an account using a valid invite token.
 func RegisterAction(w http.ResponseWriter, r *http.Request) {
-	log.Info().Msg("Register endpoint called")
-
 	var req RegisterRequest
 	if err := util.DecodeAndValidate(r, &req); err != nil {
 		util.WriteValidationError(w, err)
 		return
 	}
 
+	log.Info().
+		Str("token", req.Token).
+		Msg("Register endpoint called")
+
 	repo := db.NewUserInviteRepository(db.GetDB())
 	invite, err := repo.GetByToken(req.Token)
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("token", req.Token).
 			Msg("Failed to get user invite by token")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCompleteRegistration"),
@@ -71,6 +74,8 @@ func RegisterAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("inviteID", invite.ID.String()).
+			Str("token", req.Token).
 			Msg("Failed to check existing user")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCompleteRegistration"),
@@ -88,6 +93,7 @@ func RegisterAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("inviteID", invite.ID.String()).
 			Msg("Failed to hash password")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCompleteRegistration"),
@@ -109,6 +115,8 @@ func RegisterAction(w http.ResponseWriter, r *http.Request) {
 	if err := userRepo.Create(user); err != nil {
 		log.Error().
 			Err(err).
+			Str("inviteID", invite.ID.String()).
+			Str("email", user.Email).
 			Msg("Failed to create user")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCompleteRegistration"),
@@ -119,6 +127,8 @@ func RegisterAction(w http.ResponseWriter, r *http.Request) {
 	if err := repo.UpdateStatus(invite.ID, inviteStatusAccepted, &now); err != nil {
 		log.Error().
 			Err(err).
+			Str("inviteID", invite.ID.String()).
+			Str("userID", user.ID.String()).
 			Msg("Failed to mark invite as accepted")
 		// User already created; continue and return success
 	}

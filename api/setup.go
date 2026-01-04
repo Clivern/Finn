@@ -59,6 +59,8 @@ func SetupAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("adminEmail", req.AdminEmail).
+			Str("platformURL", req.PlatformURL).
 			Msg("Failed to complete setup")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCompleteSetup"),
@@ -66,7 +68,10 @@ func SetupAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Info().Msg("Platform setup completed successfully")
+	log.Info().
+		Str("adminEmail", req.AdminEmail).
+		Str("platformURL", req.PlatformURL).
+		Msg("Platform setup completed successfully")
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"successMessage": locale.TR(r, "setupCompletedSuccessfully"),
 	})

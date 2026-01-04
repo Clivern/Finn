@@ -121,53 +121,103 @@
       </section>
     </main>
 
-    <!-- SSH key Add/Edit modal -->
+    <!-- SSH key Add modal -->
     <Teleport to="body">
       <Transition name="modal">
         <div
-          v-show="keyFormModalOpen"
+          v-show="showAddKeyModal"
           class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
           role="dialog"
           aria-modal="true"
-          :aria-labelledby="editingKey ? 'edit-key-title' : 'add-key-title'"
-          @click.self="keyFormModalOpen = false"
+          aria-labelledby="add-key-title"
+          @click.self="showAddKeyModal = false"
         >
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
-            <h2 :id="editingKey ? 'edit-key-title' : 'add-key-title'" class="text-lg font-semibold text-theme-text">
-              {{ editingKey ? $t('secretsPage.editKey') : $t('secretsPage.addKey') }}
-            </h2>
-            <form @submit.prevent="saveKey" class="mt-4 space-y-4">
+            <h2 id="add-key-title" class="text-lg font-semibold text-theme-text">{{ $t('secretsPage.addKey') }}</h2>
+            <form @submit.prevent="handleCreateKey" class="mt-4 space-y-4">
               <div>
-                <label for="key-name" class="form-label">{{ $t('secretsPage.name') }}</label>
-                <input id="key-name" v-model="keyForm.name" type="text" required maxlength="100" class="input-field" placeholder="e.g. GitHub deploy key" />
+                <label for="add-key-name" class="form-label">{{ $t('secretsPage.name') }}</label>
+                <input id="add-key-name" v-model="keyForm.name" type="text" required maxlength="100" class="input-field" placeholder="e.g. GitHub deploy key" />
               </div>
               <div>
-                <label for="key-committerName" class="form-label">{{ $t('secretsPage.committerName') }}</label>
-                <input id="key-committerName" v-model="keyForm.committerName" type="text" required maxlength="100" class="input-field" placeholder="Your Name" />
+                <label for="add-key-committerName" class="form-label">{{ $t('secretsPage.committerName') }}</label>
+                <input id="add-key-committerName" v-model="keyForm.committerName" type="text" required maxlength="100" class="input-field" placeholder="Your Name" />
               </div>
               <div>
-                <label for="key-committerEmail" class="form-label">{{ $t('secretsPage.committerEmail') }}</label>
-                <input id="key-committerEmail" v-model="keyForm.committerEmail" type="email" required maxlength="100" class="input-field" placeholder="you@example.com" />
+                <label for="add-key-committerEmail" class="form-label">{{ $t('secretsPage.committerEmail') }}</label>
+                <input id="add-key-committerEmail" v-model="keyForm.committerEmail" type="email" required maxlength="100" class="input-field" placeholder="you@example.com" />
               </div>
               <div>
-                <label for="key-privateKey" class="form-label">Private key {{ editingKey ? $t('secretsPage.privateKeyLeaveBlank') : '' }}</label>
+                <label for="add-key-privateKey" class="form-label">{{ $t('secretsPage.privateKey') }}</label>
                 <textarea
-                  id="key-privateKey"
+                  id="add-key-privateKey"
                   v-model="keyForm.privateKey"
-                  :required="!editingKey"
+                  required
                   rows="6"
                   class="input-field font-mono text-sm"
                   placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;...&#10;-----END OPENSSH PRIVATE KEY-----"
                 />
               </div>
               <div>
-                <label for="key-publicKey" class="form-label">Public key {{ editingKey ? $t('secretsPage.publicKeyOptional') : $t('secretsPage.publicKeyPlaceholder') }}</label>
-                <input id="key-publicKey" v-model="keyForm.publicKey" type="text" class="input-field font-mono text-sm" placeholder="ssh-rsa AAAA..." />
+                <label for="add-key-publicKey" class="form-label">{{ $t('secretsPage.publicKeyPlaceholder') }}</label>
+                <input id="add-key-publicKey" v-model="keyForm.publicKey" type="text" class="input-field font-mono text-sm" placeholder="ssh-rsa AAAA..." />
               </div>
               <div class="flex gap-3 justify-end pt-2">
-                <button type="button" @click="keyFormModalOpen = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
+                <button type="button" @click="showAddKeyModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
                 <button type="submit" :disabled="keyFormSaving" class="btn-primary">
-                  {{ keyFormSaving ? $t('secretsPage.saving') : (editingKey ? $t('common.save') : $t('secretsPage.add')) }}
+                  {{ keyFormSaving ? $t('secretsPage.saving') : $t('secretsPage.add') }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- SSH key Edit modal -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div
+          v-show="showEditKeyModal"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-key-title"
+          @click.self="showEditKeyModal = false"
+        >
+          <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+            <h2 id="edit-key-title" class="text-lg font-semibold text-theme-text">{{ $t('secretsPage.editKey') }}</h2>
+            <form @submit.prevent="handleUpdateKey" class="mt-4 space-y-4">
+              <div>
+                <label for="edit-key-name" class="form-label">{{ $t('secretsPage.name') }}</label>
+                <input id="edit-key-name" v-model="keyForm.name" type="text" required maxlength="100" class="input-field" placeholder="e.g. GitHub deploy key" />
+              </div>
+              <div>
+                <label for="edit-key-committerName" class="form-label">{{ $t('secretsPage.committerName') }}</label>
+                <input id="edit-key-committerName" v-model="keyForm.committerName" type="text" required maxlength="100" class="input-field" placeholder="Your Name" />
+              </div>
+              <div>
+                <label for="edit-key-committerEmail" class="form-label">{{ $t('secretsPage.committerEmail') }}</label>
+                <input id="edit-key-committerEmail" v-model="keyForm.committerEmail" type="email" required maxlength="100" class="input-field" placeholder="you@example.com" />
+              </div>
+              <div>
+                <label for="edit-key-privateKey" class="form-label">{{ $t('secretsPage.privateKey') }} {{ $t('secretsPage.privateKeyLeaveBlank') }}</label>
+                <textarea
+                  id="edit-key-privateKey"
+                  v-model="keyForm.privateKey"
+                  rows="6"
+                  class="input-field font-mono text-sm"
+                  placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;...&#10;-----END OPENSSH PRIVATE KEY-----"
+                />
+              </div>
+              <div>
+                <label for="edit-key-publicKey" class="form-label">{{ $t('secretsPage.publicKeyOptional') }}</label>
+                <input id="edit-key-publicKey" v-model="keyForm.publicKey" type="text" class="input-field font-mono text-sm" placeholder="ssh-rsa AAAA..." />
+              </div>
+              <div class="flex gap-3 justify-end pt-2">
+                <button type="button" @click="showEditKeyModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
+                <button type="submit" :disabled="keyFormSaving" class="btn-primary">
+                  {{ keyFormSaving ? $t('secretsPage.saving') : $t('common.save') }}
                 </button>
               </div>
             </form>
@@ -203,44 +253,95 @@
       </Transition>
     </Teleport>
 
-    <!-- Git credential Add/Edit modal -->
+    <!-- Git credential Add modal -->
     <Teleport to="body">
       <Transition name="modal">
         <div
-          v-show="credFormModalOpen"
+          v-show="showAddCredModal"
           class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
           role="dialog"
           aria-modal="true"
-          :aria-labelledby="editingCred ? 'edit-cred-title' : 'add-cred-title'"
-          @click.self="credFormModalOpen = false"
+          aria-labelledby="add-cred-title"
+          @click.self="showAddCredModal = false"
         >
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
-            <h2 :id="editingCred ? 'edit-cred-title' : 'add-cred-title'" class="text-lg font-semibold text-theme-text">
-              {{ editingCred ? $t('secretsPage.editCredTitle') : $t('secretsPage.addCredTitle') }}
-            </h2>
-            <form @submit.prevent="saveCred" class="mt-4 space-y-4">
+            <h2 id="add-cred-title" class="text-lg font-semibold text-theme-text">{{ $t('secretsPage.addCredTitle') }}</h2>
+            <form @submit.prevent="handleCreateCred" class="mt-4 space-y-4">
               <div>
-                <label for="cred-name" class="form-label">{{ $t('secretsPage.name') }}</label>
-                <input id="cred-name" v-model="credForm.name" type="text" required maxlength="100" class="input-field" placeholder="e.g. GitHub token" />
+                <label for="add-cred-name" class="form-label">{{ $t('secretsPage.name') }}</label>
+                <input id="add-cred-name" v-model="credForm.name" type="text" required maxlength="100" class="input-field" placeholder="e.g. GitHub token" />
               </div>
               <div>
-                <label for="cred-committerName" class="form-label">{{ $t('secretsPage.committerName') }}</label>
-                <input id="cred-committerName" v-model="credForm.committerName" type="text" required maxlength="100" class="input-field" placeholder="Your Name" />
+                <label for="add-cred-committerName" class="form-label">{{ $t('secretsPage.committerName') }}</label>
+                <input id="add-cred-committerName" v-model="credForm.committerName" type="text" required maxlength="100" class="input-field" placeholder="Your Name" />
               </div>
               <div>
-                <label for="cred-committerEmail" class="form-label">{{ $t('secretsPage.committerEmail') }}</label>
-                <input id="cred-committerEmail" v-model="credForm.committerEmail" type="email" required maxlength="100" class="input-field" placeholder="you@example.com" />
+                <label for="add-cred-committerEmail" class="form-label">{{ $t('secretsPage.committerEmail') }}</label>
+                <input id="add-cred-committerEmail" v-model="credForm.committerEmail" type="email" required maxlength="100" class="input-field" placeholder="you@example.com" />
               </div>
               <div>
-                <label for="cred-username" class="form-label">{{ $t('secretsPage.username') }}</label>
-                <input id="cred-username" v-model="credForm.username" type="text" maxlength="100" class="input-field" placeholder="git or your username" required />
+                <label for="add-cred-username" class="form-label">{{ $t('secretsPage.username') }}</label>
+                <input id="add-cred-username" v-model="credForm.username" type="text" maxlength="100" class="input-field" placeholder="git or your username" required />
               </div>
               <div>
-                <label for="cred-passwordOrToken" class="form-label">Password or token {{ editingCred ? $t('secretsPage.passwordLeaveBlank') : '' }}</label>
+                <label for="add-cred-passwordOrToken" class="form-label">{{ $t('secretsPage.passwordOrToken') }}</label>
                 <input
-                  id="cred-passwordOrToken"
+                  id="add-cred-passwordOrToken"
                   v-model="credForm.passwordOrToken"
-                  :required="!editingCred"
+                  type="password"
+                  required
+                  autocomplete="off"
+                  class="input-field"
+                  placeholder="••••••••"
+                />
+              </div>
+              <div class="flex gap-3 justify-end pt-2">
+                <button type="button" @click="showAddCredModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
+                <button type="submit" :disabled="credFormSaving" class="btn-primary">
+                  {{ credFormSaving ? $t('secretsPage.saving') : $t('secretsPage.add') }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- Git credential Edit modal -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div
+          v-show="showEditCredModal"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-cred-title"
+          @click.self="showEditCredModal = false"
+        >
+          <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+            <h2 id="edit-cred-title" class="text-lg font-semibold text-theme-text">{{ $t('secretsPage.editCredTitle') }}</h2>
+            <form @submit.prevent="handleUpdateCred" class="mt-4 space-y-4">
+              <div>
+                <label for="edit-cred-name" class="form-label">{{ $t('secretsPage.name') }}</label>
+                <input id="edit-cred-name" v-model="credForm.name" type="text" required maxlength="100" class="input-field" placeholder="e.g. GitHub token" />
+              </div>
+              <div>
+                <label for="edit-cred-committerName" class="form-label">{{ $t('secretsPage.committerName') }}</label>
+                <input id="edit-cred-committerName" v-model="credForm.committerName" type="text" required maxlength="100" class="input-field" placeholder="Your Name" />
+              </div>
+              <div>
+                <label for="edit-cred-committerEmail" class="form-label">{{ $t('secretsPage.committerEmail') }}</label>
+                <input id="edit-cred-committerEmail" v-model="credForm.committerEmail" type="email" required maxlength="100" class="input-field" placeholder="you@example.com" />
+              </div>
+              <div>
+                <label for="edit-cred-username" class="form-label">{{ $t('secretsPage.username') }}</label>
+                <input id="edit-cred-username" v-model="credForm.username" type="text" maxlength="100" class="input-field" placeholder="git or your username" required />
+              </div>
+              <div>
+                <label for="edit-cred-passwordOrToken" class="form-label">{{ $t('secretsPage.passwordOrToken') }} {{ $t('secretsPage.passwordLeaveBlank') }}</label>
+                <input
+                  id="edit-cred-passwordOrToken"
+                  v-model="credForm.passwordOrToken"
                   type="password"
                   autocomplete="off"
                   class="input-field"
@@ -248,9 +349,9 @@
                 />
               </div>
               <div class="flex gap-3 justify-end pt-2">
-                <button type="button" @click="credFormModalOpen = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
+                <button type="button" @click="showEditCredModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
                 <button type="submit" :disabled="credFormSaving" class="btn-primary">
-                  {{ credFormSaving ? $t('secretsPage.saving') : (editingCred ? $t('common.save') : $t('secretsPage.add')) }}
+                  {{ credFormSaving ? $t('secretsPage.saving') : $t('common.save') }}
                 </button>
               </div>
             </form>
@@ -307,7 +408,8 @@ const credsLoading = ref(true)
 const errorMessage = ref('')
 const successMessage = ref('')
 
-const keyFormModalOpen = ref(false)
+const showAddKeyModal = ref(false)
+const showEditKeyModal = ref(false)
 const keyFormSaving = ref(false)
 const editingKey = ref(null)
 const keyForm = ref({
@@ -320,7 +422,8 @@ const keyForm = ref({
 const deleteKeyModal = ref(null)
 const deletingKeyId = ref(null)
 
-const credFormModalOpen = ref(false)
+const showAddCredModal = ref(false)
+const showEditCredModal = ref(false)
 const credFormSaving = ref(false)
 const editingCred = ref(null)
 const credForm = ref({
@@ -370,8 +473,15 @@ async function loadCredentials() {
 
 function openAddKeyModal() {
   editingKey.value = null
-  keyForm.value = { name: '', committerName: '', committerEmail: '', privateKey: '', publicKey: '' }
-  keyFormModalOpen.value = true
+  keyForm.value = {
+    name: '',
+    committerName: '',
+    committerEmail: '',
+    privateKey: '',
+    publicKey: ''
+  }
+  showAddKeyModal.value = true
+  showEditKeyModal.value = false
 }
 
 function openEditKeyModal(k) {
@@ -383,36 +493,53 @@ function openEditKeyModal(k) {
     privateKey: '',
     publicKey: k.publicKey ?? ''
   }
-  keyFormModalOpen.value = true
+  showEditKeyModal.value = true
+  showAddKeyModal.value = false
 }
 
-async function saveKey() {
-  if (!workspace.value?.id) return
-  const { name, committerName, committerEmail, privateKey, publicKey } = keyForm.value
-  if (!name?.trim() || !committerName?.trim() || !committerEmail?.trim()) return
-  if (!editingKey.value && !privateKey?.trim()) return
+async function handleCreateKey() {
   keyFormSaving.value = true
   errorMessage.value = ''
   successMessage.value = ''
+
   try {
     const payload = {
-      name: name.trim(),
-      committerName: committerName.trim(),
-      committerEmail: committerEmail.trim()
+      name: keyForm.value.name.trim(),
+      committerName: keyForm.value.committerName.trim(),
+      committerEmail: keyForm.value.committerEmail.trim()
     }
-    if (privateKey?.trim()) payload.privateKey = privateKey.trim()
-    if (publicKey?.trim()) payload.publicKey = publicKey.trim()
-    if (editingKey.value) {
-      await sshKeysAPI.update(workspace.value.id, editingKey.value.id, payload)
-      successMessage.value = t('secretsPage.sshKeyUpdated')
-    } else {
-      await sshKeysAPI.create(workspace.value.id, payload)
-      successMessage.value = t('secretsPage.sshKeyAdded')
-    }
-    keyFormModalOpen.value = false
+    if (keyForm.value.privateKey?.trim()) { payload.privateKey = keyForm.value.privateKey.trim() }
+    if (keyForm.value.publicKey?.trim()) { payload.publicKey = keyForm.value.publicKey.trim() }
+    await sshKeysAPI.create(workspace.value.id, payload)
+    successMessage.value = t('secretsPage.sshKeyAdded')
+    showAddKeyModal.value = false
     await loadSshKeys()
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || (editingKey.value ? t('secretsPage.failedUpdateKey') : t('secretsPage.failedAddKey'))
+    errorMessage.value = err.response?.data?.errorMessage || t('secretsPage.failedAddKey')
+  } finally {
+    keyFormSaving.value = false
+  }
+}
+
+async function handleUpdateKey() {
+  keyFormSaving.value = true
+  errorMessage.value = ''
+  successMessage.value = ''
+
+  try {
+    const payload = {
+      name: keyForm.value.name.trim(),
+      committerName: keyForm.value.committerName.trim(),
+      committerEmail: keyForm.value.committerEmail.trim()
+    }
+    if (keyForm.value.privateKey?.trim()) { payload.privateKey = keyForm.value.privateKey.trim() }
+    if (keyForm.value.publicKey?.trim()) { payload.publicKey = keyForm.value.publicKey.trim() }
+    await sshKeysAPI.update(workspace.value.id, editingKey.value.id, payload)
+    successMessage.value = t('secretsPage.sshKeyUpdated')
+    showEditKeyModal.value = false
+    await loadSshKeys()
+  } catch (err) {
+    errorMessage.value = err.response?.data?.errorMessage || t('secretsPage.failedUpdateKey')
   } finally {
     keyFormSaving.value = false
   }
@@ -423,12 +550,15 @@ function openDeleteKeyModal(k) {
 }
 
 async function confirmDeleteKey() {
-  const k = deleteKeyModal.value
-  if (!workspace.value?.id || !k?.id) return
-  deletingKeyId.value = k.id
+  if (!workspace.value?.id || !deleteKeyModal.value?.id) return
+  deletingKeyId.value = deleteKeyModal.value.id
   errorMessage.value = ''
+
   try {
-    await sshKeysAPI.delete(workspace.value.id, k.id)
+    await sshKeysAPI.delete(
+      workspace.value.id,
+      deletingKeyId.value
+    )
     successMessage.value = t('secretsPage.sshKeyDeleted')
     deleteKeyModal.value = null
     await loadSshKeys()
@@ -441,8 +571,15 @@ async function confirmDeleteKey() {
 
 function openAddCredModal() {
   editingCred.value = null
-  credForm.value = { name: '', committerName: '', committerEmail: '', username: '', passwordOrToken: '' }
-  credFormModalOpen.value = true
+  credForm.value = {
+    name: '',
+    committerName: '',
+    committerEmail: '',
+    username: '',
+    passwordOrToken: ''
+  }
+  showAddCredModal.value = true
+  showEditCredModal.value = false
 }
 
 function openEditCredModal(c) {
@@ -454,36 +591,52 @@ function openEditCredModal(c) {
     username: c.username ?? '',
     passwordOrToken: ''
   }
-  credFormModalOpen.value = true
+  showEditCredModal.value = true
+  showAddCredModal.value = false
 }
 
-async function saveCred() {
-  if (!workspace.value?.id) return
-  const { name, committerName, committerEmail, username, passwordOrToken } = credForm.value
-  if (!name?.trim() || !committerName?.trim() || !committerEmail?.trim() || !username?.trim()) return
-  if (!editingCred.value && !passwordOrToken) return
+async function handleCreateCred() {
   credFormSaving.value = true
   errorMessage.value = ''
   successMessage.value = ''
+
   try {
-    const payload = {
-      name: name.trim(),
-      committerName: committerName.trim(),
-      committerEmail: committerEmail.trim(),
-      username: username.trim(),
-    }
-    if (passwordOrToken) payload.passwordOrToken = passwordOrToken
-    if (editingCred.value) {
-      await credentialsAPI.update(workspace.value.id, editingCred.value.id, payload)
-      successMessage.value = t('secretsPage.credUpdated')
-    } else {
-      await credentialsAPI.create(workspace.value.id, payload)
-      successMessage.value = t('secretsPage.credAdded')
-    }
-    credFormModalOpen.value = false
+    await credentialsAPI.create(workspace.value.id, {
+      name: credForm.value.name.trim(),
+      committerName: credForm.value.committerName.trim(),
+      committerEmail: credForm.value.committerEmail.trim(),
+      username: credForm.value.username.trim(),
+      passwordOrToken: credForm.value.passwordOrToken
+    })
+    successMessage.value = t('secretsPage.credAdded')
+    showAddCredModal.value = false
     await loadCredentials()
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || (editingCred.value ? t('secretsPage.failedUpdateCred') : t('secretsPage.failedAddCred'))
+    errorMessage.value = err.response?.data?.errorMessage || t('secretsPage.failedAddCred')
+  } finally {
+    credFormSaving.value = false
+  }
+}
+
+async function handleUpdateCred() {
+  credFormSaving.value = true
+  errorMessage.value = ''
+  successMessage.value = ''
+
+  try {
+    const payload = {
+      name: credForm.value.name.trim(),
+      committerName: credForm.value.committerName.trim(),
+      committerEmail: credForm.value.committerEmail.trim(),
+      username: credForm.value.username.trim()
+    }
+    if (credForm.value.passwordOrToken) payload.passwordOrToken = credForm.value.passwordOrToken
+    await credentialsAPI.update(workspace.value.id, editingCred.value.id, payload)
+    successMessage.value = t('secretsPage.credUpdated')
+    showEditCredModal.value = false
+    await loadCredentials()
+  } catch (err) {
+    errorMessage.value = err.response?.data?.errorMessage || t('secretsPage.failedUpdateCred')
   } finally {
     credFormSaving.value = false
   }
@@ -494,12 +647,15 @@ function openDeleteCredModal(c) {
 }
 
 async function confirmDeleteCred() {
-  const c = deleteCredModal.value
-  if (!workspace.value?.id || !c?.id) return
-  deletingCredId.value = c.id
+  if (!workspace.value?.id || !deleteCredModal.value?.id) return
+  deletingCredId.value = deleteCredModal.value.id
   errorMessage.value = ''
+
   try {
-    await credentialsAPI.delete(workspace.value.id, c.id)
+    await credentialsAPI.delete(
+      workspace.value.id,
+      deletingCredId.value
+    )
     successMessage.value = t('secretsPage.credDeleted')
     deleteCredModal.value = null
     await loadCredentials()

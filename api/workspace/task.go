@@ -20,8 +20,6 @@ import (
 
 // GetWorkspaceRepositoryTaskAction returns one clone task's status and data.
 func GetWorkspaceRepositoryTaskAction(w http.ResponseWriter, r *http.Request) {
-	log.Info().Msg("Get workspace repository clone task endpoint called")
-
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
 		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
@@ -53,6 +51,12 @@ func GetWorkspaceRepositoryTaskAction(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+	log.Info().
+		Str("workspaceID", workspaceIDStr).
+		Str("repositoryID", repoIDStr).
+		Str("taskID", taskIDStr).
+		Str("userID", user.ID.String()).
+		Msg("Get workspace repository clone task endpoint called")
 
 	wsModule := module.NewWorkspace(db.GetDB())
 	workspace, err := wsModule.GetWorkspace(db.ID(workspaceIDStr))
@@ -65,6 +69,10 @@ func GetWorkspaceRepositoryTaskAction(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("repositoryID", repoIDStr).
+			Str("taskID", taskIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get workspace")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetWorkspace"),
@@ -77,6 +85,10 @@ func GetWorkspaceRepositoryTaskAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("repositoryID", repoIDStr).
+			Str("taskID", taskIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get workspace repository")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetRepository"),
@@ -94,11 +106,15 @@ func GetWorkspaceRepositoryTaskAction(w http.ResponseWriter, r *http.Request) {
 	allowed, err := permModule.CheckWorkspaceRepositoryPermission(
 		user,
 		repo,
-		module.CanGetWorkspaceRepository,
+		module.CanCloneWorkspaceRepository,
 	)
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("repositoryID", repo.ID.String()).
+			Str("taskID", taskIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to check workspace permission")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCheckAccess"),
@@ -117,6 +133,10 @@ func GetWorkspaceRepositoryTaskAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("repositoryID", repo.ID.String()).
+			Str("taskID", taskIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get clone task")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": "Failed to get clone task",

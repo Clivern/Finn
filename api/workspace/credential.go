@@ -74,6 +74,8 @@ func CreateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get workspace")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetWorkspace"),
@@ -90,6 +92,8 @@ func CreateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to check workspace permission")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCheckAccess"),
@@ -116,6 +120,8 @@ func CreateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	if err := repo.Create(cred); err != nil {
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to create workspace git credentials")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCreateGitCredentials"),
@@ -166,6 +172,8 @@ func ListWorkspaceGitCredsAction(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get workspace")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetWorkspace"),
@@ -182,6 +190,8 @@ func ListWorkspaceGitCredsAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to check workspace permission")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCheckAccess"),
@@ -208,10 +218,12 @@ func ListWorkspaceGitCredsAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	repo := db.NewWorkspaceGitCredRepository(db.GetDB())
-	list, err := repo.ListByWorkspaceID(workspace.ID, limit, offset)
+	result, err := repo.ListByWorkspaceID(workspace.ID, limit, offset)
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to list workspace git credentials")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedListGitCredentials"),
@@ -220,9 +232,9 @@ func ListWorkspaceGitCredsAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	total, _ := repo.CountByWorkspaceID(workspace.ID)
-	items := make([]map[string]interface{}, 0, len(list))
-	for _, c := range list {
-		items = append(items, map[string]interface{}{
+	credentials := make([]map[string]interface{}, 0, len(result))
+	for _, c := range result {
+		credentials = append(credentials, map[string]interface{}{
 			"id":             c.ID,
 			"workspaceId":    c.WorkspaceID,
 			"name":           c.Name,
@@ -235,7 +247,7 @@ func ListWorkspaceGitCredsAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"credentials": items,
+		"credentials": credentials,
 		"_meta": map[string]interface{}{
 			"limit":  limit,
 			"offset": offset,
@@ -275,6 +287,8 @@ func GetWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get workspace")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetWorkspace"),
@@ -295,6 +309,9 @@ func GetWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("gitCredID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get workspace git credentials")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetGitCredentials"),
@@ -317,6 +334,9 @@ func GetWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("gitCredID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to check workspace permission")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCheckAccess"),
@@ -379,6 +399,8 @@ func UpdateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get workspace")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetWorkspace"),
@@ -412,6 +434,9 @@ func UpdateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("gitCredID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to check workspace permission")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCheckAccess"),
@@ -436,6 +461,9 @@ func UpdateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	if err := repo.Update(c); err != nil {
 		log.Error().
 			Err(err).
+			Str("gitCredID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to update workspace git credentials")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedUpdateGitCredentials"),
@@ -486,6 +514,8 @@ func DeleteWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().
 			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to get workspace")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetWorkspace"),
@@ -519,6 +549,9 @@ func DeleteWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("gitCredID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to check workspace permission")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCheckAccess"),
@@ -535,6 +568,9 @@ func DeleteWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	if err := repo.Delete(c.ID); err != nil {
 		log.Error().
 			Err(err).
+			Str("gitCredID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
 			Msg("Failed to delete workspace git credentials")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedDeleteGitCredentials"),
@@ -544,6 +580,8 @@ func DeleteWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 
 	log.Info().
 		Str("gitCredID", idStr).
+		Str("workspaceID", workspaceIDStr).
+		Str("userID", user.ID.String()).
 		Msg("Git credentials deleted successfully")
 	util.WriteJSON(w, http.StatusNoContent, map[string]interface{}{})
 }

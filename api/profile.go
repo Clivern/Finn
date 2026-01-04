@@ -27,8 +27,6 @@ type UpdateProfileRequest struct {
 
 // GetProfileAction returns the current user's profile.
 func GetProfileAction(w http.ResponseWriter, r *http.Request) {
-	log.Info().Msg("Get profile endpoint called")
-
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
 		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
@@ -36,6 +34,9 @@ func GetProfileAction(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+	log.Info().
+		Str("userID", user.ID.String()).
+		Msg("Get profile endpoint called")
 
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"user": map[string]interface{}{
@@ -54,8 +55,6 @@ func GetProfileAction(w http.ResponseWriter, r *http.Request) {
 
 // UpdateProfileAction updates the current user's profile.
 func UpdateProfileAction(w http.ResponseWriter, r *http.Request) {
-	log.Info().Msg("Update profile endpoint called")
-
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
 		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
@@ -63,6 +62,9 @@ func UpdateProfileAction(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+	log.Info().
+		Str("userID", user.ID.String()).
+		Msg("Update profile endpoint called")
 
 	var req UpdateProfileRequest
 	if err := util.DecodeAndValidate(r, &req); err != nil {
@@ -116,6 +118,7 @@ func UpdateProfileAction(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().
 			Err(err).
+			Str("userID", user.ID.String()).
 			Msg("Failed to update profile")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedUpdateProfile"),
