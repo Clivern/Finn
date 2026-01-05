@@ -19,6 +19,7 @@ type WorkspaceSSHKey struct {
 	CommitterEmail string
 	PrivateKey     string
 	PublicKey      *string
+	Passphrase     string
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 }
@@ -55,6 +56,7 @@ func scanWorkspaceSSHKeyRows(rows *sql.Rows) ([]*WorkspaceSSHKey, error) {
 			&k.CommitterEmail,
 			&k.PrivateKey,
 			&k.PublicKey,
+			&k.Passphrase,
 			&k.CreatedAt,
 			&k.UpdatedAt,
 		); err != nil {
@@ -71,14 +73,15 @@ type workspaceSSHKeyRepoSQLite struct {
 
 func (x *workspaceSSHKeyRepoSQLite) Create(k *WorkspaceSSHKey) error {
 	result, err := x.db.Exec(
-		`INSERT INTO workspace_ssh_keys (workspace_id, name, committer_name, committer_email, private_key, public_key)
-		VALUES (?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO workspace_ssh_keys (workspace_id, name, committer_name, committer_email, private_key, public_key, passphrase)
+		VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		k.WorkspaceID.String(),
 		k.Name,
 		k.CommitterName,
 		k.CommitterEmail,
 		k.PrivateKey,
 		k.PublicKey,
+		k.Passphrase,
 	)
 	if err != nil {
 		return err
@@ -99,7 +102,7 @@ func (x *workspaceSSHKeyRepoSQLite) Create(k *WorkspaceSSHKey) error {
 func (x *workspaceSSHKeyRepoSQLite) GetByID(id ID) (*WorkspaceSSHKey, error) {
 	k := &WorkspaceSSHKey{}
 	err := x.db.QueryRow(
-		`SELECT id, workspace_id, name, committer_name, committer_email, private_key, public_key, created_at, updated_at
+		`SELECT id, workspace_id, name, committer_name, committer_email, private_key, public_key, passphrase, created_at, updated_at
 		FROM workspace_ssh_keys WHERE id = ?`,
 		id.String(),
 	).Scan(
@@ -110,6 +113,7 @@ func (x *workspaceSSHKeyRepoSQLite) GetByID(id ID) (*WorkspaceSSHKey, error) {
 		&k.CommitterEmail,
 		&k.PrivateKey,
 		&k.PublicKey,
+		&k.Passphrase,
 		&k.CreatedAt,
 		&k.UpdatedAt,
 	)
@@ -135,13 +139,14 @@ func (x *workspaceSSHKeyRepoSQLite) GetByIDAndWorkspace(id, workspaceID ID) (*Wo
 
 func (x *workspaceSSHKeyRepoSQLite) Update(k *WorkspaceSSHKey) error {
 	_, err := x.db.Exec(
-		`UPDATE workspace_ssh_keys SET name = ?, committer_name = ?, committer_email = ?, private_key = ?, public_key = ?, updated_at = ?
+		`UPDATE workspace_ssh_keys SET name = ?, committer_name = ?, committer_email = ?, private_key = ?, public_key = ?, passphrase = ?, updated_at = ?
 		WHERE id = ?`,
 		k.Name,
 		k.CommitterName,
 		k.CommitterEmail,
 		k.PrivateKey,
 		k.PublicKey,
+		k.Passphrase,
 		time.Now().UTC(),
 		k.ID.String(),
 	)
@@ -158,7 +163,7 @@ func (x *workspaceSSHKeyRepoSQLite) Delete(id ID) error {
 
 func (x *workspaceSSHKeyRepoSQLite) ListByWorkspaceID(workspaceID ID, limit, offset int) ([]*WorkspaceSSHKey, error) {
 	rows, err := x.db.Query(
-		`SELECT id, workspace_id, name, committer_name, committer_email, private_key, public_key, created_at, updated_at
+		`SELECT id, workspace_id, name, committer_name, committer_email, private_key, public_key, passphrase, created_at, updated_at
 		FROM workspace_ssh_keys WHERE workspace_id = ?
 		ORDER BY created_at DESC LIMIT ? OFFSET ?`,
 		workspaceID.String(),
@@ -187,14 +192,15 @@ type workspaceSSHKeyRepoPostgres struct {
 
 func (x *workspaceSSHKeyRepoPostgres) Create(k *WorkspaceSSHKey) error {
 	err := x.db.QueryRow(
-		`INSERT INTO workspace_ssh_keys (workspace_id, name, committer_name, committer_email, private_key, public_key)
-		VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, created_at, updated_at`,
+		`INSERT INTO workspace_ssh_keys (workspace_id, name, committer_name, committer_email, private_key, public_key, passphrase)
+		VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, created_at, updated_at`,
 		k.WorkspaceID.String(),
 		k.Name,
 		k.CommitterName,
 		k.CommitterEmail,
 		k.PrivateKey,
 		k.PublicKey,
+		k.Passphrase,
 	).Scan(&k.ID, &k.CreatedAt, &k.UpdatedAt)
 	return err
 }
@@ -202,7 +208,7 @@ func (x *workspaceSSHKeyRepoPostgres) Create(k *WorkspaceSSHKey) error {
 func (x *workspaceSSHKeyRepoPostgres) GetByID(id ID) (*WorkspaceSSHKey, error) {
 	k := &WorkspaceSSHKey{}
 	err := x.db.QueryRow(
-		`SELECT id, workspace_id, name, committer_name, committer_email, private_key, public_key, created_at, updated_at
+		`SELECT id, workspace_id, name, committer_name, committer_email, private_key, public_key, passphrase, created_at, updated_at
 		FROM workspace_ssh_keys WHERE id = $1`,
 		id.String(),
 	).Scan(
@@ -213,6 +219,7 @@ func (x *workspaceSSHKeyRepoPostgres) GetByID(id ID) (*WorkspaceSSHKey, error) {
 		&k.CommitterEmail,
 		&k.PrivateKey,
 		&k.PublicKey,
+		&k.Passphrase,
 		&k.CreatedAt,
 		&k.UpdatedAt,
 	)
@@ -238,12 +245,13 @@ func (x *workspaceSSHKeyRepoPostgres) GetByIDAndWorkspace(id, workspaceID ID) (*
 
 func (x *workspaceSSHKeyRepoPostgres) Update(k *WorkspaceSSHKey) error {
 	_, err := x.db.Exec(
-		`UPDATE workspace_ssh_keys SET name = $1, committer_name = $2, committer_email = $3, private_key = $4, public_key = $5, updated_at = $6 WHERE id = $7`,
+		`UPDATE workspace_ssh_keys SET name = $1, committer_name = $2, committer_email = $3, private_key = $4, public_key = $5, passphrase = $6, updated_at = $7 WHERE id = $8`,
 		k.Name,
 		k.CommitterName,
 		k.CommitterEmail,
 		k.PrivateKey,
 		k.PublicKey,
+		k.Passphrase,
 		time.Now().UTC(),
 		k.ID.String(),
 	)
@@ -260,7 +268,7 @@ func (x *workspaceSSHKeyRepoPostgres) Delete(id ID) error {
 
 func (x *workspaceSSHKeyRepoPostgres) ListByWorkspaceID(workspaceID ID, limit, offset int) ([]*WorkspaceSSHKey, error) {
 	rows, err := x.db.Query(
-		`SELECT id, workspace_id, name, committer_name, committer_email, private_key, public_key, created_at, updated_at
+		`SELECT id, workspace_id, name, committer_name, committer_email, private_key, public_key, passphrase, created_at, updated_at
 		FROM workspace_ssh_keys WHERE workspace_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
 		workspaceID.String(),
 		limit,

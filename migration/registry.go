@@ -96,9 +96,9 @@ func GetAll() []Migration {
 		},
 		{
 			Version:     "20250101000013a",
-			Description: "Create workspace_git_credentials table",
-			Up:          createWorkspaceGitCredentialsTable,
-			Down:        dropWorkspaceGitCredentialsTable,
+			Description: "Create workspace_credentials table",
+			Up:          createWorkspaceCredentialsTable,
+			Down:        dropWorkspaceCredentialsTable,
 		},
 		{
 			Version:     "20250101000014",
@@ -195,6 +195,12 @@ func GetAll() []Migration {
 			Description: "Create system_events_deliverables table",
 			Up:          createSystemEventsDeliverablesTable,
 			Down:        dropSystemEventsDeliverablesTable,
+		},
+		{
+			Version:     "20250101000032",
+			Description: "Create workspace_variable_groups table",
+			Up:          createWorkspaceVariableGroupsTable,
+			Down:        dropWorkspaceVariableGroupsTable,
 		},
 	}
 }
@@ -620,6 +626,7 @@ func createWorkspaceSSHKeysTable(db *sql.DB) error {
 			committer_email VARCHAR(100) NOT NULL,
 			private_key TEXT,
 			public_key TEXT,
+			passphrase VARCHAR(200) NULL,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
@@ -634,6 +641,7 @@ func createWorkspaceSSHKeysTable(db *sql.DB) error {
 			committer_email VARCHAR(100) NOT NULL,
 			private_key TEXT,
 			public_key TEXT,
+			passphrase VARCHAR(200) NULL,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
@@ -652,21 +660,22 @@ func dropWorkspaceSSHKeysTable(db *sql.DB) error {
 	return err
 }
 
-// createWorkspaceGitCredentialsTable creates the workspace_git_credentials table (Git credentials attached to workspaces)
-func createWorkspaceGitCredentialsTable(db *sql.DB) error {
+// createWorkspaceCredentialsTable creates the workspace_credentials table (git or user/password credentials per workspace).
+func createWorkspaceCredentialsTable(db *sql.DB) error {
 	driver := detectDriver(db)
 	var query string
 
 	switch driver {
 	case "sqlite":
 		query = `
-		CREATE TABLE workspace_git_credentials (
+		CREATE TABLE workspace_credentials (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			workspace_id INTEGER NOT NULL,
 			name VARCHAR(100) NOT NULL,
-			committer_name VARCHAR(100) NOT NULL,
-			committer_email VARCHAR(100) NOT NULL,
-			username VARCHAR(100) NULL,
+			type VARCHAR(50) NOT NULL DEFAULT 'git',
+			committer_name VARCHAR(100),
+			committer_email VARCHAR(100),
+			username VARCHAR(100),
 			password_or_token TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -674,18 +683,20 @@ func createWorkspaceGitCredentialsTable(db *sql.DB) error {
 		)`
 	case "postgres":
 		query = `
-		CREATE TABLE workspace_git_credentials (
+		CREATE TABLE workspace_credentials (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
 			name VARCHAR(100) NOT NULL,
-			committer_name VARCHAR(100) NOT NULL,
-			committer_email VARCHAR(100) NOT NULL,
-			username VARCHAR(100) NULL,
+			type VARCHAR(50) NOT NULL DEFAULT 'git',
+			committer_name VARCHAR(100),
+			committer_email VARCHAR(100),
+			username VARCHAR(100),
 			password_or_token TEXT,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
-		CREATE INDEX idx_workspace_git_credentials_workspace_id ON workspace_git_credentials(workspace_id)`
+		CREATE INDEX idx_workspace_credentials_workspace_id ON workspace_credentials(workspace_id);
+		CREATE INDEX idx_workspace_credentials_type ON workspace_credentials(type)`
 	default:
 		return fmt.Errorf("unsupported database driver: %s", driver)
 	}
@@ -694,13 +705,13 @@ func createWorkspaceGitCredentialsTable(db *sql.DB) error {
 	return err
 }
 
-// dropWorkspaceGitCredentialsTable drops the workspace_git_credentials table.
-func dropWorkspaceGitCredentialsTable(db *sql.DB) error {
-	_, err := db.Exec("DROP TABLE IF EXISTS workspace_git_credentials")
+// dropWorkspaceCredentialsTable drops the workspace_credentials table.
+func dropWorkspaceCredentialsTable(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE IF EXISTS workspace_credentials")
 	return err
 }
 
-// createWorkspaceRepositoriesTable creates the workspace_repositories table (repos attached to workspaces; optional ssh_key_id, optional git_credentials_id)
+// createWorkspaceRepositoriesTable creates the workspace_repositories table
 func createWorkspaceRepositoriesTable(db *sql.DB) error {
 	driver := detectDriver(db)
 	var query string
@@ -716,12 +727,12 @@ func createWorkspaceRepositoriesTable(db *sql.DB) error {
 			git_branch VARCHAR(100) NULL,
 			git_tag VARCHAR(100) NULL,
 			ssh_key_id INTEGER NULL,
-			git_credentials_id INTEGER NULL,
+			credentials_id INTEGER NULL,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
 			FOREIGN KEY (ssh_key_id) REFERENCES workspace_ssh_keys(id) ON DELETE SET NULL,
-			FOREIGN KEY (git_credentials_id) REFERENCES workspace_git_credentials(id) ON DELETE SET NULL
+			FOREIGN KEY (credentials_id) REFERENCES workspace_credentials(id) ON DELETE SET NULL
 		)`
 	case "postgres":
 		query = `
@@ -733,13 +744,13 @@ func createWorkspaceRepositoriesTable(db *sql.DB) error {
 			git_branch VARCHAR(100) NULL,
 			git_tag VARCHAR(100) NULL,
 			ssh_key_id UUID NULL REFERENCES workspace_ssh_keys(id) ON DELETE SET NULL,
-			git_credentials_id UUID NULL REFERENCES workspace_git_credentials(id) ON DELETE SET NULL,
+			credentials_id UUID NULL REFERENCES workspace_credentials(id) ON DELETE SET NULL,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
 		CREATE INDEX idx_workspace_repositories_workspace_id ON workspace_repositories(workspace_id);
 		CREATE INDEX idx_workspace_repositories_ssh_key_id ON workspace_repositories(ssh_key_id);
-		CREATE INDEX idx_workspace_repositories_git_credentials_id ON workspace_repositories(git_credentials_id)`
+		CREATE INDEX idx_workspace_repositories_credentials_id ON workspace_repositories(credentials_id)`
 	default:
 		return fmt.Errorf("unsupported database driver: %s", driver)
 	}
@@ -1082,6 +1093,7 @@ func createWorkspaceInventoriesTable(db *sql.DB) error {
 			workspace_id INTEGER NOT NULL,
 			name VARCHAR(100) NOT NULL,
 			inventory TEXT,
+			inventory_path VARCHAR(512),
 			type VARCHAR(50) NOT NULL DEFAULT 'static',
 			ssh_key_id INTEGER NULL,
 			become_key_id INTEGER NULL,
@@ -1101,6 +1113,7 @@ func createWorkspaceInventoriesTable(db *sql.DB) error {
 			workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
 			name VARCHAR(100) NOT NULL,
 			inventory TEXT,
+			inventory_path VARCHAR(512),
 			type VARCHAR(50) NOT NULL DEFAULT 'static',
 			ssh_key_id UUID NULL REFERENCES workspace_ssh_keys(id) ON DELETE SET NULL,
 			become_key_id UUID NULL REFERENCES workspace_ssh_keys(id) ON DELETE SET NULL,
@@ -1122,6 +1135,53 @@ func createWorkspaceInventoriesTable(db *sql.DB) error {
 // dropWorkspaceInventoriesTable drops the workspace_inventories table.
 func dropWorkspaceInventoriesTable(db *sql.DB) error {
 	_, err := db.Exec("DROP TABLE IF EXISTS workspace_inventories")
+	return err
+}
+
+// createWorkspaceVariableGroupsTable creates the workspace_variable_groups table
+func createWorkspaceVariableGroupsTable(db *sql.DB) error {
+	driver := detectDriver(db)
+	var query string
+
+	switch driver {
+	case "sqlite":
+		query = `
+		CREATE TABLE workspace_variable_groups (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			workspace_id INTEGER NOT NULL,
+			name VARCHAR(100) NOT NULL,
+			extra_variables TEXT,
+			environment_variables TEXT,
+			secrets TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+		)`
+	case "postgres":
+		query = `
+		CREATE TABLE workspace_variable_groups (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+			name VARCHAR(100) NOT NULL,
+			extra_variables TEXT,
+			environment_variables TEXT,
+			secrets TEXT,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		);
+		CREATE INDEX idx_workspace_variable_groups_workspace_id ON workspace_variable_groups(workspace_id);
+		CREATE INDEX idx_workspace_variable_groups_name ON workspace_variable_groups(name)`
+	default:
+		return fmt.Errorf("unsupported database driver: %s", driver)
+	}
+
+	_, err := db.Exec(query)
+	return err
+}
+
+// dropWorkspaceVariableGroupsTable drops the workspace_variable_groups table.
+func dropWorkspaceVariableGroupsTable(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE IF EXISTS workspace_variable_groups")
 	return err
 }
 

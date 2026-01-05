@@ -108,8 +108,33 @@
               </tbody>
             </table>
           </div>
-          <div v-if="_meta?.total" class="px-6 py-4 border-t border-theme-border text-sm text-theme-textLight">
-            {{ _meta.total === 1 ? $t('backendsPage.countOne') : $t('backendsPage.countMany', { count: _meta.total }) }}
+          <div class="px-6 py-4 border-t border-theme-border flex flex-wrap items-center justify-between gap-3">
+            <div class="text-sm text-theme-textLight">
+              <template v-if="hasPagination">
+                {{ $t('backendsPage.showing', { from: showingFrom, to: showingTo, total: totalBackends }) }}
+              </template>
+              <template v-else-if="_meta?.total">
+                {{ _meta.total === 1 ? $t('backendsPage.countOne') : $t('backendsPage.countMany', { count: _meta.total }) }}
+              </template>
+            </div>
+            <div v-if="hasPagination" class="flex items-center gap-2">
+              <button
+                type="button"
+                @click="goToPage(offset - limit)"
+                :disabled="offset === 0"
+                class="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {{ $t('backendsPage.previous') }}
+              </button>
+              <button
+                type="button"
+                @click="goToPage(offset + limit)"
+                :disabled="offset + limit >= totalBackends"
+                class="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {{ $t('backendsPage.next') }}
+              </button>
+            </div>
           </div>
         </template>
       </section>
@@ -452,7 +477,7 @@ export TF_HTTP_PASSWORD="&lt;your-backend-password&gt;"</code></pre>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppNav from '@/components/AppNav.vue'
@@ -466,6 +491,8 @@ const workspace = ref(null)
 const backends = ref([])
 const _meta = ref(null)
 const loading = ref(true)
+const limit = ref(20)
+const offset = ref(0)
 const errorMessage = ref('')
 const successMessage = ref('')
 
@@ -493,7 +520,7 @@ const deletingId = ref(null)
 const usageModalBackend = ref(null)
 const backendBaseUrl = typeof window !== 'undefined' ? window.location.origin : ''
 
-// Secure random string: chars from charset, length len
+
 function secureRandom(charset, len) {
   const arr = new Uint8Array(len)
   crypto.getRandomValues(arr)
@@ -521,14 +548,20 @@ function setWorkspace() {
   }
 }
 
-async function loadBackends() {
+async function loadBackends(overrideOffset) {
   if (!workspace.value?.id) return
   loading.value = true
   errorMessage.value = ''
+  const off = overrideOffset !== undefined ? overrideOffset : offset.value
+
   try {
-    const res = await backendsAPI.list(workspace.value.id, { limit: 100, offset: 0 })
+    const res = await backendsAPI.list(
+      workspace.value.id,
+      { limit: limit.value, offset: off },
+    )
     backends.value = res.data?.backends ?? []
     _meta.value = res.data?._meta ?? null
+    offset.value = off
   } catch (err) {
     errorMessage.value = err.response?.data?.errorMessage || t('backendsPage.failedLoad')
     backends.value = []
@@ -537,8 +570,23 @@ async function loadBackends() {
   }
 }
 
+const totalBackends = computed(() => _meta.value?.total ?? 0)
+const showingFrom = computed(() => (totalBackends.value === 0 ? 0 : offset.value + 1))
+const showingTo = computed(() => Math.min(offset.value + backends.value.length, totalBackends.value))
+const hasPagination = computed(() => totalBackends.value > limit.value)
+
+function goToPage(newOffset) {
+  const maxOffset = Math.max(0, totalBackends.value - limit.value)
+  const off = Math.max(0, Math.min(newOffset, maxOffset))
+  loadBackends(off)
+}
+
 function openAddModal() {
-  addForm.value = { name: '', username: '', password: '' }
+  addForm.value = {
+    name: '',
+    username: '',
+    password: '',
+  }
   addShowPassword.value = false
   addModalOpen.value = true
 }
@@ -572,8 +620,12 @@ async function fetchRevealPassword() {
   if (!workspace.value?.id || !revealModalBackend.value?.id) return
   revealModalLoading.value = true
   revealModalError.value = ''
+
   try {
-    const res = await backendsAPI.revealPassword(workspace.value.id, revealModalBackend.value.id)
+    const res = await backendsAPI.revealPassword(
+      workspace.value.id,
+      revealModalBackend.value.id,
+    )
     const pwd = res.data?.password
     revealModalPassword.value = pwd != null ? pwd : ''
   } catch (err) {
@@ -593,16 +645,15 @@ async function copyToClipboard(text, field) {
 
 async function saveAddBackend() {
   if (!workspace.value?.id) return
-  const { name, username, password } = addForm.value
-  if (!name?.trim() || !username?.trim() || !password?.trim()) return
   addSaving.value = true
   errorMessage.value = ''
   successMessage.value = ''
+
   try {
     await backendsAPI.create(workspace.value.id, {
-      name: name.trim(),
-      username: username.trim(),
-      password: password.trim()
+      name: addForm.value.name.trim(),
+      username: addForm.value.username.trim(),
+      password: addForm.value.password.trim(),
     })
     successMessage.value = t('backendsPage.backendAdded')
     addModalOpen.value = false
@@ -616,18 +667,21 @@ async function saveAddBackend() {
 
 async function saveEditBackend() {
   if (!workspace.value?.id || !editingBackend.value?.id) return
-  const { name, username, password } = editForm.value
-  if (!name?.trim() || !username?.trim()) return
   editSaving.value = true
   errorMessage.value = ''
   successMessage.value = ''
+
   try {
     const payload = {
-      name: name.trim(),
-      username: username.trim(),
-      ...(password?.trim() && { password: password.trim() })
+      name: editForm.value.name.trim(),
+      username: editForm.value.username.trim(),
     }
-    await backendsAPI.update(workspace.value.id, editingBackend.value.id, payload)
+    if (editForm.value.password?.trim()) { payload.password = editForm.value.password.trim() }
+    await backendsAPI.update(
+      workspace.value.id,
+      editingBackend.value.id,
+      payload,
+    )
     successMessage.value = t('backendsPage.backendUpdated')
     editModalOpen.value = false
     await loadBackends()
@@ -651,6 +705,7 @@ async function confirmDelete() {
   if (!workspace.value?.id || !backend?.id) return
   deletingId.value = backend.id
   errorMessage.value = ''
+
   try {
     await backendsAPI.delete(workspace.value.id, backend.id)
     successMessage.value = t('backendsPage.backendDeleted')

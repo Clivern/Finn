@@ -26,6 +26,7 @@ type CreateWorkspaceSSHKeyRequest struct {
 	CommitterEmail string `json:"committerEmail" validate:"required,max=100" label:"Committer email"`
 	PrivateKey     string `json:"privateKey" validate:"required" label:"Private key"`
 	PublicKey      string `json:"publicKey" validate:"omitempty" label:"Public key"`
+	Passphrase     string `json:"passphrase" validate:"omitempty,max=200" label:"Passphrase"`
 }
 
 // UpdateWorkspaceSSHKeyRequest is the body for updating an SSH key.
@@ -35,6 +36,7 @@ type UpdateWorkspaceSSHKeyRequest struct {
 	CommitterEmail string `json:"committerEmail" validate:"required,max=100" label:"Committer email"`
 	PrivateKey     string `json:"privateKey" validate:"omitempty" label:"Private key"`
 	PublicKey      string `json:"publicKey" validate:"omitempty" label:"Public key"`
+	Passphrase     string `json:"passphrase" validate:"omitempty,max=200" label:"Passphrase"`
 }
 
 // CreateWorkspaceSSHKeyAction creates an SSH key in the workspace.
@@ -113,6 +115,7 @@ func CreateWorkspaceSSHKeyAction(w http.ResponseWriter, r *http.Request) {
 		CommitterName:  req.CommitterName,
 		CommitterEmail: req.CommitterEmail,
 		PrivateKey:     req.PrivateKey,
+		Passphrase:     req.Passphrase,
 	}
 	if req.PublicKey != "" {
 		key.PublicKey = &req.PublicKey
@@ -462,6 +465,7 @@ func UpdateWorkspaceSSHKeyAction(w http.ResponseWriter, r *http.Request) {
 	if req.PublicKey != "" {
 		key.PublicKey = &req.PublicKey
 	}
+	key.Passphrase = req.Passphrase
 
 	if err := repo.Update(key); err != nil {
 		log.Error().

@@ -35,11 +35,11 @@ const (
 	CanUpdateWorkspaceSSHKey = "CAN_UPDATE_WORKSPACE_SSH_KEY"
 	CanDeleteWorkspaceSSHKey = "CAN_DELETE_WORKSPACE_SSH_KEY"
 
-	CanGetWorkspaceGitCreds   = "CAN_GET_WORKSPACE_GIT_CREDS"
-	CanAddWorkspaceGitCred    = "CAN_ADD_WORKSPACE_GIT_CRED"
-	CanGetWorkspaceGitCred    = "CAN_GET_WORKSPACE_GIT_CRED"
-	CanUpdateWorkspaceGitCred = "CAN_UPDATE_WORKSPACE_GIT_CRED"
-	CanDeleteWorkspaceGitCred = "CAN_DELETE_WORKSPACE_GIT_CRED"
+	CanGetWorkspaceCreds   = "CAN_GET_WORKSPACE_CREDS"
+	CanAddWorkspaceCred    = "CAN_ADD_WORKSPACE_CRED"
+	CanGetWorkspaceCred    = "CAN_GET_WORKSPACE_CRED"
+	CanUpdateWorkspaceCred = "CAN_UPDATE_WORKSPACE_CRED"
+	CanDeleteWorkspaceCred = "CAN_DELETE_WORKSPACE_CRED"
 
 	CanGetWorkspaceBackends   = "CAN_GET_WORKSPACE_BACKENDS"
 	CanAddWorkspaceBackend    = "CAN_ADD_WORKSPACE_BACKEND"
@@ -54,7 +54,7 @@ type Permission struct {
 	WorkspaceRepository        db.WorkspaceRepository
 	WorkspaceRepoRepository    db.WorkspaceRepoRepository
 	WorkspaceSSHKeyRepository  db.WorkspaceSSHKeyRepository
-	WorkspaceGitCredRepository db.WorkspaceGitCredRepository
+	WorkspaceCredRepository db.WorkspaceCredRepository
 	WorkspaceBackendRepository db.WorkspaceBackendRepository
 }
 
@@ -65,7 +65,7 @@ func NewPermission(dbConn *sql.DB) *Permission {
 		WorkspaceRepository:        db.NewWorkspaceRepository(dbConn),
 		WorkspaceRepoRepository:    db.NewWorkspaceRepoRepository(dbConn),
 		WorkspaceSSHKeyRepository:  db.NewWorkspaceSSHKeyRepository(dbConn),
-		WorkspaceGitCredRepository: db.NewWorkspaceGitCredRepository(dbConn),
+		WorkspaceCredRepository: db.NewWorkspaceCredRepository(dbConn),
 		WorkspaceBackendRepository: db.NewWorkspaceBackendRepository(dbConn),
 	}
 }
@@ -166,13 +166,13 @@ func (p *Permission) CheckWorkspaceSSHKeyPermission(user *db.User, workspaceSSHK
 	}
 }
 
-// CheckWorkspaceGitCredPermission checks if the user has the given permission on the workspace Git credential.
-func (p *Permission) CheckWorkspaceGitCredPermission(user *db.User, workspaceGitCred *db.WorkspaceGitCred, permission string) (bool, error) {
+// CheckWorkspaceCredPermission checks if the user has the given permission on the workspace credential.
+func (p *Permission) CheckWorkspaceCredPermission(user *db.User, cred *db.WorkspaceCred, permission string) (bool, error) {
 	if user.Role == db.UserRoleAdmin {
 		return true, nil
 	}
 
-	membership, err := p.WorkspaceRepository.GetWorkspaceMembership(workspaceGitCred.WorkspaceID, user.ID)
+	membership, err := p.WorkspaceRepository.GetWorkspaceMembership(cred.WorkspaceID, user.ID)
 	if err != nil {
 		return false, err
 	}
@@ -181,9 +181,9 @@ func (p *Permission) CheckWorkspaceGitCredPermission(user *db.User, workspaceGit
 	}
 
 	switch permission {
-	case CanGetWorkspaceGitCred, CanGetWorkspaceGitCreds:
+	case CanGetWorkspaceCred, CanGetWorkspaceCreds:
 		return true, nil
-	case CanUpdateWorkspaceGitCred, CanDeleteWorkspaceGitCred, CanAddWorkspaceGitCred:
+	case CanUpdateWorkspaceCred, CanDeleteWorkspaceCred, CanAddWorkspaceCred:
 		return membership.Role == db.UserRoleAdmin || membership.Role == db.UserRoleOwner, nil
 	default:
 		return false, nil

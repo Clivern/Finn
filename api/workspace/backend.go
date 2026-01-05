@@ -27,7 +27,6 @@ import (
 // CreateWorkspaceBackendRequest is the body for creating a backend.
 type CreateWorkspaceBackendRequest struct {
 	Name     string `json:"name" validate:"required,max=255" label:"Name"`
-	Slug     string `json:"slug" validate:"omitempty,max=255" label:"Slug"`
 	Username string `json:"username" validate:"required,max=255" label:"Username"`
 	Password string `json:"password" validate:"required,max=255" label:"Password"`
 }
@@ -35,7 +34,6 @@ type CreateWorkspaceBackendRequest struct {
 // UpdateWorkspaceBackendRequest is the body for updating a backend.
 type UpdateWorkspaceBackendRequest struct {
 	Name     string `json:"name" validate:"required,max=255" label:"Name"`
-	Slug     string `json:"slug" validate:"omitempty,max=255" label:"Slug"`
 	Username string `json:"username" validate:"required,max=255" label:"Username"`
 	Password string `json:"password" validate:"omitempty,max=255" label:"Password"`
 }
@@ -271,7 +269,7 @@ func ListWorkspaceBackendsAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	repo := db.NewWorkspaceBackendRepository(db.GetDB())
-	list, err := repo.ListByWorkspaceID(workspace.ID, limit, offset)
+	result, err := repo.ListByWorkspaceID(workspace.ID, limit, offset)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -286,9 +284,9 @@ func ListWorkspaceBackendsAction(w http.ResponseWriter, r *http.Request) {
 
 	lockRepo := db.NewWorkspaceBackendLockRepository(db.GetDB())
 	total, _ := repo.CountByWorkspaceID(workspace.ID)
-	items := make([]map[string]interface{}, 0, len(list))
-	for _, b := range list {
-		items = append(items, map[string]interface{}{
+	backends := make([]map[string]interface{}, 0, len(result))
+	for _, b := range result {
+		backends = append(backends, map[string]interface{}{
 			"id":        b.ID,
 			"name":      b.Name,
 			"slug":      b.Slug,
@@ -298,8 +296,9 @@ func ListWorkspaceBackendsAction(w http.ResponseWriter, r *http.Request) {
 			"updatedAt": b.UpdatedAt.UTC().Format(time.RFC3339),
 		})
 	}
+
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"backends": items,
+		"backends": backends,
 		"_meta": map[string]interface{}{
 			"limit":  limit,
 			"offset": offset,
@@ -378,7 +377,11 @@ func GetWorkspaceBackendAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	permModule := module.NewPermission(db.GetDB())
-	allowed, err := permModule.CheckWorkspaceBackendPermission(user, backend, module.CanGetWorkspaceBackend)
+	allowed, err := permModule.CheckWorkspaceBackendPermission(
+		user,
+		backend,
+		module.CanGetWorkspaceBackend,
+	)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -480,7 +483,11 @@ func RevealWorkspaceBackendPasswordAction(w http.ResponseWriter, r *http.Request
 	}
 
 	permModule := module.NewPermission(db.GetDB())
-	allowed, err := permModule.CheckWorkspaceBackendPermission(user, backend, module.CanGetWorkspaceBackend)
+	allowed, err := permModule.CheckWorkspaceBackendPermission(
+		user,
+		backend,
+		module.CanGetWorkspaceBackend,
+	)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -569,7 +576,11 @@ func UpdateWorkspaceBackendAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	permModule := module.NewPermission(db.GetDB())
-	allowed, err := permModule.CheckWorkspaceBackendPermission(user, backend, module.CanUpdateWorkspaceBackend)
+	allowed, err := permModule.CheckWorkspaceBackendPermission(
+		user,
+		backend,
+		module.CanUpdateWorkspaceBackend,
+	)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -678,7 +689,11 @@ func DeleteWorkspaceBackendAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	permModule := module.NewPermission(db.GetDB())
-	allowed, err := permModule.CheckWorkspaceBackendPermission(user, backend, module.CanDeleteWorkspaceBackend)
+	allowed, err := permModule.CheckWorkspaceBackendPermission(
+		user,
+		backend,
+		module.CanDeleteWorkspaceBackend,
+	)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -758,6 +773,7 @@ func getBackendBySlugAndBasicAuth(w http.ResponseWriter, r *http.Request) *db.Wo
 		})
 		return nil
 	}
+
 	return backend
 }
 
@@ -769,6 +785,7 @@ func CreateBackendStateAction(w http.ResponseWriter, r *http.Request) {
 	if backend == nil {
 		return
 	}
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
@@ -776,6 +793,7 @@ func CreateBackendStateAction(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
 	checksum := r.Header.Get("Content-MD5")
 	if checksum == "" && len(body) > 0 {
 		hash := md5.Sum(body)

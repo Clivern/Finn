@@ -70,6 +70,15 @@ msgstr "Failed to create API key"
 msgid "failedCreateGitCredentials"
 msgstr "Failed to create git credentials"
 
+msgid "invalidCredentialType"
+msgstr "Invalid credential type; use git, credential, or none"
+
+msgid "gitCredentialRequiresCommitterAndUsernamePassword"
+msgstr "Git credential requires committer name, committer email, username, and password"
+
+msgid "credentialTypeRequiresUsernamePassword"
+msgstr "Credential type requires username and password"
+
 msgid "failedCreateInvite"
 msgstr "Failed to create invite"
 

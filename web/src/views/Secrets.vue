@@ -68,11 +68,11 @@
         </template>
       </section>
 
-      <!-- Git credentials section -->
-      <section class="rounded-xl border border-theme-border bg-white shadow-sm overflow-hidden" :aria-label="$t('secretsPage.gitCredentials')">
+      <!-- Credentials section -->
+      <section class="rounded-xl border border-theme-border bg-white shadow-sm overflow-hidden" :aria-label="$t('secretsPage.credentials')">
         <div class="px-6 py-4 border-b border-theme-border flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 class="text-lg font-semibold text-theme-text">{{ $t('secretsPage.gitCredentials') }}</h2>
+            <h2 class="text-lg font-semibold text-theme-text">{{ $t('secretsPage.credentials') }}</h2>
             <p class="text-sm text-theme-textLight mt-0.5">{{ $t('secretsPage.gitCredentialsDescription') }}</p>
           </div>
           <button
@@ -83,7 +83,7 @@
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
-            {{ $t('secretsPage.addGitCredentials') }}
+            {{ $t('secretsPage.addCredential') }}
           </button>
         </div>
         <div v-if="credsLoading" class="p-8 text-center text-theme-textLight text-sm">{{ $t('secretsPage.loadingCreds') }}</div>
@@ -94,6 +94,7 @@
               <thead class="bg-theme-hover">
                 <tr>
                   <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">{{ $t('secretsPage.name') }}</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">{{ $t('secretsPage.credType') }}</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">{{ $t('secretsPage.committerUsername') }}</th>
                   <th class="px-6 py-3 text-right text-xs font-medium text-theme-textLight uppercase tracking-wider">{{ $t('secretsPage.actions') }}</th>
                 </tr>
@@ -103,10 +104,19 @@
                   <td class="px-6 py-4 whitespace-nowrap">
                     <p class="text-sm font-medium text-theme-text">{{ c.name }}</p>
                   </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="text-sm text-theme-textLight">{{ credTypeLabel(c.type) }}</span>
+                  </td>
                   <td class="px-6 py-4">
                     <p class="text-sm text-theme-textLight">
-                      {{ c.committerName }} &lt;{{ c.committerEmail }}&gt;
-                      <span v-if="c.username" class="block text-xs mt-0.5">{{ $t('secretsPage.user') }}: {{ c.username }}</span>
+                      <template v-if="c.type === 'git'">
+                        {{ c.committerName || '—' }} &lt;{{ c.committerEmail || '—' }}&gt;
+                        <span v-if="c.username" class="block text-xs mt-0.5">{{ $t('secretsPage.user') }}: {{ c.username }}</span>
+                      </template>
+                      <template v-else-if="c.type === 'credential'">
+                        {{ $t('secretsPage.user') }}: {{ c.username || '—' }}
+                      </template>
+                      <template v-else>—</template>
                     </p>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
@@ -162,6 +172,17 @@
                 <label for="add-key-publicKey" class="form-label">{{ $t('secretsPage.publicKeyPlaceholder') }}</label>
                 <input id="add-key-publicKey" v-model="keyForm.publicKey" type="text" class="input-field font-mono text-sm" placeholder="ssh-rsa AAAA..." />
               </div>
+              <div>
+                <label for="add-key-passphrase" class="form-label">{{ $t('secretsPage.passphrase') }}</label>
+                <input
+                  id="add-key-passphrase"
+                  v-model="keyForm.passphrase"
+                  type="password"
+                  autocomplete="off"
+                  class="input-field"
+                  :placeholder="$t('secretsPage.passphraseOptional')"
+                />
+              </div>
               <div class="flex gap-3 justify-end pt-2">
                 <button type="button" @click="showAddKeyModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
                 <button type="submit" :disabled="keyFormSaving" class="btn-primary">
@@ -214,6 +235,17 @@
                 <label for="edit-key-publicKey" class="form-label">{{ $t('secretsPage.publicKeyOptional') }}</label>
                 <input id="edit-key-publicKey" v-model="keyForm.publicKey" type="text" class="input-field font-mono text-sm" placeholder="ssh-rsa AAAA..." />
               </div>
+              <div>
+                <label for="edit-key-passphrase" class="form-label">{{ $t('secretsPage.passphrase') }} {{ $t('secretsPage.passphraseLeaveBlank') }}</label>
+                <input
+                  id="edit-key-passphrase"
+                  v-model="keyForm.passphrase"
+                  type="password"
+                  autocomplete="off"
+                  class="input-field"
+                  :placeholder="$t('secretsPage.passphraseOptional')"
+                />
+              </div>
               <div class="flex gap-3 justify-end pt-2">
                 <button type="button" @click="showEditKeyModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
                 <button type="submit" :disabled="keyFormSaving" class="btn-primary">
@@ -253,7 +285,7 @@
       </Transition>
     </Teleport>
 
-    <!-- Git credential Add modal -->
+    <!-- Credential Add modal -->
     <Teleport to="body">
       <Transition name="modal">
         <div
@@ -272,29 +304,41 @@
                 <input id="add-cred-name" v-model="credForm.name" type="text" required maxlength="100" class="input-field" placeholder="e.g. GitHub token" />
               </div>
               <div>
-                <label for="add-cred-committerName" class="form-label">{{ $t('secretsPage.committerName') }}</label>
-                <input id="add-cred-committerName" v-model="credForm.committerName" type="text" required maxlength="100" class="input-field" placeholder="Your Name" />
+                <label for="add-cred-type" class="form-label">{{ $t('secretsPage.credType') }}</label>
+                <select id="add-cred-type" v-model="credForm.type" class="input-field">
+                  <option value="git">{{ $t('secretsPage.credTypeGit') }}</option>
+                  <option value="credential">{{ $t('secretsPage.credTypeCredential') }}</option>
+                  <option value="none">{{ $t('secretsPage.credTypeNone') }}</option>
+                </select>
               </div>
-              <div>
-                <label for="add-cred-committerEmail" class="form-label">{{ $t('secretsPage.committerEmail') }}</label>
-                <input id="add-cred-committerEmail" v-model="credForm.committerEmail" type="email" required maxlength="100" class="input-field" placeholder="you@example.com" />
-              </div>
-              <div>
-                <label for="add-cred-username" class="form-label">{{ $t('secretsPage.username') }}</label>
-                <input id="add-cred-username" v-model="credForm.username" type="text" maxlength="100" class="input-field" placeholder="git or your username" required />
-              </div>
-              <div>
-                <label for="add-cred-passwordOrToken" class="form-label">{{ $t('secretsPage.passwordOrToken') }}</label>
-                <input
-                  id="add-cred-passwordOrToken"
-                  v-model="credForm.passwordOrToken"
-                  type="password"
-                  required
-                  autocomplete="off"
-                  class="input-field"
-                  placeholder="••••••••"
-                />
-              </div>
+              <template v-if="credForm.type === 'git'">
+                <div>
+                  <label for="add-cred-committerName" class="form-label">{{ $t('secretsPage.committerName') }}</label>
+                  <input id="add-cred-committerName" v-model="credForm.committerName" type="text" required maxlength="100" class="input-field" placeholder="Your Name" />
+                </div>
+                <div>
+                  <label for="add-cred-committerEmail" class="form-label">{{ $t('secretsPage.committerEmail') }}</label>
+                  <input id="add-cred-committerEmail" v-model="credForm.committerEmail" type="email" required maxlength="100" class="input-field" placeholder="you@example.com" />
+                </div>
+              </template>
+              <template v-if="credForm.type === 'git' || credForm.type === 'credential'">
+                <div>
+                  <label for="add-cred-username" class="form-label">{{ $t('secretsPage.username') }}</label>
+                  <input id="add-cred-username" v-model="credForm.username" type="text" :required="credForm.type === 'git' || credForm.type === 'credential'" maxlength="100" class="input-field" placeholder="git or your username" />
+                </div>
+                <div>
+                  <label for="add-cred-passwordOrToken" class="form-label">{{ $t('secretsPage.passwordOrToken') }}</label>
+                  <input
+                    id="add-cred-passwordOrToken"
+                    v-model="credForm.passwordOrToken"
+                    type="password"
+                    :required="credForm.type === 'git' || credForm.type === 'credential'"
+                    autocomplete="off"
+                    class="input-field"
+                    placeholder="••••••••"
+                  />
+                </div>
+              </template>
               <div class="flex gap-3 justify-end pt-2">
                 <button type="button" @click="showAddCredModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
                 <button type="submit" :disabled="credFormSaving" class="btn-primary">
@@ -307,7 +351,7 @@
       </Transition>
     </Teleport>
 
-    <!-- Git credential Edit modal -->
+    <!-- Credential Edit modal -->
     <Teleport to="body">
       <Transition name="modal">
         <div
@@ -326,28 +370,40 @@
                 <input id="edit-cred-name" v-model="credForm.name" type="text" required maxlength="100" class="input-field" placeholder="e.g. GitHub token" />
               </div>
               <div>
-                <label for="edit-cred-committerName" class="form-label">{{ $t('secretsPage.committerName') }}</label>
-                <input id="edit-cred-committerName" v-model="credForm.committerName" type="text" required maxlength="100" class="input-field" placeholder="Your Name" />
+                <label for="edit-cred-type" class="form-label">{{ $t('secretsPage.credType') }}</label>
+                <select id="edit-cred-type" v-model="credForm.type" class="input-field">
+                  <option value="git">{{ $t('secretsPage.credTypeGit') }}</option>
+                  <option value="credential">{{ $t('secretsPage.credTypeCredential') }}</option>
+                  <option value="none">{{ $t('secretsPage.credTypeNone') }}</option>
+                </select>
               </div>
-              <div>
-                <label for="edit-cred-committerEmail" class="form-label">{{ $t('secretsPage.committerEmail') }}</label>
-                <input id="edit-cred-committerEmail" v-model="credForm.committerEmail" type="email" required maxlength="100" class="input-field" placeholder="you@example.com" />
-              </div>
-              <div>
-                <label for="edit-cred-username" class="form-label">{{ $t('secretsPage.username') }}</label>
-                <input id="edit-cred-username" v-model="credForm.username" type="text" maxlength="100" class="input-field" placeholder="git or your username" required />
-              </div>
-              <div>
-                <label for="edit-cred-passwordOrToken" class="form-label">{{ $t('secretsPage.passwordOrToken') }} {{ $t('secretsPage.passwordLeaveBlank') }}</label>
-                <input
-                  id="edit-cred-passwordOrToken"
-                  v-model="credForm.passwordOrToken"
-                  type="password"
-                  autocomplete="off"
-                  class="input-field"
-                  placeholder="••••••••"
-                />
-              </div>
+              <template v-if="credForm.type === 'git'">
+                <div>
+                  <label for="edit-cred-committerName" class="form-label">{{ $t('secretsPage.committerName') }}</label>
+                  <input id="edit-cred-committerName" v-model="credForm.committerName" type="text" required maxlength="100" class="input-field" placeholder="Your Name" />
+                </div>
+                <div>
+                  <label for="edit-cred-committerEmail" class="form-label">{{ $t('secretsPage.committerEmail') }}</label>
+                  <input id="edit-cred-committerEmail" v-model="credForm.committerEmail" type="email" required maxlength="100" class="input-field" placeholder="you@example.com" />
+                </div>
+              </template>
+              <template v-if="credForm.type === 'git' || credForm.type === 'credential'">
+                <div>
+                  <label for="edit-cred-username" class="form-label">{{ $t('secretsPage.username') }}</label>
+                  <input id="edit-cred-username" v-model="credForm.username" type="text" :required="credForm.type === 'git' || credForm.type === 'credential'" maxlength="100" class="input-field" placeholder="git or your username" />
+                </div>
+                <div>
+                  <label for="edit-cred-passwordOrToken" class="form-label">{{ $t('secretsPage.passwordOrToken') }} {{ $t('secretsPage.passwordLeaveBlank') }}</label>
+                  <input
+                    id="edit-cred-passwordOrToken"
+                    v-model="credForm.passwordOrToken"
+                    type="password"
+                    autocomplete="off"
+                    class="input-field"
+                    placeholder="••••••••"
+                  />
+                </div>
+              </template>
               <div class="flex gap-3 justify-end pt-2">
                 <button type="button" @click="showEditCredModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
                 <button type="submit" :disabled="credFormSaving" class="btn-primary">
@@ -417,7 +473,8 @@ const keyForm = ref({
   committerName: '',
   committerEmail: '',
   privateKey: '',
-  publicKey: ''
+  publicKey: '',
+  passphrase: ''
 })
 const deleteKeyModal = ref(null)
 const deletingKeyId = ref(null)
@@ -427,6 +484,7 @@ const showEditCredModal = ref(false)
 const credFormSaving = ref(false)
 const editingCred = ref(null)
 const credForm = ref({
+  type: 'git',
   name: '',
   committerName: '',
   committerEmail: '',
@@ -478,7 +536,8 @@ function openAddKeyModal() {
     committerName: '',
     committerEmail: '',
     privateKey: '',
-    publicKey: ''
+    publicKey: '',
+    passphrase: ''
   }
   showAddKeyModal.value = true
   showEditKeyModal.value = false
@@ -491,7 +550,8 @@ function openEditKeyModal(k) {
     committerName: k.committerName,
     committerEmail: k.committerEmail,
     privateKey: '',
-    publicKey: k.publicKey ?? ''
+    publicKey: k.publicKey ?? '',
+    passphrase: ''
   }
   showEditKeyModal.value = true
   showAddKeyModal.value = false
@@ -510,6 +570,7 @@ async function handleCreateKey() {
     }
     if (keyForm.value.privateKey?.trim()) { payload.privateKey = keyForm.value.privateKey.trim() }
     if (keyForm.value.publicKey?.trim()) { payload.publicKey = keyForm.value.publicKey.trim() }
+    if (keyForm.value.passphrase?.trim()) { payload.passphrase = keyForm.value.passphrase.trim() }
     await sshKeysAPI.create(workspace.value.id, payload)
     successMessage.value = t('secretsPage.sshKeyAdded')
     showAddKeyModal.value = false
@@ -534,6 +595,7 @@ async function handleUpdateKey() {
     }
     if (keyForm.value.privateKey?.trim()) { payload.privateKey = keyForm.value.privateKey.trim() }
     if (keyForm.value.publicKey?.trim()) { payload.publicKey = keyForm.value.publicKey.trim() }
+    if (keyForm.value.passphrase?.trim()) { payload.passphrase = keyForm.value.passphrase.trim() }
     await sshKeysAPI.update(workspace.value.id, editingKey.value.id, payload)
     successMessage.value = t('secretsPage.sshKeyUpdated')
     showEditKeyModal.value = false
@@ -569,9 +631,17 @@ async function confirmDeleteKey() {
   }
 }
 
+function credTypeLabel(type) {
+  if (type === 'git') return t('secretsPage.credTypeGit')
+  if (type === 'credential') return t('secretsPage.credTypeCredential')
+  if (type === 'none') return t('secretsPage.credTypeNone')
+  return type || '—'
+}
+
 function openAddCredModal() {
   editingCred.value = null
   credForm.value = {
+    type: 'git',
     name: '',
     committerName: '',
     committerEmail: '',
@@ -585,6 +655,7 @@ function openAddCredModal() {
 function openEditCredModal(c) {
   editingCred.value = c
   credForm.value = {
+    type: c.type || 'git',
     name: c.name,
     committerName: c.committerName ?? '',
     committerEmail: c.committerEmail ?? '',
@@ -601,13 +672,21 @@ async function handleCreateCred() {
   successMessage.value = ''
 
   try {
-    await credentialsAPI.create(workspace.value.id, {
-      name: credForm.value.name.trim(),
-      committerName: credForm.value.committerName.trim(),
-      committerEmail: credForm.value.committerEmail.trim(),
-      username: credForm.value.username.trim(),
-      passwordOrToken: credForm.value.passwordOrToken
-    })
+    const type = credForm.value.type || 'git'
+    const payload = {
+      type,
+      name: credForm.value.name.trim()
+    }
+    if (type === 'git') {
+      payload.committerName = credForm.value.committerName.trim()
+      payload.committerEmail = credForm.value.committerEmail.trim()
+      payload.username = credForm.value.username.trim()
+      payload.passwordOrToken = credForm.value.passwordOrToken
+    } else if (type === 'credential') {
+      payload.username = credForm.value.username.trim()
+      payload.passwordOrToken = credForm.value.passwordOrToken
+    }
+    await credentialsAPI.create(workspace.value.id, payload)
     successMessage.value = t('secretsPage.credAdded')
     showAddCredModal.value = false
     await loadCredentials()
@@ -624,11 +703,17 @@ async function handleUpdateCred() {
   successMessage.value = ''
 
   try {
+    const type = credForm.value.type || 'git'
     const payload = {
-      name: credForm.value.name.trim(),
-      committerName: credForm.value.committerName.trim(),
-      committerEmail: credForm.value.committerEmail.trim(),
-      username: credForm.value.username.trim()
+      type,
+      name: credForm.value.name.trim()
+    }
+    if (type === 'git') {
+      payload.committerName = credForm.value.committerName.trim()
+      payload.committerEmail = credForm.value.committerEmail.trim()
+      payload.username = credForm.value.username.trim()
+    } else if (type === 'credential') {
+      payload.username = credForm.value.username.trim()
     }
     if (credForm.value.passwordOrToken) payload.passwordOrToken = credForm.value.passwordOrToken
     await credentialsAPI.update(workspace.value.id, editingCred.value.id, payload)

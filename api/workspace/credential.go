@@ -19,31 +19,61 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// CreateWorkspaceGitCredRequest is the body for creating git credentials.
-type CreateWorkspaceGitCredRequest struct {
+// CreateWorkspaceCredRequest is the body for creating a workspace credential
+type CreateWorkspaceCredRequest struct {
+	Type            string `json:"type" validate:"required,oneof=git credential none,max=50" label:"Type"`
 	Name            string `json:"name" validate:"required,max=100" label:"Name"`
-	CommitterName   string `json:"committerName" validate:"required,max=100" label:"Committer name"`
-	CommitterEmail  string `json:"committerEmail" validate:"required,max=100" label:"Committer email"`
-	Username        string `json:"username" validate:"required,max=100" label:"Username"`
-	PasswordOrToken string `json:"passwordOrToken" validate:"required,max=100" label:"Password or token"`
+	CommitterName   string `json:"committerName" validate:"omitempty,max=100" label:"Committer name"`
+	CommitterEmail  string `json:"committerEmail" validate:"omitempty,max=100" label:"Committer email"`
+	Username        string `json:"username" validate:"omitempty,max=100" label:"Username"`
+	PasswordOrToken string `json:"passwordOrToken" validate:"omitempty,max=500" label:"Password or token"`
 }
 
-// UpdateWorkspaceGitCredRequest is the body for updating git credentials.
-type UpdateWorkspaceGitCredRequest struct {
+// UpdateWorkspaceCredRequest is the body for updating a workspace credential.
+type UpdateWorkspaceCredRequest struct {
+	Type            string `json:"type" validate:"required,oneof=git credential none,max=50" label:"Type"`
 	Name            string `json:"name" validate:"required,max=100" label:"Name"`
-	CommitterName   string `json:"committerName" validate:"required,max=100" label:"Committer name"`
-	CommitterEmail  string `json:"committerEmail" validate:"required,max=100" label:"Committer email"`
-	Username        string `json:"username" validate:"required,max=100" label:"Username"`
-	PasswordOrToken string `json:"passwordOrToken" validate:"omitempty,max=100" label:"Password or token"`
+	CommitterName   string `json:"committerName" validate:"omitempty,max=100" label:"Committer name"`
+	CommitterEmail  string `json:"committerEmail" validate:"omitempty,max=100" label:"Committer email"`
+	Username        string `json:"username" validate:"omitempty,max=100" label:"Username"`
+	PasswordOrToken string `json:"passwordOrToken" validate:"omitempty,max=500" label:"Password or token"`
 }
 
-// CreateWorkspaceGitCredAction creates git credentials in the workspace.
-func CreateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
-	log.Info().Msg("Create workspace git credential endpoint called")
+// CreateWorkspaceCredAction creates a credential in the workspace
+func CreateWorkspaceCredAction(w http.ResponseWriter, r *http.Request) {
+	log.Info().Msg("Create workspace credential endpoint called")
 
-	var req CreateWorkspaceGitCredRequest
+	var req CreateWorkspaceCredRequest
 	if err := util.DecodeAndValidate(r, &req); err != nil {
 		util.WriteValidationError(w, err)
+		return
+	}
+
+	credType := req.Type
+	if credType == "" {
+		credType = db.CredentialTypeGit
+	}
+	switch credType {
+	case db.CredentialTypeGit:
+		if req.CommitterName == "" || req.CommitterEmail == "" || req.Username == "" || req.PasswordOrToken == "" {
+			util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+				"errorMessage": locale.TR(r, "gitCredentialRequiresCommitterAndUsernamePassword"),
+			})
+			return
+		}
+	case db.CredentialTypeCredential:
+		if req.Username == "" || req.PasswordOrToken == "" {
+			util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+				"errorMessage": locale.TR(r, "credentialTypeRequiresUsernamePassword"),
+			})
+			return
+		}
+	case db.CredentialTypeNone:
+		// only name required
+	default:
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidCredentialType"),
+		})
 		return
 	}
 
@@ -84,10 +114,10 @@ func CreateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	permModule := module.NewPermission(db.GetDB())
-	allowed, err := permModule.CheckWorkspaceGitCredPermission(
+	allowed, err := permModule.CheckWorkspaceCredPermission(
 		user,
-		&db.WorkspaceGitCred{WorkspaceID: workspace.ID},
-		module.CanAddWorkspaceGitCred,
+		&db.WorkspaceCred{WorkspaceID: workspace.ID},
+		module.CanAddWorkspaceCred,
 	)
 	if err != nil {
 		log.Error().
@@ -107,22 +137,23 @@ func CreateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cred := &db.WorkspaceGitCred{
+	cred := &db.WorkspaceCred{
 		WorkspaceID:     workspace.ID,
 		Name:            req.Name,
+		Type:            credType,
 		CommitterName:   req.CommitterName,
 		CommitterEmail:  req.CommitterEmail,
 		Username:        req.Username,
 		PasswordOrToken: req.PasswordOrToken,
 	}
 
-	repo := db.NewWorkspaceGitCredRepository(db.GetDB())
+	repo := db.NewWorkspaceCredRepository(db.GetDB())
 	if err := repo.Create(cred); err != nil {
 		log.Error().
 			Err(err).
 			Str("workspaceID", workspaceIDStr).
 			Str("userID", user.ID.String()).
-			Msg("Failed to create workspace git credentials")
+			Msg("Failed to create workspace credential")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedCreateGitCredentials"),
 		})
@@ -133,6 +164,7 @@ func CreateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 		"id":             cred.ID,
 		"workspaceId":    cred.WorkspaceID,
 		"name":           cred.Name,
+		"type":           cred.Type,
 		"committerName":  cred.CommitterName,
 		"committerEmail": cred.CommitterEmail,
 		"username":       cred.Username,
@@ -141,9 +173,9 @@ func CreateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// ListWorkspaceGitCredsAction lists git credentials in the workspace.
-func ListWorkspaceGitCredsAction(w http.ResponseWriter, r *http.Request) {
-	log.Info().Msg("List workspace git credentials endpoint called")
+// ListWorkspaceCredsAction lists credentials in the workspace.
+func ListWorkspaceCredsAction(w http.ResponseWriter, r *http.Request) {
+	log.Info().Msg("List workspace credentials endpoint called")
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
@@ -182,10 +214,10 @@ func ListWorkspaceGitCredsAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	permModule := module.NewPermission(db.GetDB())
-	allowed, err := permModule.CheckWorkspaceGitCredPermission(
+	allowed, err := permModule.CheckWorkspaceCredPermission(
 		user,
-		&db.WorkspaceGitCred{WorkspaceID: workspace.ID},
-		module.CanGetWorkspaceGitCreds,
+		&db.WorkspaceCred{WorkspaceID: workspace.ID},
+		module.CanGetWorkspaceCreds,
 	)
 	if err != nil {
 		log.Error().
@@ -217,14 +249,14 @@ func ListWorkspaceGitCredsAction(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	repo := db.NewWorkspaceGitCredRepository(db.GetDB())
+	repo := db.NewWorkspaceCredRepository(db.GetDB())
 	result, err := repo.ListByWorkspaceID(workspace.ID, limit, offset)
 	if err != nil {
 		log.Error().
 			Err(err).
 			Str("workspaceID", workspaceIDStr).
 			Str("userID", user.ID.String()).
-			Msg("Failed to list workspace git credentials")
+			Msg("Failed to list workspace credentials")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedListGitCredentials"),
 		})
@@ -238,6 +270,7 @@ func ListWorkspaceGitCredsAction(w http.ResponseWriter, r *http.Request) {
 			"id":             c.ID,
 			"workspaceId":    c.WorkspaceID,
 			"name":           c.Name,
+			"type":           c.Type,
 			"committerName":  c.CommitterName,
 			"committerEmail": c.CommitterEmail,
 			"username":       c.Username,
@@ -256,9 +289,9 @@ func ListWorkspaceGitCredsAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetWorkspaceGitCredAction returns one git credential (secret never returned).
-func GetWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
-	log.Info().Msg("Get workspace git credential endpoint called")
+// GetWorkspaceCredAction returns one credential
+func GetWorkspaceCredAction(w http.ResponseWriter, r *http.Request) {
+	log.Info().Msg("Get workspace credential endpoint called")
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
@@ -304,15 +337,15 @@ func GetWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repo := db.NewWorkspaceGitCredRepository(db.GetDB())
+	repo := db.NewWorkspaceCredRepository(db.GetDB())
 	c, err := repo.GetByIDAndWorkspace(db.ID(idStr), workspace.ID)
 	if err != nil {
 		log.Error().
 			Err(err).
-			Str("gitCredID", idStr).
+			Str("credID", idStr).
 			Str("workspaceID", workspaceIDStr).
 			Str("userID", user.ID.String()).
-			Msg("Failed to get workspace git credentials")
+			Msg("Failed to get workspace credential")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedGetGitCredentials"),
 		})
@@ -326,15 +359,15 @@ func GetWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	permModule := module.NewPermission(db.GetDB())
-	allowed, err := permModule.CheckWorkspaceGitCredPermission(
+	allowed, err := permModule.CheckWorkspaceCredPermission(
 		user,
 		c,
-		module.CanGetWorkspaceGitCred,
+		module.CanGetWorkspaceCred,
 	)
 	if err != nil {
 		log.Error().
 			Err(err).
-			Str("gitCredID", idStr).
+			Str("credID", idStr).
 			Str("workspaceID", workspaceIDStr).
 			Str("userID", user.ID.String()).
 			Msg("Failed to check workspace permission")
@@ -354,6 +387,7 @@ func GetWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 		"id":             c.ID,
 		"workspaceId":    c.WorkspaceID,
 		"name":           c.Name,
+		"type":           c.Type,
 		"committerName":  c.CommitterName,
 		"committerEmail": c.CommitterEmail,
 		"username":       c.Username,
@@ -362,11 +396,11 @@ func GetWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// UpdateWorkspaceGitCredAction updates workspace git credentials.
-func UpdateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
-	log.Info().Msg("Update workspace git credential endpoint called")
+// UpdateWorkspaceCredAction updates a workspace credential.
+func UpdateWorkspaceCredAction(w http.ResponseWriter, r *http.Request) {
+	log.Info().Msg("Update workspace credential endpoint called")
 
-	var req UpdateWorkspaceGitCredRequest
+	var req UpdateWorkspaceCredRequest
 	if err := util.DecodeAndValidate(r, &req); err != nil {
 		util.WriteValidationError(w, err)
 		return
@@ -416,7 +450,7 @@ func UpdateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repo := db.NewWorkspaceGitCredRepository(db.GetDB())
+	repo := db.NewWorkspaceCredRepository(db.GetDB())
 	c, err := repo.GetByIDAndWorkspace(db.ID(idStr), workspace.ID)
 	if err != nil || c == nil {
 		util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
@@ -426,15 +460,15 @@ func UpdateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	permModule := module.NewPermission(db.GetDB())
-	allowed, err := permModule.CheckWorkspaceGitCredPermission(
+	allowed, err := permModule.CheckWorkspaceCredPermission(
 		user,
 		c,
-		module.CanUpdateWorkspaceGitCred,
+		module.CanUpdateWorkspaceCred,
 	)
 	if err != nil {
 		log.Error().
 			Err(err).
-			Str("gitCredID", idStr).
+			Str("credID", idStr).
 			Str("workspaceID", workspaceIDStr).
 			Str("userID", user.ID.String()).
 			Msg("Failed to check workspace permission")
@@ -450,6 +484,10 @@ func UpdateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	credType := req.Type
+	if credType != "" {
+		c.Type = credType
+	}
 	c.Name = req.Name
 	c.CommitterName = req.CommitterName
 	c.CommitterEmail = req.CommitterEmail
@@ -461,10 +499,10 @@ func UpdateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	if err := repo.Update(c); err != nil {
 		log.Error().
 			Err(err).
-			Str("gitCredID", idStr).
+			Str("credID", idStr).
 			Str("workspaceID", workspaceIDStr).
 			Str("userID", user.ID.String()).
-			Msg("Failed to update workspace git credentials")
+			Msg("Failed to update workspace credential")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedUpdateGitCredentials"),
 		})
@@ -475,6 +513,7 @@ func UpdateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 		"id":             c.ID,
 		"workspaceId":    c.WorkspaceID,
 		"name":           c.Name,
+		"type":           c.Type,
 		"committerName":  c.CommitterName,
 		"committerEmail": c.CommitterEmail,
 		"username":       c.Username,
@@ -483,9 +522,9 @@ func UpdateWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// DeleteWorkspaceGitCredAction deletes workspace git credentials.
-func DeleteWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
-	log.Info().Msg("Delete workspace git credential endpoint called")
+// DeleteWorkspaceCredAction deletes a workspace credential.
+func DeleteWorkspaceCredAction(w http.ResponseWriter, r *http.Request) {
+	log.Info().Msg("Delete workspace credential endpoint called")
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok || user == nil {
@@ -531,7 +570,7 @@ func DeleteWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repo := db.NewWorkspaceGitCredRepository(db.GetDB())
+	repo := db.NewWorkspaceCredRepository(db.GetDB())
 	c, err := repo.GetByIDAndWorkspace(db.ID(idStr), workspace.ID)
 	if err != nil || c == nil {
 		util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
@@ -541,15 +580,15 @@ func DeleteWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	permModule := module.NewPermission(db.GetDB())
-	allowed, err := permModule.CheckWorkspaceGitCredPermission(
+	allowed, err := permModule.CheckWorkspaceCredPermission(
 		user,
 		c,
-		module.CanDeleteWorkspaceGitCred,
+		module.CanDeleteWorkspaceCred,
 	)
 	if err != nil {
 		log.Error().
 			Err(err).
-			Str("gitCredID", idStr).
+			Str("credID", idStr).
 			Str("workspaceID", workspaceIDStr).
 			Str("userID", user.ID.String()).
 			Msg("Failed to check workspace permission")
@@ -568,10 +607,10 @@ func DeleteWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	if err := repo.Delete(c.ID); err != nil {
 		log.Error().
 			Err(err).
-			Str("gitCredID", idStr).
+			Str("credID", idStr).
 			Str("workspaceID", workspaceIDStr).
 			Str("userID", user.ID.String()).
-			Msg("Failed to delete workspace git credentials")
+			Msg("Failed to delete workspace credential")
 		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
 			"errorMessage": locale.TR(r, "failedDeleteGitCredentials"),
 		})
@@ -579,9 +618,9 @@ func DeleteWorkspaceGitCredAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Info().
-		Str("gitCredID", idStr).
+		Str("credID", idStr).
 		Str("workspaceID", workspaceIDStr).
 		Str("userID", user.ID.String()).
-		Msg("Git credentials deleted successfully")
+		Msg("Credential deleted successfully")
 	util.WriteJSON(w, http.StatusNoContent, map[string]interface{}{})
 }

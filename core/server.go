@@ -147,11 +147,11 @@ func SetupServer(Static embed.FS) http.Handler {
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))
-		r.Post("/api/v1/workspaces/{workspaceID}/credentials", apiw.CreateWorkspaceGitCredAction)
-		r.Get("/api/v1/workspaces/{workspaceID}/credentials", apiw.ListWorkspaceGitCredsAction)
-		r.Get("/api/v1/workspaces/{workspaceID}/credentials/{id}", apiw.GetWorkspaceGitCredAction)
-		r.Put("/api/v1/workspaces/{workspaceID}/credentials/{id}", apiw.UpdateWorkspaceGitCredAction)
-		r.Delete("/api/v1/workspaces/{workspaceID}/credentials/{id}", apiw.DeleteWorkspaceGitCredAction)
+		r.Post("/api/v1/workspaces/{workspaceID}/credentials", apiw.CreateWorkspaceCredAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/credentials", apiw.ListWorkspaceCredsAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/credentials/{id}", apiw.GetWorkspaceCredAction)
+		r.Put("/api/v1/workspaces/{workspaceID}/credentials/{id}", apiw.UpdateWorkspaceCredAction)
+		r.Delete("/api/v1/workspaces/{workspaceID}/credentials/{id}", apiw.DeleteWorkspaceCredAction)
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))

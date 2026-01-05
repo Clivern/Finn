@@ -19,7 +19,7 @@ import (
 type Async struct {
 	Runners  db.RunnerRepository
 	Repos    db.WorkspaceRepoRepository
-	GitCreds db.WorkspaceGitCredRepository
+	Creds db.WorkspaceCredRepository
 	SSHKeys  db.WorkspaceSSHKeyRepository
 }
 
@@ -27,13 +27,13 @@ type Async struct {
 func NewAsync(
 	runners db.RunnerRepository,
 	repos db.WorkspaceRepoRepository,
-	gitCreds db.WorkspaceGitCredRepository,
+	creds db.WorkspaceCredRepository,
 	sshKeys db.WorkspaceSSHKeyRepository,
 ) *Async {
 	return &Async{
 		Runners:  runners,
 		Repos:    repos,
-		GitCreds: gitCreds,
+		Creds: creds,
 		SSHKeys:  sshKeys,
 	}
 }
@@ -79,7 +79,7 @@ func (a *Async) Clone(ctx context.Context, repo *db.WorkspaceRepo, run *db.Runne
 	}
 
 	if repo.GitCredentialsID != nil {
-		if cred, err := a.GitCreds.GetByIDAndWorkspace(*repo.GitCredentialsID, repo.WorkspaceID); err == nil {
+		if cred, err := a.Creds.GetByIDAndWorkspace(*repo.GitCredentialsID, repo.WorkspaceID); err == nil {
 			payload["username"] = cred.Username
 			payload["password"] = cred.PasswordOrToken
 		}
@@ -87,6 +87,9 @@ func (a *Async) Clone(ctx context.Context, repo *db.WorkspaceRepo, run *db.Runne
 	if repo.SSHKeyID != nil {
 		if key, err := a.SSHKeys.GetByIDAndWorkspace(*repo.SSHKeyID, repo.WorkspaceID); err == nil {
 			payload["ssh_private_key"] = key.PrivateKey
+			if key.Passphrase != "" {
+				payload["ssh_passphrase"] = key.Passphrase
+			}
 		}
 	}
 

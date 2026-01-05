@@ -736,7 +736,7 @@ func CloneWorkspaceRepositoryAction(w http.ResponseWriter, r *http.Request) {
 	async := mgmt.NewAsync(
 		db.NewRunnerRepository(db.GetDB()),
 		repoDB,
-		db.NewWorkspaceGitCredRepository(db.GetDB()),
+		db.NewWorkspaceCredRepository(db.GetDB()),
 		db.NewWorkspaceSSHKeyRepository(db.GetDB()),
 	)
 	runner, err := async.GetActiveRunner(r.Context())

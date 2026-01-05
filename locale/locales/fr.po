@@ -64,6 +64,15 @@ msgstr "Échec de la création de la clé API"
 msgid "failedCreateGitCredentials"
 msgstr "Échec de la création des identifiants git"
 
+msgid "invalidCredentialType"
+msgstr "Type d'identifiant invalide ; utiliser git, credential ou none"
+
+msgid "gitCredentialRequiresCommitterAndUsernamePassword"
+msgstr "Un identifiant git requiert le nom du committer, l'e-mail du committer, le nom d'utilisateur et le mot de passe"
+
+msgid "credentialTypeRequiresUsernamePassword"
+msgstr "Le type credential requiert un nom d'utilisateur et un mot de passe"
+
 msgid "failedCreateInvite"
 msgstr "Échec de la création de l'invitation"
 

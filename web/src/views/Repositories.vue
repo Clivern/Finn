@@ -370,21 +370,27 @@
             <div class="px-6 py-4 overflow-y-auto flex-1 space-y-4">
               <div v-if="cloneTaskLoadError" class="text-sm text-red-600">{{ cloneTaskLoadError }}</div>
               <template v-else-if="cloneTaskData">
-                <div class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
-                  <span class="text-theme-textLight">{{ $t('repositoriesPage.cloneTaskStatus') }}:</span>
-                  <span
-                    :class="[
-                      'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
-                      cloneTaskData.status === 'success' && 'bg-green-100 text-green-800',
-                      cloneTaskData.status === 'failed' && 'bg-red-100 text-red-800',
-                      (cloneTaskData.status === 'running' || cloneTaskData.status === 'pending') && 'bg-amber-100 text-amber-800'
-                    ]"
-                  >
-                    {{ titleCase(cloneTaskData.status) || '—' }}
-                  </span>
-                </div>
+                <div
+                :class="[
+                  'flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium',
+                  cloneTaskData.status === 'success' && 'bg-green-50 text-green-700 border border-green-200',
+                  cloneTaskData.status === 'failed' && 'bg-red-50 text-red-700 border border-red-200',
+                  (cloneTaskData.status === 'running' || cloneTaskData.status === 'pending') && 'bg-amber-50 text-amber-700 border border-amber-200'
+                ]"
+              >
+                <svg v-if="cloneTaskData.status === 'success'" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <svg v-else-if="cloneTaskData.status === 'failed'" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                <svg v-else class="h-4 w-4 shrink-0 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                </svg>
+                <span>{{ $t('repositoriesPage.cloneTaskStatus') }}: {{ titleCase(cloneTaskData.status) || '—' }}</span>
+              </div>
                 <div>
-                  <p class="text-sm font-medium text-theme-text mb-2">{{ $t('repositoriesPage.cloneTaskLogs') }}</p>
                   <div
                     v-if="cloneTaskLogLines.length === 0"
                     class="rounded-lg border border-theme-border bg-theme-hover px-4 py-3 text-sm text-theme-textLight"
@@ -398,9 +404,6 @@
                 </div>
               </template>
               <div v-else class="text-sm text-theme-textLight">{{ $t('repositoriesPage.loading') }}</div>
-            </div>
-            <div class="px-6 py-4 border-t border-theme-border">
-              <button type="button" @click="closeCloneTaskModal" class="btn-secondary">{{ $t('common.close') }}</button>
             </div>
           </div>
         </div>
