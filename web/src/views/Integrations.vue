@@ -15,7 +15,7 @@
       <section class="section" aria-label="Integrations overview">
         <h2 class="section-title">Overview</h2>
         <p class="text-sm text-theme-textLight leading-relaxed mb-4">
-          Integrations connect Met with third-party tools: version control, notification channels,
+          Integrations connect Tivo with third-party tools: version control, notification channels,
           cloud providers, and APIs. Configure credentials and endpoints here.
         </p>
         <div class="rounded-lg border border-theme-border border-dashed bg-theme-hover/30 p-8 text-center">

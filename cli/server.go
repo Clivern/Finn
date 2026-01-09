@@ -7,14 +7,14 @@ package cli
 import (
 	"fmt"
 
-	"github.com/clivern/met/core"
+	"github.com/clivern/tivo/core"
 
 	"github.com/spf13/cobra"
 )
 
 var serverCmd = &cobra.Command{
 	Use:   "server",
-	Short: "Start the met backend server",
+	Short: "Start the tivo backend server",
 	Run: func(_ *cobra.Command, _ []string) {
 		// Load configuration
 		if err := core.Load(config); err != nil {
@@ -36,6 +36,7 @@ var serverCmd = &cobra.Command{
 	},
 }
 
+// init registers the server subcommand and flags.
 func init() {
 	serverCmd.Flags().StringVarP(
 		&config,

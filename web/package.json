@@ -1,7 +1,7 @@
 {
-  "name": "met",
+  "name": "tivo",
   "version": "0.1.0",
-  "description": "Met - Run Ansible, Terraform, OpenTofu with AI-powered Platform",
+  "description": "Tivo - Run Ansible, Terraform, OpenTofu with AI-powered Platform",
   "type": "module",
   "scripts": {
     "dev": "vite",

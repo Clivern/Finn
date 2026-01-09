@@ -7,9 +7,9 @@ package api
 import (
 	"net/http"
 
-	"github.com/clivern/met/db"
-	"github.com/clivern/met/module"
-	"github.com/clivern/met/service"
+	"github.com/clivern/tivo/db"
+	"github.com/clivern/tivo/module"
+	"github.com/clivern/tivo/service"
 
 	"github.com/rs/zerolog/log"
 )
@@ -30,7 +30,7 @@ type UpdateSettingsRequest struct {
 
 // UpdateSettingsAction handles application settings update requests
 func UpdateSettingsAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Update settings endpoint called")
+	log.Info().Msg("Update settings endpoint called")
 
 	var req UpdateSettingsRequest
 	if err := service.DecodeAndValidate(r, &req); err != nil {
@@ -68,7 +68,7 @@ func UpdateSettingsAction(w http.ResponseWriter, r *http.Request) {
 
 // GetSettingsAction handles user settings get requests
 func GetSettingsAction(w http.ResponseWriter, _ *http.Request) {
-	log.Debug().Msg("Get settings endpoint called")
+	log.Info().Msg("Get settings endpoint called")
 
 	settingsModule := module.NewSettings(db.NewOptionRepository(db.GetDB()))
 	settings, err := settingsModule.GetSettings()

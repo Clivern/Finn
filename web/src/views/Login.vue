@@ -1,18 +1,17 @@
 <template>
   <div class="min-h-screen flex items-center justify-center bg-theme-bg px-4">
     <div class="max-w-md w-full">
-      <!-- Logo and Header -->
       <div class="text-center mb-10">
         <div class="flex justify-center mb-8">
-          <img src="/logo.png" alt="Met Logo" class="h-24 w-auto">
+          <router-link to="/">
+            <img src="/logo.png" alt="Tivo Logo" class="h-24 w-auto">
+          </router-link>
         </div>
       </div>
 
-      <!-- Login Form -->
       <div class="bg-white rounded-lg border border-theme-border p-8 shadow-sm">
         <h2 class="text-2xl font-semibold text-theme-text mb-6 text-center">Welcome back</h2>
         <form class="space-y-5" @submit.prevent="handleLogin">
-          <!-- Email Field -->
           <div>
             <label for="email" class="block text-sm font-medium text-theme-text mb-2">
               Email
@@ -28,7 +27,6 @@
             >
           </div>
 
-          <!-- Password Field -->
           <div>
             <label for="password" class="block text-sm font-medium text-theme-text mb-2">
               Password
@@ -44,7 +42,6 @@
             >
           </div>
 
-          <!-- Remember Me -->
           <div class="flex items-center justify-between">
             <div class="flex items-center">
               <input
@@ -57,17 +54,18 @@
                 Remember me
               </label>
             </div>
+            <router-link to="/forgot-password" class="text-sm text-primary-800 hover:text-primary-900 font-medium">
+              Forgot password?
+            </router-link>
           </div>
 
-          <!-- Error Message -->
           <div v-if="error" class="rounded-md border border-red-200 bg-red-50 p-3">
             <p class="text-sm text-red-800">
               {{ error }}
             </p>
           </div>
 
-          <!-- Submit Button -->
-          <div>
+          <div class="space-y-3">
             <button
               type="submit"
               class="w-full btn-primary py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -82,39 +80,54 @@
                 Signing in...
               </span>
             </button>
+            <p class="text-center text-sm text-theme-textLight">
+              Don't have an account?
+              <router-link to="/register" class="font-medium text-primary-800 hover:text-primary-900">Register</router-link>
+            </p>
           </div>
         </form>
       </div>
 
-      <!-- Footer -->
       <p class="text-center text-xs text-theme-textLight mt-8">
-        Copyright © 2025 Met. All rights reserved.
+        Copyright © 2025 Tivo. All rights reserved.
       </p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { reactive, computed } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { authAPI } from '@/api'
+import { saveUser } from '@/lib/auth'
 
 const router = useRouter()
-const authStore = useAuthStore()
-
 const form = reactive({
   email: '',
   password: '',
   rememberMe: false
 })
 
-const loading = computed(() => authStore.loading)
-const error = computed(() => authStore.error)
+const loading = ref(false)
+const error = ref(null)
 
 const handleLogin = async () => {
-  const result = await authStore.login(form.email, form.password, form.rememberMe)
-  if (result.success) {
-    router.push('/dashboard')
+  loading.value = true
+  error.value = null
+
+  try {
+    const response = await authAPI.login({
+      email: form.email,
+      password: form.password,
+      rememberMe: form.rememberMe
+    })
+
+    saveUser(response.data?.user)
+    router.push('/select-workspace')
+  } catch (err) {
+    error.value = err.response?.data?.errorMessage || 'Login failed. Please try again.'
+  } finally {
+    loading.value = false
   }
 }
 </script>

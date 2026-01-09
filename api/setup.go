@@ -7,9 +7,9 @@ package api
 import (
 	"net/http"
 
-	"github.com/clivern/met/db"
-	"github.com/clivern/met/module"
-	"github.com/clivern/met/service"
+	"github.com/clivern/tivo/db"
+	"github.com/clivern/tivo/module"
+	"github.com/clivern/tivo/service"
 
 	"github.com/rs/zerolog/log"
 )
@@ -35,6 +35,7 @@ func SetupAction(w http.ResponseWriter, r *http.Request) {
 	setupModule := module.NewSetup(
 		db.NewOptionRepository(db.GetDB()),
 		db.NewUserRepository(db.GetDB()),
+		db.NewSystemEventRepository(db.GetDB()),
 	)
 
 	if setupModule.IsInstalled() {
@@ -71,6 +72,7 @@ func SetupStatusAction(w http.ResponseWriter, _ *http.Request) {
 	setupModule := module.NewSetup(
 		db.NewOptionRepository(db.GetDB()),
 		db.NewUserRepository(db.GetDB()),
+		db.NewSystemEventRepository(db.GetDB()),
 	)
 	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"installed": setupModule.IsInstalled(),

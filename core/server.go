@@ -17,9 +17,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/clivern/met/api"
-	"github.com/clivern/met/db"
-	"github.com/clivern/met/middleware"
+	"github.com/clivern/tivo/api"
+	"github.com/clivern/tivo/db"
+	"github.com/clivern/tivo/middleware"
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
@@ -42,12 +42,10 @@ func Setup(Static embed.FS) http.Handler {
 	r.Use(middleware.RequestSizeLimit(int64(10 * 1024 * 1024)))
 	r.Use(middleware.SessionAuth())
 
-	// Routes
 	r.Get("/favicon.ico", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
 
-	// Public Actions
 	r.Group(func(r chi.Router) {
 		r.Get("/api/v1/public/_health", api.HealthAction)
 		r.Get("/api/v1/public/_ready", api.ReadyAction)
@@ -55,9 +53,13 @@ func Setup(Static embed.FS) http.Handler {
 		r.Get("/api/v1/public/action/setup/status", api.SetupStatusAction)
 		r.Post("/api/v1/public/action/login", api.LoginAction)
 		r.Post("/api/v1/public/action/logout", api.LogoutAction)
+		r.Post("/api/v1/public/action/forgot-password", api.ForgotPasswordAction)
+		r.Post("/api/v1/public/action/reset-password", api.ResetPasswordAction)
+		r.Get("/api/v1/public/action/invite/token/{token}", api.GetUserInviteByTokenAction)
+		r.Post("/api/v1/public/action/register", api.RegisterAction)
 	})
-	// Private Actions
 	r.Group(func(r chi.Router) {
+		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))
 		r.Get("/api/v1/action/profile", api.GetProfileAction)
 		r.Put("/api/v1/action/profile", api.UpdateProfileAction)
 	})
@@ -66,7 +68,13 @@ func Setup(Static embed.FS) http.Handler {
 		r.Put("/api/v1/action/settings", api.UpdateSettingsAction)
 		r.Get("/api/v1/action/settings", api.GetSettingsAction)
 	})
-	// Users routes
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))
+		r.Post("/api/v1/apiKeys", api.CreateUserAPIKeyAction)
+		r.Get("/api/v1/apiKeys", api.ListUserAPIKeysAction)
+		r.Get("/api/v1/apiKeys/{id}", api.GetUserAPIKeyAction)
+		r.Delete("/api/v1/apiKeys/{id}", api.DeleteUserAPIKeyAction)
+	})
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.RequireRole(db.UserRoleAdmin))
 		r.Post("/api/v1/users", api.CreateUserAction)
@@ -75,6 +83,39 @@ func Setup(Static embed.FS) http.Handler {
 		r.Put("/api/v1/users/{id}", api.UpdateUserAction)
 		r.Delete("/api/v1/users/{id}", api.DeleteUserAction)
 	})
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.RequireRole(db.UserRoleAdmin))
+		r.Post("/api/v1/invites", api.CreateUserInviteAction)
+		r.Get("/api/v1/invites", api.ListInvitesAction)
+		r.Get("/api/v1/invites/{id}", api.GetUserInviteAction)
+		r.Delete("/api/v1/invites/{id}", api.DeleteUserInviteAction)
+	})
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.RequireRole(db.UserRoleAdmin))
+		r.Get("/api/v1/runners", api.ListRunnersAction)
+		r.Get("/api/v1/runners/{id}", api.GetRunnerAction)
+		r.Post("/api/v1/runners", api.CreateRunnerAction)
+		r.Put("/api/v1/runners/{id}", api.UpdateRunnerAction)
+		r.Delete("/api/v1/runners/{id}", api.DeleteRunnerAction)
+	})
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))
+		r.Post("/api/v1/workspaces", api.CreateWorkspaceAction)
+		r.Get("/api/v1/workspaces", api.ListWorkspacesAction)
+		r.Get("/api/v1/workspaces/{id}", api.GetWorkspaceAction)
+		r.Put("/api/v1/workspaces/{id}", api.UpdateWorkspaceAction)
+		r.Delete("/api/v1/workspaces/{id}", api.DeleteWorkspaceAction)
+	})
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))
+		r.Post("/api/v1/workspaces/{workspaceID}/users", api.AddWorkspaceUserAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/users", api.ListWorkspaceUsersAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/all-users", api.ListAllUsersAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/users/{userID}", api.GetWorkspaceUserAction)
+		r.Put("/api/v1/workspaces/{workspaceID}/users/{userID}", api.UpdateWorkspaceUserRoleAction)
+		r.Delete("/api/v1/workspaces/{workspaceID}/users/{userID}", api.RemoveWorkspaceUserAction)
+	})
+
 	r.With(middleware.BasicAuth(
 		viper.GetString("app.metrics.username"),
 		viper.GetString("app.metrics.secret"),
@@ -88,10 +129,8 @@ func Setup(Static embed.FS) http.Handler {
 		))
 	}
 
-	// Serve static assets (CSS, JS, images, etc.)
 	r.Handle("/assets/*", http.StripPrefix("/", http.FileServer(http.FS(dist))))
 
-	// SPA fallback: serve index.html for all other routes
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		indexFile, err := dist.Open("index.html")
 		if err != nil {
@@ -166,7 +205,6 @@ func Run(handler http.Handler) error {
 			err = srv.ListenAndServe()
 		}
 
-		// Ignore ErrServerClosed as it's expected during graceful shutdown
 		if err != nil && err != http.ErrServerClosed {
 			serverErrors <- err
 		}
@@ -192,7 +230,6 @@ func Run(handler http.Handler) error {
 			Dur("timeout", shutdownTimeout).
 			Msg("Gracefully shutting down server")
 
-		// Shutdown with timeout to allow in-flight requests to complete
 		if err := srv.Shutdown(ctx); err != nil {
 			return fmt.Errorf("server forced to shutdown: %w", err)
 		}

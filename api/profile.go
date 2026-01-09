@@ -8,15 +8,25 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/clivern/met/middleware"
-	"github.com/clivern/met/service"
+	"github.com/clivern/tivo/db"
+	"github.com/clivern/tivo/middleware"
+	"github.com/clivern/tivo/module"
+	"github.com/clivern/tivo/service"
 
 	"github.com/rs/zerolog/log"
 )
 
+// UpdateProfileRequest represents the update profile request payload.
+type UpdateProfileRequest struct {
+	Name            string `json:"name" validate:"omitempty,max=255" label:"Name"`
+	Email           string `json:"email" validate:"omitempty,email,max=255" label:"Email"`
+	CurrentPassword string `json:"currentPassword" validate:"omitempty,max=60" label:"Current password"`
+	NewPassword     string `json:"newPassword" validate:"omitempty,strong_password,min=8,max=60" label:"New password"`
+}
+
 // GetProfileAction handles user profile requests
 func GetProfileAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Get profile endpoint called")
+	log.Info().Msg("Get profile endpoint called")
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
@@ -42,8 +52,87 @@ func GetProfileAction(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateProfileAction handles user profile update requests
-func UpdateProfileAction(w http.ResponseWriter, _ *http.Request) {
-	log.Debug().Msg("Update profile endpoint called")
+func UpdateProfileAction(w http.ResponseWriter, r *http.Request) {
+	log.Info().Msg("Update profile endpoint called")
 
-	service.WriteJSON(w, http.StatusOK, map[string]interface{}{})
+	user, ok := middleware.GetUserFromContext(r.Context())
+	if !ok || user == nil {
+		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": "Not authenticated",
+		})
+		return
+	}
+
+	var req UpdateProfileRequest
+	if err := service.DecodeAndValidate(r, &req); err != nil {
+		service.WriteValidationError(w, err)
+		return
+	}
+
+	if (req.Email != "" && req.Email != user.Email) || (req.NewPassword != "") {
+		if req.CurrentPassword == "" {
+			service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+				"errorMessage": "Current password is required to change email or password",
+			})
+			return
+		}
+		if !service.ComparePassword(user.Password, req.CurrentPassword) {
+			service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+				"errorMessage": "Current password is incorrect",
+			})
+			return
+		}
+	}
+
+	name := user.Name
+	if req.Name != "" {
+		name = req.Name
+	}
+	email := user.Email
+	if req.Email != "" {
+		email = req.Email
+	}
+
+	userModule := module.NewUser(db.NewUserRepository(db.GetDB()))
+	opts := &module.UpdateUserOptions{
+		UserID:   user.ID,
+		Name:     name,
+		Email:    email,
+		Role:     user.Role,
+		IsActive: user.IsActive,
+	}
+	if req.NewPassword != "" {
+		opts.Password = req.NewPassword
+	}
+
+	updated, err := userModule.UpdateUser(opts)
+	if err != nil {
+		if err == module.ErrUserEmailAlreadyExists {
+			service.WriteJSON(w, http.StatusConflict, map[string]interface{}{
+				"errorMessage": "An account with this email already exists",
+			})
+			return
+		}
+		log.Error().Err(err).Msg("Failed to update profile")
+		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": "Failed to update profile",
+		})
+		return
+	}
+
+	log.Info().Str("userID", updated.ID.String()).Msg("Profile updated successfully")
+	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"user": map[string]interface{}{
+			"id":          updated.ID,
+			"email":       updated.Email,
+			"role":        updated.Role,
+			"isActive":    updated.IsActive,
+			"name":        updated.Name,
+			"avatar":      service.GravatarURL(updated.Email, 80),
+			"lastLoginAt": updated.LastLoginAt.UTC().Format(time.RFC3339),
+			"createdAt":   updated.CreatedAt.UTC().Format(time.RFC3339),
+			"updatedAt":   updated.UpdatedAt.UTC().Format(time.RFC3339),
+		},
+		"successMessage": "Profile updated successfully",
+	})
 }

@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// Option represents a key-value option in the database.
+// Option represents a key-value option in the database
 type Option struct {
 	ID        ID
 	Key       string
@@ -18,85 +18,161 @@ type Option struct {
 	UpdatedAt time.Time
 }
 
-// OptionRepository handles database operations for options.
-type OptionRepository struct {
+// OptionRepository defines option CRUD
+type OptionRepository interface {
+	Create(key, value string) error
+	Get(key string) (*Option, error)
+	Update(key, value string) error
+	Delete(key string) error
+	List() ([]*Option, error)
+}
+
+// NewOptionRepository returns the repository for the current driver
+func NewOptionRepository(db *sql.DB) OptionRepository {
+	driver := GetDriver()
+	if driver == "postgres" || driver == "postgresql" {
+		return &optionRepoPostgres{db: db}
+	}
+	return &optionRepoSQLite{db: db}
+}
+
+// scanOptionRows builds a slice of Option from query rows
+func scanOptionRows(rows *sql.Rows) ([]*Option, error) {
+	var list []*Option
+	for rows.Next() {
+		o := &Option{}
+		if err := rows.Scan(&o.ID, &o.Key, &o.Value, &o.CreatedAt, &o.UpdatedAt); err != nil {
+			return nil, err
+		}
+		list = append(list, o)
+	}
+	return list, rows.Err()
+}
+
+// --- SQLite ---
+
+// optionRepoSQLite implements OptionRepository for SQLite
+type optionRepoSQLite struct {
 	db *sql.DB
 }
 
-// NewOptionRepository creates a new option repository.
-func NewOptionRepository(db *sql.DB) *OptionRepository {
-	return &OptionRepository{db: db}
-}
-
-// Create inserts a new option into the database.
-func (r *OptionRepository) Create(key, value string) error {
-	q := Placeholder("INSERT INTO options (key, value) VALUES (?, ?)", GetDriver())
-	_, err := r.db.Exec(q, key, value)
+// Create inserts a row
+func (r *optionRepoSQLite) Create(key, value string) error {
+	_, err := r.db.Exec(
+		`INSERT INTO options (key, value) VALUES (?, ?)`,
+		key, value,
+	)
 	return err
 }
 
-// Get retrieves an option by key.
-func (r *OptionRepository) Get(key string) (*Option, error) {
-	option := &Option{}
-	q := Placeholder(`SELECT id, key, value, created_at, updated_at
-		FROM options
-		WHERE key = ?`, GetDriver())
-	err := r.db.QueryRow(q, key).Scan(
-		&option.ID,
-		&option.Key,
-		&option.Value,
-		&option.CreatedAt,
-		&option.UpdatedAt,
-	)
-
+// Get returns an option by key
+func (r *optionRepoSQLite) Get(key string) (*Option, error) {
+	o := &Option{}
+	err := r.db.QueryRow(
+		`SELECT id, key, value, created_at, updated_at
+		FROM options WHERE key = ?`,
+		key,
+	).Scan(&o.ID, &o.Key, &o.Value, &o.CreatedAt, &o.UpdatedAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-	return option, nil
+	return o, nil
 }
 
-// Update updates an option value.
-func (r *OptionRepository) Update(key, value string) error {
-	q := Placeholder(`UPDATE options SET
-			value = ?, updated_at = ?
-		WHERE key = ?`, GetDriver())
-	_, err := r.db.Exec(q, value, time.Now().UTC(), key)
+// Update updates an option
+func (r *optionRepoSQLite) Update(key, value string) error {
+	_, err := r.db.Exec(
+		`UPDATE options SET value = ?, updated_at = ? WHERE key = ?`,
+		value, time.Now().UTC(), key,
+	)
 	return err
 }
 
-// Delete removes an option from the database.
-func (r *OptionRepository) Delete(key string) error {
-	q := Placeholder("DELETE FROM options WHERE key = ?", GetDriver())
-	_, err := r.db.Exec(q, key)
+// Delete removes an option
+func (r *optionRepoSQLite) Delete(key string) error {
+	_, err := r.db.Exec(
+		`DELETE FROM options WHERE key = ?`,
+		key,
+	)
 	return err
 }
 
-// List retrieves all options from the database.
-func (r *OptionRepository) List() ([]*Option, error) {
-	q := Placeholder("SELECT id, key, value, created_at, updated_at FROM options ORDER BY key", GetDriver())
-	rows, err := r.db.Query(q)
+// List returns a list of options
+func (r *optionRepoSQLite) List() ([]*Option, error) {
+	rows, err := r.db.Query(
+		`SELECT id, key, value, created_at, updated_at
+		FROM options ORDER BY key`,
+	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
+	return scanOptionRows(rows)
+}
 
-	var options []*Option
-	for rows.Next() {
-		option := &Option{}
-		if err := rows.Scan(
-			&option.ID,
-			&option.Key,
-			&option.Value,
-			&option.CreatedAt,
-			&option.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		options = append(options, option)
+// --- Postgres ---
+
+// optionRepoPostgres implements OptionRepository for PostgreSQL
+type optionRepoPostgres struct {
+	db *sql.DB
+}
+
+// Create inserts a row
+func (r *optionRepoPostgres) Create(key, value string) error {
+	_, err := r.db.Exec(
+		`INSERT INTO options (key, value) VALUES ($1, $2)`,
+		key, value,
+	)
+	return err
+}
+
+// Get returns an option by key
+func (r *optionRepoPostgres) Get(key string) (*Option, error) {
+	o := &Option{}
+	err := r.db.QueryRow(
+		`SELECT id, key, value, created_at, updated_at
+		FROM options WHERE key = $1`,
+		key,
+	).Scan(&o.ID, &o.Key, &o.Value, &o.CreatedAt, &o.UpdatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
 	}
+	if err != nil {
+		return nil, err
+	}
+	return o, nil
+}
 
-	return options, rows.Err()
+// Update updates an option
+func (r *optionRepoPostgres) Update(key, value string) error {
+	_, err := r.db.Exec(
+		`UPDATE options SET value = $1, updated_at = $2 WHERE key = $3`,
+		value, time.Now().UTC(), key,
+	)
+	return err
+}
+
+// Delete removes an option
+func (r *optionRepoPostgres) Delete(key string) error {
+	_, err := r.db.Exec(
+		`DELETE FROM options WHERE key = $1`,
+		key,
+	)
+	return err
+}
+
+// List returns a list of options
+func (r *optionRepoPostgres) List() ([]*Option, error) {
+	rows, err := r.db.Query(
+		`SELECT id, key, value, created_at, updated_at
+		FROM options ORDER BY key`,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanOptionRows(rows)
 }

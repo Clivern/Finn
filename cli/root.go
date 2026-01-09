@@ -14,12 +14,12 @@ import (
 var config string
 
 var rootCmd = &cobra.Command{
-	Use: "met",
-	Short: `🐀 Run Ansible, Terraform, OpenTofu with AI-powered Platform.
+	Use: "tivo",
+	Short: `🐀 A Platform to Run, Schedule, and Automate Ansible and Terraform Workflows
 
 
 If you have any suggestions, bug reports, or annoyances please report
-them to our issue tracker at <https://github.com/clivern/met/issues>`,
+them to our issue tracker at <https://github.com/clivern/tivo/issues>`,
 }
 
 // Execute runs cmd tool

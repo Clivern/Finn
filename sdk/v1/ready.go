@@ -14,7 +14,7 @@ type ReadyResponse struct {
 	Status string `json:"status"`
 }
 
-// Ready checks if the Met API is ready to serve traffic
+// Ready checks if the Tivo API is ready to serve traffic
 func (c *Client) Ready() (*ReadyResponse, error) {
 	resp, err := c.doRequest(http.MethodGet, "/api/v1/public/_ready", nil)
 	if err != nil {
@@ -29,7 +29,7 @@ func (c *Client) Ready() (*ReadyResponse, error) {
 	return &readyResp, nil
 }
 
-// Ready checks if the Met API is ready to serve traffic at the given base URL
+// Ready checks if the Tivo API is ready to serve traffic at the given base URL
 func Ready(baseURL string) (*ReadyResponse, error) {
 	client, err := NewClient(ClientConfig{BaseURL: baseURL})
 	if err != nil {

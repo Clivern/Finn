@@ -2,7 +2,6 @@
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
-// Package middleware provides HTTP middleware functions for the Met application.
 package middleware
 
 import (
@@ -10,9 +9,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/clivern/met/db"
-	"github.com/clivern/met/module"
-	"github.com/clivern/met/service"
+	"github.com/clivern/tivo/db"
+	"github.com/clivern/tivo/module"
+	"github.com/clivern/tivo/service"
 
 	"github.com/rs/zerolog/log"
 )
@@ -54,7 +53,7 @@ func SessionAuth() func(http.Handler) http.Handler {
 			}
 
 			// Get session token from cookie
-			sessionToken := service.GetCookie(r, "_met_session")
+			sessionToken := service.GetCookie(r, "_pers_session")
 			if sessionToken == "" {
 				log.Info().Str("path", r.URL.Path).Msg("No session cookie found")
 				service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
@@ -71,7 +70,7 @@ func SessionAuth() func(http.Handler) http.Handler {
 
 			user, _, err := sessionManager.ValidateSession(sessionToken)
 			if err != nil {
-				service.DeleteCookie(w, "_met_session")
+				service.DeleteCookie(w, "_pers_session")
 				sessionManager.RevokeUserSessions(user.ID)
 				log.Info().Err(err).Str("path", r.URL.Path).Msg("Session validation failed")
 				service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{

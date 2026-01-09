@@ -9,16 +9,16 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/clivern/met/db"
+	"github.com/clivern/tivo/db"
 )
 
 // Settings manages application configuration options.
 type Settings struct {
-	OptionRepository *db.OptionRepository
+	OptionRepository db.OptionRepository
 }
 
 // NewSettings creates a new Settings module instance.
-func NewSettings(optionRepository *db.OptionRepository) *Settings {
+func NewSettings(optionRepository db.OptionRepository) *Settings {
 	return &Settings{OptionRepository: optionRepository}
 }
 

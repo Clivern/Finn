@@ -7,8 +7,8 @@ package api
 import (
 	"net/http"
 
-	"github.com/clivern/met/db"
-	"github.com/clivern/met/service"
+	"github.com/clivern/tivo/db"
+	"github.com/clivern/tivo/service"
 
 	"github.com/rs/zerolog/log"
 )
@@ -17,7 +17,6 @@ import (
 func ReadyAction(w http.ResponseWriter, _ *http.Request) {
 	log.Debug().Msg("Readiness check endpoint called")
 
-	// Try to ping the database
 	database := db.GetDB()
 	if err := database.Ping(); err != nil {
 		log.Error().Err(err).Msg("Database ping failed during readiness check")

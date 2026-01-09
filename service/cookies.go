@@ -2,7 +2,6 @@
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
-// Package service provides utility services and helper functions for the Met application.
 package service
 
 import (

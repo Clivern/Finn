@@ -2,7 +2,6 @@
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
-// Package cli provides command-line interface commands for the Met application.
 package cli
 
 import (
@@ -39,6 +38,7 @@ SOFTWARE.`)
 	},
 }
 
+// init registers the license subcommand.
 func init() {
 	rootCmd.AddCommand(licenseCmd)
 }

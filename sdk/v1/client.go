@@ -2,7 +2,7 @@
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
-// Package v1 provides the Met API client implementation.
+// Package v1 provides the Tivo API client implementation.
 package v1
 
 import (
@@ -14,14 +14,14 @@ import (
 	"time"
 )
 
-// Client represents a Met API client
+// Client represents a Tivo API client
 type Client struct {
 	baseURL    string
 	httpClient *http.Client
 	apiKey     string
 }
 
-// ClientConfig represents configuration for the Met API client
+// ClientConfig represents configuration for the Tivo API client
 type ClientConfig struct {
 	BaseURL    string
 	APIKey     string
@@ -29,7 +29,7 @@ type ClientConfig struct {
 	HTTPClient *http.Client
 }
 
-// NewClient creates a new Met API client
+// NewClient creates a new Tivo API client
 func NewClient(config ClientConfig) (*Client, error) {
 	if config.BaseURL == "" {
 		return nil, fmt.Errorf("baseURL is required")

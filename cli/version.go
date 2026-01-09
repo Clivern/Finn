@@ -28,10 +28,11 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number",
 	Run: func(_ *cobra.Command, _ []string) {
-		fmt.Printf("Current Met Version %v Commit %v, Built @%v By %v.\n", Version, Commit, Date, BuiltBy)
+		fmt.Printf("Current Tivo Version %v Commit %v, Built @%v By %v.\n", Version, Commit, Date, BuiltBy)
 	},
 }
 
+// init registers the version subcommand.
 func init() {
 	rootCmd.AddCommand(versionCmd)
 }

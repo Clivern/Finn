@@ -7,20 +7,19 @@ package api
 import (
 	"net/http"
 
-	"github.com/clivern/met/db"
-	"github.com/clivern/met/middleware"
-	"github.com/clivern/met/module"
-	"github.com/clivern/met/service"
+	"github.com/clivern/tivo/db"
+	"github.com/clivern/tivo/middleware"
+	"github.com/clivern/tivo/module"
+	"github.com/clivern/tivo/service"
 
 	"github.com/rs/zerolog/log"
 )
 
 // LogoutAction handles logout requests.
-// Returns 200 even when not authenticated (idempotent: "already logged out").
 func LogoutAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Logout endpoint called")
+	log.Info().Msg("Logout endpoint called")
 
-	service.DeleteCookie(w, "_met_session")
+	service.DeleteCookie(w, "_pers_session")
 
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
@@ -36,7 +35,6 @@ func LogoutAction(w http.ResponseWriter, r *http.Request) {
 	)
 
 	sessionManager.CleanupExpiredSessions()
-
 	if err := sessionManager.RevokeUserSessions(user.ID); err != nil {
 		log.Error().Err(err).Msg("Failed to revoke session")
 	}

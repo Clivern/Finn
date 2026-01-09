@@ -6,10 +6,9 @@
 package middleware
 
 import (
-	"fmt"
 	"net/http"
 
-	"github.com/clivern/met/service"
+	"github.com/clivern/tivo/service"
 
 	"github.com/rs/zerolog/log"
 )
@@ -42,7 +41,6 @@ func RequireRole(allowedRoles ...string) func(http.Handler) http.Handler {
 
 			// Check if user has one of the allowed roles
 			hasRole := false
-			fmt.Println("Allowed Roles", allowedRoles)
 			for _, role := range allowedRoles {
 				if user.Role == role {
 					hasRole = true

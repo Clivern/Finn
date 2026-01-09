@@ -6,11 +6,12 @@ package api
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
-	"github.com/clivern/met/db"
-	"github.com/clivern/met/module"
-	"github.com/clivern/met/service"
+	"github.com/clivern/tivo/db"
+	"github.com/clivern/tivo/module"
+	"github.com/clivern/tivo/service"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -25,7 +26,7 @@ type LoginRequest struct {
 
 // LoginAction handles login requests
 func LoginAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Login endpoint called")
+	log.Info().Msg("Login endpoint called")
 
 	var req LoginRequest
 	if err := service.DecodeAndValidate(r, &req); err != nil {
@@ -40,14 +41,32 @@ func LoginAction(w http.ResponseWriter, r *http.Request) {
 	user, err := authModule.Login(req.Email, req.Password)
 	if err != nil {
 		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "Invalid credentials",
+			"errorMessage": "Invalid username or password",
 		})
 		return
 	}
 
 	if !user.IsActive {
 		service.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
-			"errorMessage": "User is not active",
+			"errorMessage": "Your account is not active. Please contact support.",
+		})
+		return
+	}
+
+	optionRepo := db.NewOptionRepository(db.GetDB())
+	maintenanceOpt, err := optionRepo.Get("maintenance_mode")
+
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get maintenance_mode option")
+		service.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": "Failed to check maintenance status",
+		})
+		return
+	}
+
+	if maintenanceOpt != nil && maintenanceOpt.Value == "1" && user.Role != db.UserRoleAdmin {
+		service.WriteJSON(w, http.StatusServiceUnavailable, map[string]interface{}{
+			"errorMessage": "Maintenance mode is enabled. Only administrators can sign in.",
 		})
 		return
 	}
@@ -67,7 +86,7 @@ func LoginAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var cookieOptions *service.CookieOptions
-	if viper.GetBool("app.tls.status") {
+	if viper.GetBool("app.tls.status") || strings.HasPrefix(viper.GetString("app.hostname"), "https://") {
 		cookieOptions = service.SecureCookieOptions()
 	} else {
 		cookieOptions = service.DefaultCookieOptions()
@@ -78,7 +97,7 @@ func LoginAction(w http.ResponseWriter, r *http.Request) {
 		cookieOptions.MaxAge = 0
 	}
 
-	service.SetCookie(w, "_met_session", session.Token, cookieOptions)
+	service.SetCookie(w, "_pers_session", session.Token, cookieOptions)
 	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"successMessage": "Login successful",
 		"user": map[string]interface{}{

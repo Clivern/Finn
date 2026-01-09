@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/clivern/met/service"
+	"github.com/clivern/tivo/service"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

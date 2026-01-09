@@ -2,23 +2,22 @@
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
-// Package module provides business logic modules for the Met application.
 package module
 
 import (
 	"errors"
 
-	"github.com/clivern/met/db"
-	"github.com/clivern/met/service"
+	"github.com/clivern/tivo/db"
+	"github.com/clivern/tivo/service"
 )
 
 // Auth is a module that handles authentication.
 type Auth struct {
-	UserRepository *db.UserRepository
+	UserRepository db.UserRepository
 }
 
 // NewAuth creates a new auth.
-func NewAuth(repo *db.UserRepository) *Auth {
+func NewAuth(repo db.UserRepository) *Auth {
 	return &Auth{UserRepository: repo}
 }
 

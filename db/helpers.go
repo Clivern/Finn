@@ -60,30 +60,6 @@ func GetDriver() string {
 	return dbDriver
 }
 
-// Placeholder returns the query with placeholders suitable for the current driver.
-func Placeholder(query, driver string) string {
-	if driver == "postgres" || driver == "postgresql" {
-		n := 0
-		return placeholderReplacer(query, func() string {
-			n++
-			return fmt.Sprintf("$%d", n)
-		})
-	}
-	return query
-}
-
-func placeholderReplacer(query string, next func() string) string {
-	var out []byte
-	for i := 0; i < len(query); i++ {
-		if query[i] == '?' {
-			out = append(out, next()...)
-		} else {
-			out = append(out, query[i])
-		}
-	}
-	return string(out)
-}
-
 // CloseDB closes the global database connection
 func CloseDB() error {
 	mu.Lock()

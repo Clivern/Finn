@@ -8,8 +8,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/clivern/met/db"
-	"github.com/clivern/met/service"
+	"github.com/clivern/tivo/db"
+	"github.com/clivern/tivo/service"
 )
 
 var (
@@ -19,16 +19,17 @@ var (
 
 // User handles user management operations.
 type User struct {
-	UserRepository *db.UserRepository
+	UserRepository db.UserRepository
 }
 
 // NewUser creates a new user module instance.
-func NewUser(repo *db.UserRepository) *User {
+func NewUser(repo db.UserRepository) *User {
 	return &User{UserRepository: repo}
 }
 
 // CreateUserOptions contains options for creating a user.
 type CreateUserOptions struct {
+	Name     string
 	Email    string
 	Password string
 	Role     string
@@ -51,7 +52,7 @@ func (u *User) CreateUser(options *CreateUserOptions) (*db.User, error) {
 	}
 
 	user := &db.User{
-		Name:        "",
+		Name:        options.Name,
 		Email:       options.Email,
 		Password:    hashedPassword,
 		Role:        options.Role,
@@ -81,6 +82,7 @@ func (u *User) GetUser(userID db.ID) (*db.User, error) {
 // UpdateUserOptions contains options for updating a user.
 type UpdateUserOptions struct {
 	UserID   db.ID
+	Name     string
 	Email    string
 	Password string
 	Role     string
@@ -107,11 +109,11 @@ func (u *User) UpdateUser(options *UpdateUserOptions) (*db.User, error) {
 		}
 	}
 
+	user.Name = options.Name
 	user.Email = options.Email
 	user.Role = options.Role
 	user.IsActive = options.IsActive
 
-	// Update password only if provided
 	if options.Password != "" {
 		hashedPassword, err := service.HashPassword(options.Password)
 		if err != nil {

@@ -2,9 +2,7 @@
   <div class="min-h-screen bg-theme-bg">
     <AppNav />
 
-    <!-- Main Content -->
     <main class="w-full py-8 px-4 sm:px-6 lg:px-8">
-      <!-- Page Header -->
       <div class="mb-8 flex justify-between items-center">
         <div>
           <h1 class="text-3xl font-semibold text-theme-text">Users</h1>
@@ -18,7 +16,6 @@
         </button>
       </div>
 
-      <!-- Success/Error Messages -->
       <div v-if="successMessage" class="mb-6 rounded-md border border-green-200 bg-green-50 p-4">
         <p class="text-sm text-green-800">{{ successMessage }}</p>
       </div>
@@ -26,7 +23,6 @@
         <p class="text-sm text-red-800">{{ errorMessage }}</p>
       </div>
 
-      <!-- Users Table -->
       <div class="bg-white rounded-lg border border-theme-border overflow-hidden">
         <div v-if="loading" class="p-8 text-center">
           <svg class="animate-spin h-6 w-6 mx-auto text-theme-text" fill="none" viewBox="0 0 24 24">
@@ -44,7 +40,7 @@
           <thead class="bg-theme-hover">
             <tr>
               <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
-                Email
+                User
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-theme-textLight uppercase tracking-wider">
                 Role
@@ -66,16 +62,18 @@
           <tbody class="bg-white divide-y divide-theme-border">
             <tr v-for="user in users" :key="user.id" class="hover:bg-theme-hover">
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-theme-text">{{ user.email }}</div>
+                <div>
+                  <div class="text-sm font-medium text-theme-text">{{ user.name || '—' }}</div>
+                  <div class="text-xs text-theme-textLight">{{ user.email }}</div>
+                </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span class="px-2 py-1 text-xs font-medium rounded-full"
                   :class="{
                     'bg-purple-100 text-purple-800': user.role === 'admin',
-                    'bg-blue-100 text-blue-800': user.role === 'user',
-                    'bg-gray-100 text-gray-800': user.role === 'readonly'
+                    'bg-blue-100 text-blue-800': user.role === 'regular'
                   }">
-                  {{ user.role }}
+                  {{ user.role.charAt(0).toUpperCase() + user.role.slice(1) }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
@@ -88,10 +86,10 @@
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-theme-textLight">
-                {{ formatDate(user.lastLoginAt) }}
+                {{ formatRelative(user.lastLoginAt, 'Never') }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-theme-textLight">
-                {{ formatDate(user.createdAt) }}
+                {{ formatRelative(user.createdAt, 'Never') }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <button
@@ -111,7 +109,6 @@
           </tbody>
         </table>
 
-        <!-- Pagination -->
         <div v-if="total > 0" class="bg-white px-6 py-4 border-t border-theme-border flex items-center justify-between">
           <div class="text-sm text-theme-textLight">
             Showing {{ offset + 1 }} to {{ Math.min(offset + limit, total) }} of {{ total }} users
@@ -136,7 +133,6 @@
       </div>
     </main>
 
-    <!-- Create User Modal -->
     <div v-if="showCreateModal" class="fixed inset-0 z-50 overflow-y-auto" @click.self="closeCreateModal">
       <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" @click="closeCreateModal"></div>
@@ -156,6 +152,19 @@
                 </button>
               </div>
               <div class="space-y-4">
+                <div>
+                  <label for="create-name" class="block text-sm font-medium text-theme-text mb-2">
+                    Name *
+                  </label>
+                  <input
+                    id="create-name"
+                    v-model="createForm.name"
+                    type="text"
+                    required
+                    class="input-field"
+                    placeholder="Full name"
+                  />
+                </div>
                 <div>
                   <label for="create-email" class="block text-sm font-medium text-theme-text mb-2">
                     Email *
@@ -193,8 +202,7 @@
                     class="input-field"
                   >
                     <option value="admin">Admin</option>
-                    <option value="user">User</option>
-                    <option value="readonly">Readonly</option>
+                    <option value="regular">Regular</option>
                   </select>
                 </div>
                 <div class="flex items-start">
@@ -239,7 +247,6 @@
       </div>
     </div>
 
-    <!-- Edit User Modal -->
     <div v-if="showEditModal" class="fixed inset-0 z-50 overflow-y-auto" @click.self="closeEditModal">
       <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" @click="closeEditModal"></div>
@@ -296,8 +303,7 @@
                     class="input-field"
                   >
                     <option value="admin">Admin</option>
-                    <option value="user">User</option>
-                    <option value="readonly">Readonly</option>
+                    <option value="regular">Regular</option>
                   </select>
                 </div>
                 <div class="flex items-start">
@@ -342,7 +348,6 @@
       </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
     <div v-if="showDeleteModal" class="fixed inset-0 z-50 overflow-y-auto" @click.self="closeDeleteModal">
       <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" @click="closeDeleteModal"></div>
@@ -396,13 +401,10 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { useAuthStore } from '@/stores/auth'
 import { userAPI } from '@/api'
 import AppNav from '@/components/AppNav.vue'
+import { formatRelative } from '@/utils/date'
 
-const authStore = useAuthStore()
-
-// State
 const loading = ref(false)
 const users = ref([])
 const total = ref(0)
@@ -411,7 +413,6 @@ const offset = ref(0)
 const successMessage = ref(null)
 const errorMessage = ref(null)
 
-// Modal states
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
 const showDeleteModal = ref(false)
@@ -420,11 +421,11 @@ const editLoading = ref(false)
 const deleteLoading = ref(false)
 const userToDelete = ref(null)
 
-// Forms
 const createForm = reactive({
+  name: '',
   email: '',
   password: '',
-  role: 'user',
+  role: 'regular',
   isActive: true
 })
 
@@ -432,63 +433,22 @@ const editForm = reactive({
   id: null,
   email: '',
   password: '',
-  role: 'user',
+  role: 'regular',
   isActive: true
 })
-
-const formatDate = (dateString) => {
-  if (!dateString) return 'Never'
-  try {
-    const date = new Date(dateString)
-
-    // Check if date is invalid or represents a zero time (year 1 or before Unix epoch)
-    if (isNaN(date.getTime()) || date.getFullYear() < 1970) {
-      return 'Never'
-    }
-
-    const now = new Date()
-    const diffMs = now - date
-    const diffMins = Math.floor(diffMs / 60000)
-    const diffHours = Math.floor(diffMs / 3600000)
-    const diffDays = Math.floor(diffMs / 86400000)
-
-    // Relative time for recent dates
-    if (diffMins < 1) return 'Just now'
-    if (diffMins < 60) return `${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'} ago`
-    if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`
-    if (diffDays < 7) return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`
-
-    // For older dates, show formatted date
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    const month = months[date.getMonth()]
-    const day = date.getDate()
-    const year = date.getFullYear()
-    const isCurrentYear = year === now.getFullYear()
-
-    if (isCurrentYear) {
-      return `${month} ${day}`
-    } else {
-      return `${month} ${day}, ${year}`
-    }
-  } catch {
-    return 'Never'
-  }
-}
 
 const loadUsers = async () => {
   loading.value = true
   errorMessage.value = null
 
   try {
-    const response = await userAPI.getUsers({
+    const res = await userAPI.getUsers({
       limit: limit.value,
       offset: offset.value
     })
 
-    if (response.data) {
-      users.value = response.data.users || []
-      total.value = response.data._meta?.total || 0
-    }
+    users.value = res.data.users
+    total.value = res.data._meta.total
   } catch (err) {
     console.error('Failed to load users:', err)
     errorMessage.value = err.response?.data?.errorMessage || 'Failed to load users'
@@ -505,18 +465,20 @@ const goToPage = (newOffset) => {
 }
 
 const openCreateModal = () => {
+  createForm.name = ''
   createForm.email = ''
   createForm.password = ''
-  createForm.role = 'user'
+  createForm.role = 'regular'
   createForm.isActive = true
   showCreateModal.value = true
 }
 
 const closeCreateModal = () => {
   showCreateModal.value = false
+  createForm.name = ''
   createForm.email = ''
   createForm.password = ''
-  createForm.role = 'user'
+  createForm.role = 'regular'
   createForm.isActive = true
 }
 
@@ -526,32 +488,20 @@ const handleCreate = async () => {
   successMessage.value = null
 
   try {
-    const response = await userAPI.createUser({
+    await userAPI.createUser({
+      name: createForm.name,
       email: createForm.email,
       password: createForm.password,
       role: createForm.role,
       isActive: createForm.isActive
     })
-
-    if (response.data) {
-      successMessage.value = 'User created successfully'
-      closeCreateModal()
-      loadUsers()
-      setTimeout(() => {
-        successMessage.value = null
-      }, 3000)
-    }
+    successMessage.value = 'User created successfully'
+    closeCreateModal()
+    await loadUsers()
+    setTimeout(() => { successMessage.value = null }, 3000)
   } catch (err) {
     console.error('Failed to create user:', err)
-    if (err.response?.data?.errorMessage) {
-      errorMessage.value = err.response.data.errorMessage
-    } else if (err.response?.data?.errors) {
-      const errors = err.response.data.errors
-      const errorList = Object.values(errors).flat().join(', ')
-      errorMessage.value = `Validation errors: ${errorList}`
-    } else {
-      errorMessage.value = 'Failed to create user. Please try again.'
-    }
+    errorMessage.value = err.response?.data?.errorMessage || 'Failed to create user. Please try again.'
   } finally {
     createLoading.value = false
   }
@@ -571,7 +521,7 @@ const closeEditModal = () => {
   editForm.id = null
   editForm.email = ''
   editForm.password = ''
-  editForm.role = 'user'
+  editForm.role = 'regular'
   editForm.isActive = true
 }
 
@@ -580,39 +530,22 @@ const handleUpdate = async () => {
   errorMessage.value = null
   successMessage.value = null
 
+  const payload = {
+    email: editForm.email,
+    role: editForm.role,
+    isActive: editForm.isActive
+  }
+  if (editForm.password) payload.password = editForm.password
+
   try {
-    const payload = {
-      email: editForm.email,
-      role: editForm.role,
-      isActive: editForm.isActive
-    }
-
-    // Only include password if it's provided
-    if (editForm.password) {
-      payload.password = editForm.password
-    }
-
-    const response = await userAPI.updateUser(editForm.id, payload)
-
-    if (response.data) {
-      successMessage.value = 'User updated successfully'
-      closeEditModal()
-      loadUsers()
-      setTimeout(() => {
-        successMessage.value = null
-      }, 3000)
-    }
+    await userAPI.updateUser(editForm.id, payload)
+    successMessage.value = 'User updated successfully'
+    closeEditModal()
+    await loadUsers()
+    setTimeout(() => { successMessage.value = null }, 3000)
   } catch (err) {
     console.error('Failed to update user:', err)
-    if (err.response?.data?.errorMessage) {
-      errorMessage.value = err.response.data.errorMessage
-    } else if (err.response?.data?.errors) {
-      const errors = err.response.data.errors
-      const errorList = Object.values(errors).flat().join(', ')
-      errorMessage.value = `Validation errors: ${errorList}`
-    } else {
-      errorMessage.value = 'Failed to update user. Please try again.'
-    }
+    errorMessage.value = err.response?.data?.errorMessage || 'Failed to update user. Please try again.'
   } finally {
     editLoading.value = false
   }
@@ -639,17 +572,11 @@ const handleDelete = async () => {
     await userAPI.deleteUser(userToDelete.value.id)
     successMessage.value = 'User deleted successfully'
     closeDeleteModal()
-    loadUsers()
-    setTimeout(() => {
-      successMessage.value = null
-    }, 3000)
+    await loadUsers()
+    setTimeout(() => { successMessage.value = null }, 3000)
   } catch (err) {
     console.error('Failed to delete user:', err)
-    if (err.response?.data?.errorMessage) {
-      errorMessage.value = err.response.data.errorMessage
-    } else {
-      errorMessage.value = 'Failed to delete user. Please try again.'
-    }
+    errorMessage.value = err.response?.data?.errorMessage || 'Failed to delete user. Please try again.'
   } finally {
     deleteLoading.value = false
   }

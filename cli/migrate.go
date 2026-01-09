@@ -5,9 +5,9 @@
 package cli
 
 import (
-	"github.com/clivern/met/core"
-	"github.com/clivern/met/db"
-	"github.com/clivern/met/migration"
+	"github.com/clivern/tivo/core"
+	"github.com/clivern/tivo/db"
+	"github.com/clivern/tivo/migration"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -170,6 +170,7 @@ var migrateStatusCmd = &cobra.Command{
 	},
 }
 
+// init registers the migrate subcommands and flags.
 func init() {
 	rootCmd.AddCommand(migrateCmd)
 	migrateCmd.AddCommand(migrateUpCmd)

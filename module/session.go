@@ -10,17 +10,17 @@ import (
 	"errors"
 	"time"
 
-	"github.com/clivern/met/db"
+	"github.com/clivern/tivo/db"
 )
 
 // SessionManager handles session operations.
 type SessionManager struct {
-	SessionRepo *db.SessionRepository
-	UserRepo    *db.UserRepository
+	SessionRepo db.SessionRepository
+	UserRepo    db.UserRepository
 }
 
 // NewSessionManager creates a new session manager.
-func NewSessionManager(sessionRepo *db.SessionRepository, userRepo *db.UserRepository) *SessionManager {
+func NewSessionManager(sessionRepo db.SessionRepository, userRepo db.UserRepository) *SessionManager {
 	return &SessionManager{
 		SessionRepo: sessionRepo,
 		UserRepo:    userRepo,

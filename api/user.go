@@ -10,33 +10,35 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/clivern/met/db"
-	"github.com/clivern/met/middleware"
-	"github.com/clivern/met/module"
-	"github.com/clivern/met/service"
+	"github.com/clivern/tivo/db"
+	"github.com/clivern/tivo/middleware"
+	"github.com/clivern/tivo/module"
+	"github.com/clivern/tivo/service"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )
 
 // CreateUserRequest represents the create user request payload
 type CreateUserRequest struct {
+	Name     string `json:"name" validate:"required,min=4,max=60" label:"Name"`
 	Email    string `json:"email" validate:"required,email,min=4,max=60" label:"Email"`
 	Password string `json:"password" validate:"required,strong_password,min=8,max=60" label:"Password"`
-	Role     string `json:"role" validate:"required,oneof=admin user readonly" label:"Role"`
+	Role     string `json:"role" validate:"required,oneof=admin regular" label:"Role"`
 	IsActive bool   `json:"isActive" label:"Is Active"`
 }
 
 // UpdateUserRequest represents the update user request payload
 type UpdateUserRequest struct {
+	Name     string `json:"name" validate:"required,min=4,max=60" label:"Name"`
 	Email    string `json:"email" validate:"required,email,min=4,max=60" label:"Email"`
 	Password string `json:"password" validate:"omitempty,strong_password,min=8,max=60" label:"Password"`
-	Role     string `json:"role" validate:"required,oneof=admin user readonly" label:"Role"`
+	Role     string `json:"role" validate:"required,oneof=admin regular" label:"Role"`
 	IsActive bool   `json:"isActive" label:"Is Active"`
 }
 
 // CreateUserAction handles user creation requests
 func CreateUserAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Create user endpoint called")
+	log.Info().Msg("Create user endpoint called")
 
 	var req CreateUserRequest
 	if err := service.DecodeAndValidate(r, &req); err != nil {
@@ -46,6 +48,7 @@ func CreateUserAction(w http.ResponseWriter, r *http.Request) {
 
 	userModule := module.NewUser(db.NewUserRepository(db.GetDB()))
 	user, err := userModule.CreateUser(&module.CreateUserOptions{
+		Name:     req.Name,
 		Email:    req.Email,
 		Password: req.Password,
 		Role:     req.Role,
@@ -69,10 +72,10 @@ func CreateUserAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Str("userID", user.ID.String()).Msg("User created successfully")
 	service.WriteJSON(w, http.StatusCreated, map[string]interface{}{
 		"id":          user.ID,
+		"name":        user.Name,
 		"email":       user.Email,
 		"role":        user.Role,
 		"isActive":    user.IsActive,
-		"apiKey":      "",
 		"lastLoginAt": user.LastLoginAt.UTC().Format(time.RFC3339),
 		"createdAt":   user.CreatedAt.UTC().Format(time.RFC3339),
 		"updatedAt":   user.UpdatedAt.UTC().Format(time.RFC3339),
@@ -81,7 +84,7 @@ func CreateUserAction(w http.ResponseWriter, r *http.Request) {
 
 // GetUserAction handles get user by ID requests
 func GetUserAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Get user endpoint called")
+	log.Info().Msg("Get user endpoint called")
 
 	userIDStr := chi.URLParam(r, "id")
 	if userIDStr == "" {
@@ -109,10 +112,10 @@ func GetUserAction(w http.ResponseWriter, r *http.Request) {
 
 	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"id":          user.ID,
+		"name":        user.Name,
 		"email":       user.Email,
 		"role":        user.Role,
 		"isActive":    user.IsActive,
-		"apiKey":      "",
 		"lastLoginAt": user.LastLoginAt.UTC().Format(time.RFC3339),
 		"createdAt":   user.CreatedAt.UTC().Format(time.RFC3339),
 		"updatedAt":   user.UpdatedAt.UTC().Format(time.RFC3339),
@@ -121,9 +124,8 @@ func GetUserAction(w http.ResponseWriter, r *http.Request) {
 
 // UpdateUserAction handles user update requests
 func UpdateUserAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Update user endpoint called")
+	log.Info().Msg("Update user endpoint called")
 
-	// Get user ID from URL
 	userIDStr := chi.URLParam(r, "id")
 	if userIDStr == "" {
 		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
@@ -141,6 +143,7 @@ func UpdateUserAction(w http.ResponseWriter, r *http.Request) {
 	userModule := module.NewUser(db.NewUserRepository(db.GetDB()))
 	user, err := userModule.UpdateUser(&module.UpdateUserOptions{
 		UserID:   db.ID(userIDStr),
+		Name:     req.Name,
 		Email:    req.Email,
 		Password: req.Password,
 		Role:     req.Role,
@@ -170,10 +173,10 @@ func UpdateUserAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Str("userID", user.ID.String()).Msg("User updated successfully")
 	service.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"id":          user.ID,
+		"name":        user.Name,
 		"email":       user.Email,
 		"role":        user.Role,
 		"isActive":    user.IsActive,
-		"apiKey":      "",
 		"lastLoginAt": user.LastLoginAt.UTC().Format(time.RFC3339),
 		"createdAt":   user.CreatedAt.UTC().Format(time.RFC3339),
 		"updatedAt":   user.UpdatedAt.UTC().Format(time.RFC3339),
@@ -182,7 +185,7 @@ func UpdateUserAction(w http.ResponseWriter, r *http.Request) {
 
 // ListUsersAction handles user listing requests with pagination
 func ListUsersAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("List users endpoint called")
+	log.Info().Msg("List users endpoint called")
 
 	limitStr := r.URL.Query().Get("limit")
 	offsetStr := r.URL.Query().Get("offset")
@@ -220,10 +223,10 @@ func ListUsersAction(w http.ResponseWriter, r *http.Request) {
 	for _, user := range result.Users {
 		userList = append(userList, map[string]interface{}{
 			"id":          user.ID,
+			"name":        user.Name,
 			"email":       user.Email,
 			"role":        user.Role,
 			"isActive":    user.IsActive,
-			"apiKey":      "",
 			"lastLoginAt": user.LastLoginAt.UTC().Format(time.RFC3339),
 			"createdAt":   user.CreatedAt.UTC().Format(time.RFC3339),
 			"updatedAt":   user.UpdatedAt.UTC().Format(time.RFC3339),
@@ -242,11 +245,10 @@ func ListUsersAction(w http.ResponseWriter, r *http.Request) {
 
 // DeleteUserAction handles user deletion requests
 func DeleteUserAction(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Delete user endpoint called")
+	log.Info().Msg("Delete user endpoint called")
 
 	currentUser, _ := middleware.GetUserFromContext(r.Context())
 
-	// Get user ID from URL
 	userIDStr := chi.URLParam(r, "id")
 	if userIDStr == "" {
 		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
@@ -256,7 +258,6 @@ func DeleteUserAction(w http.ResponseWriter, r *http.Request) {
 	}
 	userID := db.ID(userIDStr)
 
-	// Prevent self-deletion
 	if currentUser.ID == userID {
 		service.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
 			"errorMessage": "You cannot delete your own account",
@@ -266,6 +267,7 @@ func DeleteUserAction(w http.ResponseWriter, r *http.Request) {
 
 	userModule := module.NewUser(db.NewUserRepository(db.GetDB()))
 	err := userModule.DeleteUser(userID)
+
 	if err != nil {
 		if errors.Is(err, module.ErrUserNotFound) {
 			service.WriteJSON(w, http.StatusNotFound, map[string]interface{}{

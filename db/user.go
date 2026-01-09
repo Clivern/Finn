@@ -5,9 +5,7 @@
 package db
 
 import (
-	"crypto/sha256"
 	"database/sql"
-	"fmt"
 	"strconv"
 	"time"
 )
@@ -15,8 +13,9 @@ import (
 // User role constants
 const (
 	UserRoleAdmin    = "admin"
-	UserRoleUser     = "user"
-	UserRoleReadonly = "readonly"
+	UserRoleRegular  = "regular"
+	UserRoleOwner    = "owner"
+	UserRoleReadOnly = "readonly"
 )
 
 // User represents a user in the database.
@@ -32,41 +31,57 @@ type User struct {
 	UpdatedAt   time.Time
 }
 
-// UserRepository handles database operations for users.
-type UserRepository struct {
+// UserRepository defines user CRUD
+type UserRepository interface {
+	Create(user *User) error
+	GetByID(id ID) (*User, error)
+	GetByAPIKey(apiKey string) (*User, error)
+	GetByEmail(email string) (*User, error)
+	Update(user *User) error
+	UpdateLastLogin(id ID) error
+	Delete(id ID) error
+	List(limit, offset int) ([]*User, error)
+	Count() (int64, error)
+}
+
+// NewUserRepository returns the repository for the current driver
+func NewUserRepository(db *sql.DB) UserRepository {
+	driver := GetDriver()
+	if driver == "postgres" || driver == "postgresql" {
+		return &userRepoPostgres{db: db}
+	}
+	return &userRepoSQLite{db: db}
+}
+
+// scanUserRows builds a slice of User from query rows.
+func scanUserRows(rows *sql.Rows) ([]*User, error) {
+	var list []*User
+	for rows.Next() {
+		u := &User{}
+		if err := rows.Scan(
+			&u.ID, &u.Name, &u.Email, &u.Password, &u.Role,
+			&u.IsActive, &u.LastLoginAt, &u.CreatedAt, &u.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		list = append(list, u)
+	}
+	return list, rows.Err()
+}
+
+// --- SQLite ---
+
+// userRepoSQLite implements UserRepository for SQLite.
+type userRepoSQLite struct {
 	db *sql.DB
 }
 
-// NewUserRepository creates a new user repository.
-func NewUserRepository(db *sql.DB) *UserRepository {
-	return &UserRepository{db: db}
-}
-
-// Create inserts a new user into the database.
-func (r *UserRepository) Create(user *User) error {
-	driver := GetDriver()
-	q := Placeholder(`INSERT INTO users (name, email, password_hash, role, is_active, last_login_at)
-		VALUES (?, ?, ?, ?, ?, ?)`, driver)
-	if driver == "postgres" || driver == "postgresql" {
-		q = `INSERT INTO users (name, email, password_hash, role, is_active, last_login_at)
-			VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
-		err := r.db.QueryRow(q,
-			user.Name,
-			user.Email,
-			user.Password,
-			user.Role,
-			user.IsActive,
-			user.LastLoginAt,
-		).Scan(&user.ID)
-		return err
-	}
-	result, err := r.db.Exec(q,
-		user.Name,
-		user.Email,
-		user.Password,
-		user.Role,
-		user.IsActive,
-		user.LastLoginAt,
+// Create inserts a row
+func (r *userRepoSQLite) Create(user *User) error {
+	result, err := r.db.Exec(
+		`INSERT INTO users (name, email, password_hash, role, is_active, last_login_at)
+		VALUES (?, ?, ?, ?, ?, ?)`,
+		user.Name, user.Email, user.Password, user.Role, user.IsActive, user.LastLoginAt,
 	)
 	if err != nil {
 		return err
@@ -79,173 +94,250 @@ func (r *UserRepository) Create(user *User) error {
 	return nil
 }
 
-// GetByID retrieves a user by ID.
-func (r *UserRepository) GetByID(id ID) (*User, error) {
+// GetByID returns a user by ID
+func (r *userRepoSQLite) GetByID(id ID) (*User, error) {
 	user := &User{}
-	q := Placeholder(`SELECT id, name, email, password_hash, role, is_active, last_login_at, created_at, updated_at
-		FROM users
-		WHERE id = ?`, GetDriver())
-	err := r.db.QueryRow(q, id.String()).Scan(
-		&user.ID,
-		&user.Name,
-		&user.Email,
-		&user.Password,
-		&user.Role,
-		&user.IsActive,
-		&user.LastLoginAt,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-	)
-
+	err := r.db.QueryRow(
+		`SELECT id, name, email, password_hash, role, is_active, last_login_at, created_at, updated_at
+		FROM users WHERE id = ?`,
+		id.String(),
+	).Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.Role,
+		&user.IsActive, &user.LastLoginAt, &user.CreatedAt, &user.UpdatedAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-
 	return user, nil
 }
 
-// GetByAPIKey retrieves a user by API key from the user_api_keys table.
-func (r *UserRepository) GetByAPIKey(apiKey string) (*User, error) {
+// GetByAPIKey returns a user by API key (raw key lookup)
+func (r *userRepoSQLite) GetByAPIKey(apiKey string) (*User, error) {
 	if apiKey == "" {
 		return nil, nil
 	}
-	keyHash := fmt.Sprintf("%x", sha256.Sum256([]byte(apiKey)))
 	user := &User{}
-	q := Placeholder(`SELECT u.id, u.name, u.email, u.password_hash, u.role, u.is_active, u.last_login_at, u.created_at, u.updated_at
+	err := r.db.QueryRow(
+		`SELECT u.id, u.name, u.email, u.password_hash, u.role, u.is_active, u.last_login_at, u.created_at, u.updated_at
 		FROM users u
 		INNER JOIN user_api_keys k ON u.id = k.user_id
-		WHERE k.key_hash = ? AND (k.expires_at IS NULL OR k.expires_at > CURRENT_TIMESTAMP)`, GetDriver())
-	err := r.db.QueryRow(q, keyHash).Scan(
-		&user.ID,
-		&user.Name,
-		&user.Email,
-		&user.Password,
-		&user.Role,
-		&user.IsActive,
-		&user.LastLoginAt,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-	)
-
+		WHERE k.key = ? AND (k.expires_at IS NULL OR k.expires_at > CURRENT_TIMESTAMP)`,
+		apiKey,
+	).Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.Role,
+		&user.IsActive, &user.LastLoginAt, &user.CreatedAt, &user.UpdatedAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-
 	return user, nil
 }
 
-// GetByEmail retrieves a user by email.
-func (r *UserRepository) GetByEmail(email string) (*User, error) {
+// GetByEmail returns a user by email
+func (r *userRepoSQLite) GetByEmail(email string) (*User, error) {
 	user := &User{}
-	q := Placeholder(`SELECT id, name, email, password_hash, role, is_active, last_login_at, created_at, updated_at
-		FROM users
-		WHERE email = ?`, GetDriver())
-	err := r.db.QueryRow(q, email).Scan(
-		&user.ID,
-		&user.Name,
-		&user.Email,
-		&user.Password,
-		&user.Role,
-		&user.IsActive,
-		&user.LastLoginAt,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-	)
-
+	err := r.db.QueryRow(
+		`SELECT id, name, email, password_hash, role, is_active, last_login_at, created_at, updated_at
+		FROM users WHERE email = ?`,
+		email,
+	).Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.Role,
+		&user.IsActive, &user.LastLoginAt, &user.CreatedAt, &user.UpdatedAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-
 	return user, nil
 }
 
-// Update updates a user's information.
-func (r *UserRepository) Update(user *User) error {
-	q := Placeholder(`UPDATE users SET
-			name = ?, email = ?, password_hash = ?, role = ?, is_active = ?,
+// Update updates a user
+func (r *userRepoSQLite) Update(user *User) error {
+	_, err := r.db.Exec(
+		`UPDATE users SET name = ?, email = ?, password_hash = ?, role = ?, is_active = ?,
 			last_login_at = ?, updated_at = ?
-		WHERE id = ?`, GetDriver())
-	_, err := r.db.Exec(q,
-		user.Name,
-		user.Email,
-		user.Password,
-		user.Role,
-		user.IsActive,
-		user.LastLoginAt,
-		time.Now().UTC(),
-		user.ID.String(),
+		WHERE id = ?`,
+		user.Name, user.Email, user.Password, user.Role, user.IsActive,
+		user.LastLoginAt, time.Now().UTC(), user.ID.String(),
 	)
 	return err
 }
 
-// UpdateLastLogin updates the user's last login timestamp.
-func (r *UserRepository) UpdateLastLogin(id ID) error {
+// UpdateLastLogin updates the last login timestamp
+func (r *userRepoSQLite) UpdateLastLogin(id ID) error {
 	now := time.Now().UTC()
-	q := Placeholder(`UPDATE users SET
-			last_login_at = ?, updated_at = ?
-		WHERE id = ?`, GetDriver())
-	_, err := r.db.Exec(q, now, now, id.String())
+	_, err := r.db.Exec(
+		`UPDATE users SET last_login_at = ?, updated_at = ? WHERE id = ?`,
+		now, now, id.String(),
+	)
 	return err
 }
 
-// Delete removes a user from the database.
-func (r *UserRepository) Delete(id ID) error {
-	q := Placeholder("DELETE FROM users WHERE id = ?", GetDriver())
-	_, err := r.db.Exec(q, id.String())
+// Delete removes a user
+func (r *userRepoSQLite) Delete(id ID) error {
+	_, err := r.db.Exec(
+		`DELETE FROM users WHERE id = ?`,
+		id.String(),
+	)
 	return err
 }
 
-// List retrieves all users with pagination.
-func (r *UserRepository) List(limit, offset int) ([]*User, error) {
-	q := Placeholder(`SELECT id, name, email, password_hash, role, is_active, last_login_at, created_at, updated_at
-		FROM users
-		ORDER BY created_at DESC
-		LIMIT ? OFFSET ?`, GetDriver())
-	rows, err := r.db.Query(q, limit, offset)
+// List returns a list of users
+func (r *userRepoSQLite) List(limit, offset int) ([]*User, error) {
+	rows, err := r.db.Query(
+		`SELECT id, name, email, password_hash, role, is_active, last_login_at, created_at, updated_at
+		FROM users ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+		limit, offset,
+	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-
-	var users []*User
-	for rows.Next() {
-		user := &User{}
-		if err := rows.Scan(
-			&user.ID,
-			&user.Name,
-			&user.Email,
-			&user.Password,
-			&user.Role,
-			&user.IsActive,
-			&user.LastLoginAt,
-			&user.CreatedAt,
-			&user.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		users = append(users, user)
-	}
-
-	return users, rows.Err()
+	return scanUserRows(rows)
 }
 
-// Count returns the total number of users.
-func (r *UserRepository) Count() (int64, error) {
+// Count returns the total number of users
+func (r *userRepoSQLite) Count() (int64, error) {
 	var count int64
-	err := r.db.QueryRow("SELECT COUNT(*) FROM users").Scan(&count)
+	err := r.db.QueryRow(
+		`SELECT COUNT(*) FROM users`,
+	).Scan(&count)
 	return count, err
 }
 
-// UserMeta represents metadata associated with a user.
+// --- Postgres ---
+
+// userRepoPostgres implements UserRepository for PostgreSQL
+type userRepoPostgres struct {
+	db *sql.DB
+}
+
+// Create inserts a row
+func (r *userRepoPostgres) Create(user *User) error {
+	err := r.db.QueryRow(
+		`INSERT INTO users (name, email, password_hash, role, is_active, last_login_at)
+		VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+		user.Name, user.Email, user.Password, user.Role, user.IsActive, user.LastLoginAt,
+	).Scan(&user.ID)
+	return err
+}
+
+// GetByID returns a user by ID
+func (r *userRepoPostgres) GetByID(id ID) (*User, error) {
+	user := &User{}
+	err := r.db.QueryRow(
+		`SELECT id, name, email, password_hash, role, is_active, last_login_at, created_at, updated_at
+		FROM users WHERE id = $1`,
+		id.String(),
+	).Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.Role,
+		&user.IsActive, &user.LastLoginAt, &user.CreatedAt, &user.UpdatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+// GetByAPIKey returns a user by API key (raw key lookup)
+func (r *userRepoPostgres) GetByAPIKey(apiKey string) (*User, error) {
+	if apiKey == "" {
+		return nil, nil
+	}
+	user := &User{}
+	err := r.db.QueryRow(
+		`SELECT u.id, u.name, u.email, u.password_hash, u.role, u.is_active, u.last_login_at, u.created_at, u.updated_at
+		FROM users u
+		INNER JOIN user_api_keys k ON u.id = k.user_id
+		WHERE k.key = $1 AND (k.expires_at IS NULL OR k.expires_at > CURRENT_TIMESTAMP)`,
+		apiKey,
+	).Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.Role,
+		&user.IsActive, &user.LastLoginAt, &user.CreatedAt, &user.UpdatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+// GetByEmail returns a user by email
+func (r *userRepoPostgres) GetByEmail(email string) (*User, error) {
+	user := &User{}
+	err := r.db.QueryRow(
+		`SELECT id, name, email, password_hash, role, is_active, last_login_at, created_at, updated_at
+		FROM users WHERE email = $1`,
+		email,
+	).Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.Role,
+		&user.IsActive, &user.LastLoginAt, &user.CreatedAt, &user.UpdatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+// Update updates a user
+func (r *userRepoPostgres) Update(user *User) error {
+	_, err := r.db.Exec(
+		`UPDATE users SET name = $1, email = $2, password_hash = $3, role = $4, is_active = $5,
+			last_login_at = $6, updated_at = $7
+		WHERE id = $8`,
+		user.Name, user.Email, user.Password, user.Role, user.IsActive,
+		user.LastLoginAt, time.Now().UTC(), user.ID.String(),
+	)
+	return err
+}
+
+// UpdateLastLogin updates the last login timestamp
+func (r *userRepoPostgres) UpdateLastLogin(id ID) error {
+	now := time.Now().UTC()
+	_, err := r.db.Exec(
+		`UPDATE users SET last_login_at = $1, updated_at = $2 WHERE id = $3`,
+		now, now, id.String(),
+	)
+	return err
+}
+
+// Delete removes a user
+func (r *userRepoPostgres) Delete(id ID) error {
+	_, err := r.db.Exec(
+		`DELETE FROM users WHERE id = $1`,
+		id.String(),
+	)
+	return err
+}
+
+// List returns a list of users
+func (r *userRepoPostgres) List(limit, offset int) ([]*User, error) {
+	rows, err := r.db.Query(
+		`SELECT id, name, email, password_hash, role, is_active, last_login_at, created_at, updated_at
+		FROM users ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
+		limit, offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanUserRows(rows)
+}
+
+// Count returns the total number of users
+func (r *userRepoPostgres) Count() (int64, error) {
+	var count int64
+	err := r.db.QueryRow(
+		`SELECT COUNT(*) FROM users`,
+	).Scan(&count)
+	return count, err
+}
+
+// UserMeta represents metadata associated with a user
 type UserMeta struct {
 	ID        ID
 	Key       string
@@ -255,105 +347,188 @@ type UserMeta struct {
 	UpdatedAt time.Time
 }
 
-// UserMetaRepository handles database operations for user metadata.
-type UserMetaRepository struct {
+// UserMetaRepository defines user metadata CRUD
+type UserMetaRepository interface {
+	Create(userID ID, key, value string) error
+	Get(userID ID, key string) (*UserMeta, error)
+	Update(userID ID, key, value string) error
+	Delete(userID ID, key string) error
+	ListByUser(userID ID) ([]*UserMeta, error)
+	Upsert(userID ID, key, value string) error
+}
+
+// NewUserMetaRepository returns the repository for the current driver
+func NewUserMetaRepository(db *sql.DB) UserMetaRepository {
+	driver := GetDriver()
+	if driver == "postgres" || driver == "postgresql" {
+		return &userMetaRepoPostgres{db: db}
+	}
+	return &userMetaRepoSQLite{db: db}
+}
+
+// scanUserMetaRows builds a slice of UserMeta from query rows.
+func scanUserMetaRows(rows *sql.Rows) ([]*UserMeta, error) {
+	var list []*UserMeta
+	for rows.Next() {
+		m := &UserMeta{}
+		if err := rows.Scan(&m.ID, &m.Key, &m.Value, &m.UserID, &m.CreatedAt, &m.UpdatedAt); err != nil {
+			return nil, err
+		}
+		list = append(list, m)
+	}
+	return list, rows.Err()
+}
+
+// --- UserMeta SQLite ---
+
+// userMetaRepoSQLite implements UserMetaRepository for SQLite.
+type userMetaRepoSQLite struct {
 	db *sql.DB
 }
 
-// NewUserMetaRepository creates a new user meta repository.
-func NewUserMetaRepository(db *sql.DB) *UserMetaRepository {
-	return &UserMetaRepository{db: db}
-}
-
-// Create inserts new metadata for a user.
-func (r *UserMetaRepository) Create(userID ID, key, value string) error {
-	q := Placeholder("INSERT INTO users_meta (user_id, key, value) VALUES (?, ?, ?)", GetDriver())
-	_, err := r.db.Exec(q, userID.String(), key, value)
+// Create inserts a user meta
+func (r *userMetaRepoSQLite) Create(userID ID, key, value string) error {
+	_, err := r.db.Exec(
+		`INSERT INTO users_meta (user_id, key, value) VALUES (?, ?, ?)`,
+		userID.String(), key, value,
+	)
 	return err
 }
 
-// Get retrieves metadata for a user by key.
-func (r *UserMetaRepository) Get(userID ID, key string) (*UserMeta, error) {
+// Get returns a user meta
+func (r *userMetaRepoSQLite) Get(userID ID, key string) (*UserMeta, error) {
 	meta := &UserMeta{}
-	q := Placeholder(`SELECT id, key, value, user_id, created_at, updated_at
-		FROM users_meta
-		WHERE user_id = ? AND key = ?`, GetDriver())
-	err := r.db.QueryRow(q, userID.String(), key).Scan(
-		&meta.ID,
-		&meta.Key,
-		&meta.Value,
-		&meta.UserID,
-		&meta.CreatedAt,
-		&meta.UpdatedAt,
-	)
-
+	err := r.db.QueryRow(
+		`SELECT id, key, value, user_id, created_at, updated_at
+		FROM users_meta WHERE user_id = ? AND key = ?`,
+		userID.String(), key,
+	).Scan(&meta.ID, &meta.Key, &meta.Value, &meta.UserID, &meta.CreatedAt, &meta.UpdatedAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-
 	return meta, nil
 }
 
-// Update updates metadata for a user.
-func (r *UserMetaRepository) Update(userID ID, key, value string) error {
-	q := Placeholder(`UPDATE users_meta SET
-			value = ?, updated_at = ?
-		WHERE user_id = ? AND key = ?`, GetDriver())
-	_, err := r.db.Exec(q, value, time.Now().UTC(), userID.String(), key)
+// Update updates a user meta
+func (r *userMetaRepoSQLite) Update(userID ID, key, value string) error {
+	_, err := r.db.Exec(
+		`UPDATE users_meta SET value = ?, updated_at = ? WHERE user_id = ? AND key = ?`,
+		value, time.Now().UTC(), userID.String(), key,
+	)
 	return err
 }
 
-// Delete removes metadata for a user.
-func (r *UserMetaRepository) Delete(userID ID, key string) error {
-	q := Placeholder("DELETE FROM users_meta WHERE user_id = ? AND key = ?", GetDriver())
-	_, err := r.db.Exec(q, userID.String(), key)
+// Delete removes a user meta
+func (r *userMetaRepoSQLite) Delete(userID ID, key string) error {
+	_, err := r.db.Exec(
+		`DELETE FROM users_meta WHERE user_id = ? AND key = ?`,
+		userID.String(), key,
+	)
 	return err
 }
 
-// ListByUser retrieves all metadata for a user.
-func (r *UserMetaRepository) ListByUser(userID ID) ([]*UserMeta, error) {
-	q := Placeholder(`SELECT id, key, value, user_id, created_at, updated_at
-		FROM users_meta
-		WHERE user_id = ?
-		ORDER BY key`, GetDriver())
-	rows, err := r.db.Query(q, userID.String())
+// ListByUser returns a list of user meta
+func (r *userMetaRepoSQLite) ListByUser(userID ID) ([]*UserMeta, error) {
+	rows, err := r.db.Query(
+		`SELECT id, key, value, user_id, created_at, updated_at
+		FROM users_meta WHERE user_id = ? ORDER BY key`,
+		userID.String(),
+	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-
-	var metadata []*UserMeta
-	for rows.Next() {
-		meta := &UserMeta{}
-		if err := rows.Scan(
-			&meta.ID,
-			&meta.Key,
-			&meta.Value,
-			&meta.UserID,
-			&meta.CreatedAt,
-			&meta.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		metadata = append(metadata, meta)
-	}
-
-	return metadata, rows.Err()
+	return scanUserMetaRows(rows)
 }
 
-// Upsert inserts or updates metadata for a user.
-func (r *UserMetaRepository) Upsert(userID ID, key, value string) error {
+// Upsert upserts a user meta
+func (r *userMetaRepoSQLite) Upsert(userID ID, key, value string) error {
 	existing, err := r.Get(userID, key)
 	if err != nil {
 		return err
 	}
-
 	if existing == nil {
 		return r.Create(userID, key, value)
 	}
+	return r.Update(userID, key, value)
+}
 
+// --- UserMeta Postgres ---
+
+// userMetaRepoPostgres implements UserMetaRepository for PostgreSQL
+type userMetaRepoPostgres struct {
+	db *sql.DB
+}
+
+// Create inserts a user meta
+func (r *userMetaRepoPostgres) Create(userID ID, key, value string) error {
+	_, err := r.db.Exec(
+		`INSERT INTO users_meta (user_id, key, value) VALUES ($1, $2, $3)`,
+		userID.String(), key, value,
+	)
+	return err
+}
+
+// Get returns a user meta
+func (r *userMetaRepoPostgres) Get(userID ID, key string) (*UserMeta, error) {
+	meta := &UserMeta{}
+	err := r.db.QueryRow(
+		`SELECT id, key, value, user_id, created_at, updated_at
+		FROM users_meta WHERE user_id = $1 AND key = $2`,
+		userID.String(), key,
+	).Scan(&meta.ID, &meta.Key, &meta.Value, &meta.UserID, &meta.CreatedAt, &meta.UpdatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return meta, nil
+}
+
+// Update updates a user meta
+func (r *userMetaRepoPostgres) Update(userID ID, key, value string) error {
+	_, err := r.db.Exec(
+		`UPDATE users_meta SET value = $1, updated_at = $2 WHERE user_id = $3 AND key = $4`,
+		value, time.Now().UTC(), userID.String(), key,
+	)
+	return err
+}
+
+// Delete removes a user meta
+func (r *userMetaRepoPostgres) Delete(userID ID, key string) error {
+	_, err := r.db.Exec(
+		`DELETE FROM users_meta WHERE user_id = $1 AND key = $2`,
+		userID.String(), key,
+	)
+	return err
+}
+
+// ListByUser returns a list of user meta
+func (r *userMetaRepoPostgres) ListByUser(userID ID) ([]*UserMeta, error) {
+	rows, err := r.db.Query(
+		`SELECT id, key, value, user_id, created_at, updated_at
+		FROM users_meta WHERE user_id = $1 ORDER BY key`,
+		userID.String(),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanUserMetaRows(rows)
+}
+
+// Upsert upserts a user meta
+func (r *userMetaRepoPostgres) Upsert(userID ID, key, value string) error {
+	existing, err := r.Get(userID, key)
+	if err != nil {
+		return err
+	}
+	if existing == nil {
+		return r.Create(userID, key, value)
+	}
 	return r.Update(userID, key, value)
 }

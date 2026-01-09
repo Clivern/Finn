@@ -8,14 +8,15 @@ import (
 	"errors"
 	"time"
 
-	"github.com/clivern/met/db"
-	"github.com/clivern/met/service"
+	"github.com/clivern/tivo/db"
+	"github.com/clivern/tivo/service"
 )
 
 // Setup handles the initial installation and configuration of the gateway.
 type Setup struct {
-	OptionRepository *db.OptionRepository
-	UserRepository   *db.UserRepository
+	OptionRepository      db.OptionRepository
+	UserRepository        db.UserRepository
+	SystemEventRepository db.SystemEventRepository
 }
 
 // SetupOptions contains the configuration options for gateway setup.
@@ -28,8 +29,12 @@ type SetupOptions struct {
 }
 
 // NewSetup creates a new Setup instance with the provided repositories.
-func NewSetup(optionRepository *db.OptionRepository, userRepository *db.UserRepository) *Setup {
-	return &Setup{OptionRepository: optionRepository, UserRepository: userRepository}
+func NewSetup(optionRepository db.OptionRepository, userRepository db.UserRepository, systemEventRepository db.SystemEventRepository) *Setup {
+	return &Setup{
+		OptionRepository:      optionRepository,
+		UserRepository:        userRepository,
+		SystemEventRepository: systemEventRepository,
+	}
 }
 
 // IsInstalled checks whether the platform has been installed.
@@ -84,7 +89,10 @@ func (s *Setup) Install(options *SetupOptions) error {
 		return err
 	}
 
-	err = s.OptionRepository.Create("platform_description", "")
+	err = s.OptionRepository.Create(
+		"platform_description",
+		"A Platform to Run, Schedule, and Automate Ansible and Terraform Workflows.",
+	)
 	if err != nil {
 		return err
 	}
@@ -94,7 +102,7 @@ func (s *Setup) Install(options *SetupOptions) error {
 		return err
 	}
 
-	err = s.OptionRepository.Create("smtp_server", "")
+	err = s.OptionRepository.Create("smtp_server", "smtp.gmail.com")
 	if err != nil {
 		return err
 	}
@@ -104,7 +112,7 @@ func (s *Setup) Install(options *SetupOptions) error {
 		return err
 	}
 
-	err = s.OptionRepository.Create("smtp_from_email", "")
+	err = s.OptionRepository.Create("smtp_from_email", "noreply@tivo.io")
 	if err != nil {
 		return err
 	}
@@ -119,10 +127,15 @@ func (s *Setup) Install(options *SetupOptions) error {
 		return err
 	}
 
-	err = s.OptionRepository.Create("smtp_use_tls", "0")
+	err = s.OptionRepository.Create("smtp_use_tls", "1")
 	if err != nil {
 		return err
 	}
+
+	s.SystemEventRepository.Create("platform_installed", &db.SystemEventPlatformInstalled{
+		UserID:    user.ID.String(),
+		UserEmail: user.Email,
+	})
 
 	return nil
 }
