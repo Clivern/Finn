@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -34,6 +35,8 @@ func init() {
 
 	// Register custom validators
 	validate.RegisterValidation("strong_password", validateStrongPassword)
+	validate.RegisterValidation("json", validateJSONString)
+	validate.RegisterValidation("json_object", validateJSONObjectString)
 }
 
 // GetValidator returns the shared validator instance.
@@ -112,9 +115,41 @@ func getErrorMessage(e validator.FieldError) string {
 		return fmt.Sprintf("%s must be a valid UUID", field)
 	case "strong_password":
 		return fmt.Sprintf("%s must contain at least 8 characters, one uppercase, one lowercase, one digit, and one special character", field)
+	case "json":
+		return fmt.Sprintf("%s must be valid JSON", field)
+	case "json_object":
+		return fmt.Sprintf("%s must be a valid JSON object", field)
 	default:
 		return fmt.Sprintf("%s is invalid", field)
 	}
+}
+
+func validateJSONString(fl validator.FieldLevel) bool {
+	s, ok := fl.Field().Interface().(string)
+	if !ok {
+		return false
+	}
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return true
+	}
+
+	var tmp interface{}
+	return json.Unmarshal([]byte(s), &tmp) == nil
+}
+
+func validateJSONObjectString(fl validator.FieldLevel) bool {
+	s, ok := fl.Field().Interface().(string)
+	if !ok {
+		return false
+	}
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return true
+	}
+
+	var tmp map[string]interface{}
+	return json.Unmarshal([]byte(s), &tmp) == nil
 }
 
 // DecodeJSON reads and decodes JSON from the request body.

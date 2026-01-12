@@ -118,6 +118,12 @@ msgstr "Échec de la suppression de l'utilisateur"
 msgid "failedDeleteWorkspace"
 msgstr "Échec de la suppression de l'espace de travail"
 
+msgid "failedEncryptSecretEnvironmentVariables"
+msgstr "Échec du chiffrement des variables d'environnement secrètes"
+
+msgid "failedEncryptSecretExtraVariables"
+msgstr "Échec du chiffrement des variables supplémentaires secrètes"
+
 msgid "failedGetApiKey"
 msgstr "Échec de la récupération de la clé API"
 
@@ -405,3 +411,12 @@ msgstr "Un utilisateur avec cette adresse e-mail existe déjà"
 
 msgid "workspaceNotFound"
 msgstr "Espace de travail introuvable"
+
+msgid "inventoryFilePathRequired"
+msgstr "Le chemin du fichier d'inventaire est requis"
+
+msgid "inventoryContentRequired"
+msgstr "Le contenu de l'inventaire est requis"
+
+msgid "invalidInventoryType"
+msgstr "Type d'inventaire invalide ; utilisez static, static_yaml ou file"

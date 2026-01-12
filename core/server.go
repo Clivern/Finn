@@ -111,6 +111,10 @@ func SetupServer(Static embed.FS) http.Handler {
 		r.Post("/api/v1/runners/{id}/ping", api.PingRunnerAction)
 	})
 	r.Group(func(r chi.Router) {
+		r.Use(middleware.RequireRole(db.UserRoleAdmin))
+		r.Post("/api/v1/workspaces/{workspaceID}/backends/{id}/unlock", apiw.UnlockWorkspaceBackendAction)
+	})
+	r.Group(func(r chi.Router) {
 		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))
 		r.Post("/api/v1/workspaces", api.CreateWorkspaceAction)
 		r.Get("/api/v1/workspaces", api.ListWorkspacesAction)
@@ -155,12 +159,28 @@ func SetupServer(Static embed.FS) http.Handler {
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))
+		r.Post("/api/v1/workspaces/{workspaceID}/inventories", apiw.CreateWorkspaceInventoryAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/inventories", apiw.ListWorkspaceInventoriesAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/inventories/{id}", apiw.GetWorkspaceInventoryAction)
+		r.Put("/api/v1/workspaces/{workspaceID}/inventories/{id}", apiw.UpdateWorkspaceInventoryAction)
+		r.Delete("/api/v1/workspaces/{workspaceID}/inventories/{id}", apiw.DeleteWorkspaceInventoryAction)
+	})
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))
 		r.Post("/api/v1/workspaces/{workspaceID}/backends", apiw.CreateWorkspaceBackendAction)
 		r.Get("/api/v1/workspaces/{workspaceID}/backends", apiw.ListWorkspaceBackendsAction)
 		r.Get("/api/v1/workspaces/{workspaceID}/backends/{id}", apiw.GetWorkspaceBackendAction)
 		r.Get("/api/v1/workspaces/{workspaceID}/backends/{id}/password", apiw.RevealWorkspaceBackendPasswordAction)
 		r.Put("/api/v1/workspaces/{workspaceID}/backends/{id}", apiw.UpdateWorkspaceBackendAction)
 		r.Delete("/api/v1/workspaces/{workspaceID}/backends/{id}", apiw.DeleteWorkspaceBackendAction)
+	})
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))
+		r.Post("/api/v1/workspaces/{workspaceID}/gvars", apiw.CreateWorkspaceVariableGroupAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/gvars", apiw.ListWorkspaceVariableGroupsAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/gvars/{id}", apiw.GetWorkspaceVariableGroupAction)
+		r.Put("/api/v1/workspaces/{workspaceID}/gvars/{id}", apiw.UpdateWorkspaceVariableGroupAction)
+		r.Delete("/api/v1/workspaces/{workspaceID}/gvars/{id}", apiw.DeleteWorkspaceVariableGroupAction)
 	})
 
 	r.With(middleware.BasicAuth(

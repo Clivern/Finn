@@ -46,27 +46,43 @@ const (
 	CanGetWorkspaceBackend    = "CAN_GET_WORKSPACE_BACKEND"
 	CanUpdateWorkspaceBackend = "CAN_UPDATE_WORKSPACE_BACKEND"
 	CanDeleteWorkspaceBackend = "CAN_DELETE_WORKSPACE_BACKEND"
+
+	CanGetWorkspaceVariableGroups   = "CAN_GET_WORKSPACE_VARIABLE_GROUPS"
+	CanAddWorkspaceVariableGroup    = "CAN_ADD_WORKSPACE_VARIABLE_GROUP"
+	CanGetWorkspaceVariableGroup    = "CAN_GET_WORKSPACE_VARIABLE_GROUP"
+	CanUpdateWorkspaceVariableGroup = "CAN_UPDATE_WORKSPACE_VARIABLE_GROUP"
+	CanDeleteWorkspaceVariableGroup = "CAN_DELETE_WORKSPACE_VARIABLE_GROUP"
+
+	CanGetWorkspaceInventories  = "CAN_GET_WORKSPACE_INVENTORIES"
+	CanAddWorkspaceInventory    = "CAN_ADD_WORKSPACE_INVENTORY"
+	CanGetWorkspaceInventory    = "CAN_GET_WORKSPACE_INVENTORY"
+	CanUpdateWorkspaceInventory = "CAN_UPDATE_WORKSPACE_INVENTORY"
+	CanDeleteWorkspaceInventory = "CAN_DELETE_WORKSPACE_INVENTORY"
 )
 
 // Permission checks user permissions for resources (e.g. workspace).
 type Permission struct {
-	UserRepository             db.UserRepository
-	WorkspaceRepository        db.WorkspaceRepository
-	WorkspaceRepoRepository    db.WorkspaceRepoRepository
-	WorkspaceSSHKeyRepository  db.WorkspaceSSHKeyRepository
-	WorkspaceCredRepository db.WorkspaceCredRepository
-	WorkspaceBackendRepository db.WorkspaceBackendRepository
+	UserRepository                   db.UserRepository
+	WorkspaceRepository              db.WorkspaceRepository
+	WorkspaceRepoRepository          db.WorkspaceRepoRepository
+	WorkspaceSSHKeyRepository        db.WorkspaceSSHKeyRepository
+	WorkspaceCredRepository          db.WorkspaceCredRepository
+	WorkspaceInventoryRepository     db.WorkspaceInventoryRepository
+	WorkspaceBackendRepository       db.WorkspaceBackendRepository
+	WorkspaceVariableGroupRepository db.WorkspaceVariableGroupRepository
 }
 
 // NewPermission creates a new permission module.
 func NewPermission(dbConn *sql.DB) *Permission {
 	return &Permission{
-		UserRepository:             db.NewUserRepository(dbConn),
-		WorkspaceRepository:        db.NewWorkspaceRepository(dbConn),
-		WorkspaceRepoRepository:    db.NewWorkspaceRepoRepository(dbConn),
-		WorkspaceSSHKeyRepository:  db.NewWorkspaceSSHKeyRepository(dbConn),
-		WorkspaceCredRepository: db.NewWorkspaceCredRepository(dbConn),
-		WorkspaceBackendRepository: db.NewWorkspaceBackendRepository(dbConn),
+		UserRepository:                   db.NewUserRepository(dbConn),
+		WorkspaceRepository:              db.NewWorkspaceRepository(dbConn),
+		WorkspaceRepoRepository:          db.NewWorkspaceRepoRepository(dbConn),
+		WorkspaceSSHKeyRepository:        db.NewWorkspaceSSHKeyRepository(dbConn),
+		WorkspaceCredRepository:          db.NewWorkspaceCredRepository(dbConn),
+		WorkspaceInventoryRepository:     db.NewWorkspaceInventoryRepository(dbConn),
+		WorkspaceBackendRepository:       db.NewWorkspaceBackendRepository(dbConn),
+		WorkspaceVariableGroupRepository: db.NewWorkspaceVariableGroupRepository(dbConn),
 	}
 }
 
@@ -208,6 +224,54 @@ func (p *Permission) CheckWorkspaceBackendPermission(user *db.User, backend *db.
 	case CanGetWorkspaceBackend, CanGetWorkspaceBackends:
 		return true, nil
 	case CanUpdateWorkspaceBackend, CanDeleteWorkspaceBackend, CanAddWorkspaceBackend:
+		return membership.Role == db.UserRoleAdmin || membership.Role == db.UserRoleOwner, nil
+	default:
+		return false, nil
+	}
+}
+
+// CheckWorkspaceVariableGroupPermission checks if the user has the given permission on the workspace variable group.
+func (p *Permission) CheckWorkspaceVariableGroupPermission(user *db.User, group *db.WorkspaceVariableGroup, permission string) (bool, error) {
+	if user.Role == db.UserRoleAdmin {
+		return true, nil
+	}
+
+	membership, err := p.WorkspaceRepository.GetWorkspaceMembership(group.WorkspaceID, user.ID)
+	if err != nil {
+		return false, err
+	}
+	if membership == nil {
+		return false, nil
+	}
+
+	switch permission {
+	case CanGetWorkspaceVariableGroup, CanGetWorkspaceVariableGroups:
+		return true, nil
+	case CanUpdateWorkspaceVariableGroup, CanDeleteWorkspaceVariableGroup, CanAddWorkspaceVariableGroup:
+		return membership.Role == db.UserRoleAdmin || membership.Role == db.UserRoleOwner, nil
+	default:
+		return false, nil
+	}
+}
+
+// CheckWorkspaceInventoryPermission checks if the user has the given permission on the workspace inventory.
+func (p *Permission) CheckWorkspaceInventoryPermission(user *db.User, inventory *db.WorkspaceInventory, permission string) (bool, error) {
+	if user.Role == db.UserRoleAdmin {
+		return true, nil
+	}
+
+	membership, err := p.WorkspaceRepository.GetWorkspaceMembership(inventory.WorkspaceID, user.ID)
+	if err != nil {
+		return false, err
+	}
+	if membership == nil {
+		return false, nil
+	}
+
+	switch permission {
+	case CanGetWorkspaceInventory, CanGetWorkspaceInventories:
+		return true, nil
+	case CanUpdateWorkspaceInventory, CanDeleteWorkspaceInventory, CanAddWorkspaceInventory:
 		return membership.Role == db.UserRoleAdmin || membership.Role == db.UserRoleOwner, nil
 	default:
 		return false, nil

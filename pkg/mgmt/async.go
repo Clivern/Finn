@@ -12,15 +12,16 @@ import (
 
 	"github.com/clivern/finn/db"
 	"github.com/clivern/finn/pkg/runner"
+	"github.com/clivern/finn/pkg/util"
 	"github.com/rs/zerolog/log"
 )
 
 // Async sends clone requests to runners for workspace repositories.
 type Async struct {
-	Runners  db.RunnerRepository
-	Repos    db.WorkspaceRepoRepository
-	Creds db.WorkspaceCredRepository
-	SSHKeys  db.WorkspaceSSHKeyRepository
+	Runners db.RunnerRepository
+	Repos   db.WorkspaceRepoRepository
+	Creds   db.WorkspaceCredRepository
+	SSHKeys db.WorkspaceSSHKeyRepository
 }
 
 // NewAsync returns an Async that uses the given runner and repo repositories.
@@ -31,10 +32,10 @@ func NewAsync(
 	sshKeys db.WorkspaceSSHKeyRepository,
 ) *Async {
 	return &Async{
-		Runners:  runners,
-		Repos:    repos,
-		Creds: creds,
-		SSHKeys:  sshKeys,
+		Runners: runners,
+		Repos:   repos,
+		Creds:   creds,
+		SSHKeys: sshKeys,
 	}
 }
 
@@ -81,14 +82,25 @@ func (a *Async) Clone(ctx context.Context, repo *db.WorkspaceRepo, run *db.Runne
 	if repo.GitCredentialsID != nil {
 		if cred, err := a.Creds.GetByIDAndWorkspace(*repo.GitCredentialsID, repo.WorkspaceID); err == nil {
 			payload["username"] = cred.Username
-			payload["password"] = cred.PasswordOrToken
+			payload["password"] = util.DecryptFromBase64String(
+				cred.PasswordOrToken,
+				util.GetEncryptionKey(),
+			)
 		}
 	}
+
 	if repo.SSHKeyID != nil {
 		if key, err := a.SSHKeys.GetByIDAndWorkspace(*repo.SSHKeyID, repo.WorkspaceID); err == nil {
-			payload["ssh_private_key"] = key.PrivateKey
-			if key.Passphrase != "" {
-				payload["ssh_passphrase"] = key.Passphrase
+			payload["ssh_private_key"] = util.DecryptFromBase64String(
+				key.PrivateKey,
+				util.GetEncryptionKey(),
+			)
+			decPass := util.DecryptFromBase64String(
+				key.Passphrase,
+				util.GetEncryptionKey(),
+			)
+			if decPass != "" {
+				payload["ssh_passphrase"] = decPass
 			}
 		}
 	}

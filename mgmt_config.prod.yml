@@ -8,6 +8,8 @@ app:
   port: ${FINN_SERVER_PORT:-8000}
   # Hostname
   hostname: ${FINN_SERVER_HOSTNAME:-127.0.0.1}
+  # Server encryption key
+  encryption_key: ${FINN_SERVER_ENCRYPTION_KEY:-ec42a4ca49c7fba9273e402eb4d3521a8679b634bc4fdf80932e18e17e252fc3}
   # TLS configs
   tls:
     status: ${FINN_SERVER_TLS_STATUS:-off}

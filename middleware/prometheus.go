@@ -7,6 +7,7 @@ package middleware
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -75,14 +76,16 @@ func (mrw *metricsResponseWriter) Write(b []byte) (int, error) {
 // PrometheusMiddleware creates a middleware for Prometheus metrics
 func PrometheusMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Skip metrics endpoint to avoid recursion
-		if r.URL.Path == "/api/v1/_metrics" {
+		if r.URL.Path == "/api/v1/public/_metrics" {
 			next.ServeHTTP(w, r)
 			return
 		}
 
 		start := time.Now().UTC()
 		path := r.URL.Path
+		if strings.HasPrefix(r.URL.Path, "/assets/") {
+			path = "/assets/*"
+		}
 
 		reqSize := float64(r.ContentLength)
 		if reqSize > 0 {
@@ -99,8 +102,20 @@ func PrometheusMiddleware(next http.Handler) http.Handler {
 		duration := time.Since(start).Seconds()
 		status := strconv.Itoa(wrapped.statusCode)
 
-		httpRequestsTotal.WithLabelValues(r.Method, path, status).Inc()
-		httpRequestDuration.WithLabelValues(r.Method, path, status).Observe(duration)
-		httpResponseSize.WithLabelValues(r.Method, path, status).Observe(float64(wrapped.size))
+		httpRequestsTotal.WithLabelValues(
+			r.Method,
+			path,
+			status,
+		).Inc()
+		httpRequestDuration.WithLabelValues(
+			r.Method,
+			path,
+			status,
+		).Observe(duration)
+		httpResponseSize.WithLabelValues(
+			r.Method,
+			path,
+			status,
+		).Observe(float64(wrapped.size))
 	})
 }

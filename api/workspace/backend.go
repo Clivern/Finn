@@ -734,6 +734,124 @@ func DeleteWorkspaceBackendAction(w http.ResponseWriter, r *http.Request) {
 	util.WriteJSON(w, http.StatusNoContent, map[string]interface{}{})
 }
 
+// UnlockWorkspaceBackendAction clears the active Terraform state lock (platform admin only).
+func UnlockWorkspaceBackendAction(w http.ResponseWriter, r *http.Request) {
+	log.Info().Msg("Unlock workspace backend (admin) endpoint called")
+
+	user, ok := middleware.GetUserFromContext(r.Context())
+	if !ok || user == nil {
+		util.WriteJSON(w, http.StatusUnauthorized, map[string]interface{}{
+			"errorMessage": locale.TR(r, "notAuthenticated"),
+		})
+		return
+	}
+
+	workspaceIDStr := chi.URLParam(r, "workspaceID")
+	if workspaceIDStr == "" {
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidWorkspaceID"),
+		})
+		return
+	}
+
+	wsModule := module.NewWorkspace(db.GetDB())
+	workspace, err := wsModule.GetWorkspace(db.ID(workspaceIDStr))
+	if err != nil {
+		if errors.Is(err, module.ErrWorkspaceNotFound) {
+			util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+				"errorMessage": locale.TR(r, "workspaceNotFound"),
+			})
+			return
+		}
+		log.Error().
+			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
+			Msg("Failed to get workspace")
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetWorkspace"),
+		})
+		return
+	}
+
+	idStr := chi.URLParam(r, "id")
+	if idStr == "" {
+		util.WriteJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"errorMessage": locale.TR(r, "invalidBackendID"),
+		})
+		return
+	}
+
+	repo := db.NewWorkspaceBackendRepository(db.GetDB())
+	backend, err := repo.GetByIDAndWorkspace(db.ID(idStr), workspace.ID)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("backendID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
+			Msg("Failed to get workspace backend")
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetBackend"),
+		})
+		return
+	}
+	if backend == nil {
+		util.WriteJSON(w, http.StatusNotFound, map[string]interface{}{
+			"errorMessage": locale.TR(r, "backendNotFound"),
+		})
+		return
+	}
+
+	lockMu.Lock()
+	defer lockMu.Unlock()
+
+	lockRepo := db.NewWorkspaceBackendLockRepository(db.GetDB())
+	active, err := lockRepo.GetAnyActiveByBackendID(backend.ID)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("backendID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
+			Msg("Failed to get active lock")
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedGetBackend"),
+		})
+		return
+	}
+
+	if active != nil {
+		if err := lockRepo.SetInactive(active.ID); err != nil {
+			log.Error().
+				Err(err).
+				Str("backendID", idStr).
+				Str("workspaceID", workspaceIDStr).
+				Str("userID", user.ID.String()).
+				Msg("Failed to unlock workspace backend")
+			util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+				"errorMessage": locale.TR(r, "failedUpdateBackend"),
+			})
+			return
+		}
+		log.Info().
+			Str("backendID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
+			Msg("Workspace backend state unlocked by admin")
+	}
+
+	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"id":        backend.ID,
+		"name":      backend.Name,
+		"slug":      backend.Slug,
+		"username":  backend.Username,
+		"locked":    lockRepo.IsLocked(backend.ID),
+		"createdAt": backend.CreatedAt.UTC().Format(time.RFC3339),
+		"updatedAt": backend.UpdatedAt.UTC().Format(time.RFC3339),
+	})
+}
+
 // getBackendBySlugAndBasicAuth resolves backend by slug and validates Basic Auth
 func getBackendBySlugAndBasicAuth(w http.ResponseWriter, r *http.Request) *db.WorkspaceBackend {
 	slug := chi.URLParam(r, "slug")

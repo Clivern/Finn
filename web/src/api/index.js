@@ -164,6 +164,24 @@ export const credentialsAPI = {
   delete: (workspaceId, id) => api.delete(`/workspaces/${workspaceId}/credentials/${id}`),
 }
 
+// API endpoints for workspace Ansible inventories
+export const inventoriesAPI = {
+  list: (workspaceId, params = {}) => api.get(`/workspaces/${workspaceId}/inventories`, { params }),
+  get: (workspaceId, id) => api.get(`/workspaces/${workspaceId}/inventories/${id}`),
+  create: (workspaceId, data) => api.post(`/workspaces/${workspaceId}/inventories`, data),
+  update: (workspaceId, id, data) => api.put(`/workspaces/${workspaceId}/inventories/${id}`, data),
+  delete: (workspaceId, id) => api.delete(`/workspaces/${workspaceId}/inventories/${id}`),
+}
+
+// API endpoints for workspace variable groups (extra vars / env / secrets)
+export const variableGroupsAPI = {
+  list: (workspaceId, params = {}) => api.get(`/workspaces/${workspaceId}/gvars`, { params }),
+  get: (workspaceId, id) => api.get(`/workspaces/${workspaceId}/gvars/${id}`),
+  create: (workspaceId, data) => api.post(`/workspaces/${workspaceId}/gvars`, data),
+  update: (workspaceId, id, data) => api.put(`/workspaces/${workspaceId}/gvars/${id}`, data),
+  delete: (workspaceId, id) => api.delete(`/workspaces/${workspaceId}/gvars/${id}`),
+}
+
 // API endpoints for workspace backends (Terraform state backends)
 export const backendsAPI = {
   list: (workspaceId, params = {}) => api.get(`/workspaces/${workspaceId}/backends`, { params }),
@@ -172,6 +190,7 @@ export const backendsAPI = {
   update: (workspaceId, id, data) => api.put(`/workspaces/${workspaceId}/backends/${id}`, data),
   delete: (workspaceId, id) => api.delete(`/workspaces/${workspaceId}/backends/${id}`),
   revealPassword: (workspaceId, id) => api.get(`/workspaces/${workspaceId}/backends/${id}/password`),
+  unlock: (workspaceId, id) => api.post(`/workspaces/${workspaceId}/backends/${id}/unlock`),
 }
 
 // API endpoints for AI assistant

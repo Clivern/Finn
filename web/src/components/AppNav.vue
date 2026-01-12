@@ -232,7 +232,7 @@ const navItems = computed(() => {
     { to: '/templates', label: t('nav.templates') },
     { to: '/flows', label: t('nav.flows') },
     { to: '/inventory', label: t('nav.inventory') },
-    { to: '/environment', label: t('nav.environment') },
+    { to: '/group-vars', label: t('nav.groupVars') },
     { to: '/repositories', label: t('nav.repositories') },
     { to: '/secrets', label: t('nav.secrets') },
     { to: '/backends', label: t('nav.backends') }

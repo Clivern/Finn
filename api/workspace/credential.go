@@ -137,6 +137,22 @@ func CreateWorkspaceCredAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	token, err := util.EncryptToBase64String(
+		req.PasswordOrToken,
+		util.GetEncryptionKey(),
+	)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
+			Msg("Failed to encrypt credential password")
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCreateGitCredentials"),
+		})
+		return
+	}
+
 	cred := &db.WorkspaceCred{
 		WorkspaceID:     workspace.ID,
 		Name:            req.Name,
@@ -144,7 +160,7 @@ func CreateWorkspaceCredAction(w http.ResponseWriter, r *http.Request) {
 		CommitterName:   req.CommitterName,
 		CommitterEmail:  req.CommitterEmail,
 		Username:        req.Username,
-		PasswordOrToken: req.PasswordOrToken,
+		PasswordOrToken: token,
 	}
 
 	repo := db.NewWorkspaceCredRepository(db.GetDB())
@@ -493,7 +509,23 @@ func UpdateWorkspaceCredAction(w http.ResponseWriter, r *http.Request) {
 	c.CommitterEmail = req.CommitterEmail
 	c.Username = req.Username
 	if req.PasswordOrToken != "" {
-		c.PasswordOrToken = req.PasswordOrToken
+		token, err := util.EncryptToBase64String(
+			req.PasswordOrToken,
+			util.GetEncryptionKey(),
+		)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Str("credID", idStr).
+				Str("workspaceID", workspaceIDStr).
+				Str("userID", user.ID.String()).
+				Msg("Failed to encrypt credential password")
+			util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+				"errorMessage": locale.TR(r, "failedUpdateGitCredentials"),
+			})
+			return
+		}
+		c.PasswordOrToken = token
 	}
 
 	if err := repo.Update(c); err != nil {

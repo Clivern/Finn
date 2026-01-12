@@ -130,6 +130,12 @@ msgstr "Failed to delete user"
 msgid "failedDeleteWorkspace"
 msgstr "Failed to delete workspace"
 
+msgid "failedEncryptSecretEnvironmentVariables"
+msgstr "Failed to encrypt secret environment variables"
+
+msgid "failedEncryptSecretExtraVariables"
+msgstr "Failed to encrypt secret extra variables"
+
 msgid "failedGetApiKey"
 msgstr "Failed to get API key"
 
@@ -429,3 +435,12 @@ msgstr "User with this email already exists"
 
 msgid "workspaceNotFound"
 msgstr "Workspace not found"
+
+msgid "inventoryFilePathRequired"
+msgstr "Inventory file path is required"
+
+msgid "inventoryContentRequired"
+msgstr "Inventory content is required"
+
+msgid "invalidInventoryType"
+msgstr "Invalid inventory type; use static, static_yaml, or file"

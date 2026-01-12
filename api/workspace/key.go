@@ -109,13 +109,44 @@ func CreateWorkspaceSSHKeyAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	privateKeyEnc, err := util.EncryptToBase64String(
+		req.PrivateKey,
+		util.GetEncryptionKey(),
+	)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
+			Msg("Failed to encrypt SSH private key")
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCreateSshKey"),
+		})
+		return
+	}
+	passphraseEnc, err := util.EncryptToBase64String(
+		req.Passphrase,
+		util.GetEncryptionKey(),
+	)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
+			Msg("Failed to encrypt SSH key passphrase")
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedCreateSshKey"),
+		})
+		return
+	}
+
 	key := &db.WorkspaceSSHKey{
 		WorkspaceID:    workspace.ID,
 		Name:           req.Name,
 		CommitterName:  req.CommitterName,
 		CommitterEmail: req.CommitterEmail,
-		PrivateKey:     req.PrivateKey,
-		Passphrase:     req.Passphrase,
+		PrivateKey:     privateKeyEnc,
+		Passphrase:     passphraseEnc,
 	}
 	if req.PublicKey != "" {
 		key.PublicKey = &req.PublicKey
@@ -260,7 +291,7 @@ func ListWorkspaceSSHKeysAction(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetWorkspaceSSHKeyAction returns one SSH key (private key never returned).
+// GetWorkspaceSSHKeyAction returns one SSH key.
 func GetWorkspaceSSHKeyAction(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Get workspace SSH key endpoint called")
 
@@ -459,13 +490,47 @@ func UpdateWorkspaceSSHKeyAction(w http.ResponseWriter, r *http.Request) {
 	key.Name = req.Name
 	key.CommitterName = req.CommitterName
 	key.CommitterEmail = req.CommitterEmail
+
 	if req.PrivateKey != "" {
-		key.PrivateKey = req.PrivateKey
+		privateKeyEnc, err := util.EncryptToBase64String(
+			req.PrivateKey,
+			util.GetEncryptionKey(),
+		)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Str("sshKeyID", idStr).
+				Str("workspaceID", workspaceIDStr).
+				Str("userID", user.ID.String()).
+				Msg("Failed to encrypt SSH private key")
+			util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+				"errorMessage": locale.TR(r, "failedUpdateSshKey"),
+			})
+			return
+		}
+		key.PrivateKey = privateKeyEnc
 	}
 	if req.PublicKey != "" {
 		key.PublicKey = &req.PublicKey
 	}
-	key.Passphrase = req.Passphrase
+
+	passphraseEnc, err := util.EncryptToBase64String(
+		req.Passphrase,
+		util.GetEncryptionKey(),
+	)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("sshKeyID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
+			Msg("Failed to encrypt SSH key passphrase")
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedUpdateSshKey"),
+		})
+		return
+	}
+	key.Passphrase = passphraseEnc
 
 	if err := repo.Update(key); err != nil {
 		log.Error().

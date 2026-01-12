@@ -36,168 +36,162 @@ func detectDriver(db *sql.DB) string {
 func GetAll() []Migration {
 	return []Migration{
 		{
-			Version:     "20250101000003",
+			Version:     "20250101000001",
 			Description: "Create options table",
 			Up:          createOptionsTable,
 			Down:        dropOptionsTable,
 		},
 		{
-			Version:     "20250101000004",
+			Version:     "20250101000002",
 			Description: "Create users table",
 			Up:          createUsersTable,
 			Down:        dropUsersTable,
 		},
 		{
-			Version:     "20250101000005",
+			Version:     "20250101000003",
 			Description: "Create users_meta table",
 			Up:          createUsersMetaTable,
 			Down:        dropUsersMetaTable,
 		},
 		{
-			Version:     "20250101000006",
+			Version:     "20250101000004",
 			Description: "Create user_sessions table",
 			Up:          createUserSessionsTable,
 			Down:        dropUserSessionsTable,
 		}, {
-			Version:     "20250101000007",
+			Version:     "20250101000005",
 			Description: "Create user_api_keys table",
 			Up:          createUserAPIKeysTable,
 			Down:        dropUserAPIKeysTable,
 		},
 		{
-			Version:     "20250101000009",
+			Version:     "20250101000006",
 			Description: "Create workspaces table",
 			Up:          createWorkspacesTable,
 			Down:        dropWorkspacesTable,
 		},
 		{
-			Version:     "20250101000010",
+			Version:     "20250101000007",
 			Description: "Create user_invites table",
 			Up:          createUserInvitesTable,
 			Down:        dropUserInvitesTable,
 		},
 		{
-			Version:     "20250101000011",
+			Version:     "20250101000008",
 			Description: "Create workspaces_meta table",
 			Up:          createWorkspacesMetaTable,
 			Down:        dropWorkspacesMetaTable,
 		},
 		{
-			Version:     "20250101000012",
+			Version:     "20250101000009",
 			Description: "Create workspace_users table",
 			Up:          createWorkspaceUsersTable,
 			Down:        dropWorkspaceUsersTable,
 		},
 		{
-			Version:     "20250101000013",
+			Version:     "20250101000010",
 			Description: "Create workspace_ssh_keys table",
 			Up:          createWorkspaceSSHKeysTable,
 			Down:        dropWorkspaceSSHKeysTable,
 		},
 		{
-			Version:     "20250101000013a",
+			Version:     "20250101000011",
 			Description: "Create workspace_credentials table",
 			Up:          createWorkspaceCredentialsTable,
 			Down:        dropWorkspaceCredentialsTable,
 		},
 		{
-			Version:     "20250101000014",
+			Version:     "20250101000012",
 			Description: "Create workspace_repositories table",
 			Up:          createWorkspaceRepositoriesTable,
 			Down:        dropWorkspaceRepositoriesTable,
 		},
 		{
-			Version:     "20250101000015",
+			Version:     "20250101000013",
 			Description: "Create workspace_integrations table",
 			Up:          createWorkspaceIntegrationsTable,
 			Down:        dropWorkspaceIntegrationsTable,
 		},
 		{
-			Version:     "20250101000016",
+			Version:     "20250101000014",
 			Description: "Create runners table",
 			Up:          createRunnersTable,
 			Down:        dropRunnersTable,
 		},
 		{
-			Version:     "20250101000017",
+			Version:     "20250101000015",
 			Description: "Create workspace_inventories table",
 			Up:          createWorkspaceInventoriesTable,
 			Down:        dropWorkspaceInventoriesTable,
 		},
 		{
-			Version:     "20250101000018",
-			Description: "Create workspace_environments table",
-			Up:          createWorkspaceEnvironmentsTable,
-			Down:        dropWorkspaceEnvironmentsTable,
-		},
-		{
-			Version:     "20250101000020",
+			Version:     "20250101000016",
 			Description: "Create system_integrations table",
 			Up:          createSystemIntegrationsTable,
 			Down:        dropSystemIntegrationsTable,
 		},
 		{
-			Version:     "20250101000021",
+			Version:     "20250101000017",
 			Description: "Create password_reset_tokens table",
 			Up:          createPasswordResetTokensTable,
 			Down:        dropPasswordResetTokensTable,
 		},
 		{
-			Version:     "20250101000022",
+			Version:     "20250101000018",
 			Description: "Create workspace_events table",
 			Up:          createWorkspaceEventsTable,
 			Down:        dropWorkspaceEventsTable,
 		},
 		{
-			Version:     "20250101000023",
+			Version:     "20250101000019",
 			Description: "Create system_events table",
 			Up:          createSystemEventsTable,
 			Down:        dropSystemEventsTable,
 		},
 		{
-			Version:     "20250101000024",
+			Version:     "20250101000020",
 			Description: "Create workspace_backend table",
 			Up:          createWorkspaceBackendTable,
 			Down:        dropWorkspaceBackendTable,
 		},
 		{
-			Version:     "20250101000025",
+			Version:     "20250101000021",
 			Description: "Create workspace_backend_state table",
 			Up:          createWorkspaceBackendStateTable,
 			Down:        dropWorkspaceBackendStateTable,
 		},
 		{
-			Version:     "20250101000026",
+			Version:     "20250101000022",
 			Description: "Create workspace_backend_lock table",
 			Up:          createWorkspaceBackendLockTable,
 			Down:        dropWorkspaceBackendLockTable,
 		},
 		{
-			Version:     "20250101000028",
+			Version:     "20250101000023",
 			Description: "Create user_ai_messages table",
 			Up:          createUserAIMessagesTable,
 			Down:        dropUserAIMessagesTable,
 		},
 		{
-			Version:     "20250101000029",
+			Version:     "20250101000024",
 			Description: "Create workspace_repository_clone_tasks table",
 			Up:          createWorkspaceRepositoryCloneTasksTable,
 			Down:        dropWorkspaceRepositoryCloneTasksTable,
 		},
 		{
-			Version:     "20250101000030",
+			Version:     "20250101000025",
 			Description: "Create workspace_events_deliverables table",
 			Up:          createWorkspaceEventsDeliverablesTable,
 			Down:        dropWorkspaceEventsDeliverablesTable,
 		},
 		{
-			Version:     "20250101000031",
+			Version:     "20250101000026",
 			Description: "Create system_events_deliverables table",
 			Up:          createSystemEventsDeliverablesTable,
 			Down:        dropSystemEventsDeliverablesTable,
 		},
 		{
-			Version:     "20250101000032",
+			Version:     "20250101000027",
 			Description: "Create workspace_variable_groups table",
 			Up:          createWorkspaceVariableGroupsTable,
 			Down:        dropWorkspaceVariableGroupsTable,
@@ -1096,15 +1090,18 @@ func createWorkspaceInventoriesTable(db *sql.DB) error {
 			inventory_path VARCHAR(512),
 			type VARCHAR(50) NOT NULL DEFAULT 'static',
 			ssh_key_id INTEGER NULL,
+			credential_id INTEGER NULL,
 			become_key_id INTEGER NULL,
+			become_credential_id INTEGER NULL,
 			repository_id INTEGER NULL,
-			runner_tag VARCHAR(128),
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
 			FOREIGN KEY (ssh_key_id) REFERENCES workspace_ssh_keys(id) ON DELETE SET NULL,
 			FOREIGN KEY (become_key_id) REFERENCES workspace_ssh_keys(id) ON DELETE SET NULL,
-			FOREIGN KEY (repository_id) REFERENCES workspace_repositories(id) ON DELETE SET NULL
+			FOREIGN KEY (become_credential_id) REFERENCES workspace_credentials(id) ON DELETE SET NULL,
+			FOREIGN KEY (repository_id) REFERENCES workspace_repositories(id) ON DELETE SET NULL,
+			FOREIGN KEY (credential_id) REFERENCES workspace_credentials(id) ON DELETE SET NULL
 		)`
 	case "postgres":
 		query = `
@@ -1116,9 +1113,10 @@ func createWorkspaceInventoriesTable(db *sql.DB) error {
 			inventory_path VARCHAR(512),
 			type VARCHAR(50) NOT NULL DEFAULT 'static',
 			ssh_key_id UUID NULL REFERENCES workspace_ssh_keys(id) ON DELETE SET NULL,
+			credential_id UUID NULL REFERENCES workspace_credentials(id) ON DELETE SET NULL,
 			become_key_id UUID NULL REFERENCES workspace_ssh_keys(id) ON DELETE SET NULL,
+			become_credential_id UUID NULL REFERENCES workspace_credentials(id) ON DELETE SET NULL,
 			repository_id UUID NULL REFERENCES workspace_repositories(id) ON DELETE SET NULL,
-			runner_tag VARCHAR(128),
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
@@ -1152,7 +1150,8 @@ func createWorkspaceVariableGroupsTable(db *sql.DB) error {
 			name VARCHAR(100) NOT NULL,
 			extra_variables TEXT,
 			environment_variables TEXT,
-			secrets TEXT,
+			secret_extra_variables TEXT,
+			secret_environment_variables TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
@@ -1165,7 +1164,8 @@ func createWorkspaceVariableGroupsTable(db *sql.DB) error {
 			name VARCHAR(100) NOT NULL,
 			extra_variables TEXT,
 			environment_variables TEXT,
-			secrets TEXT,
+			secret_extra_variables TEXT,
+			secret_environment_variables TEXT,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
@@ -1182,55 +1182,6 @@ func createWorkspaceVariableGroupsTable(db *sql.DB) error {
 // dropWorkspaceVariableGroupsTable drops the workspace_variable_groups table.
 func dropWorkspaceVariableGroupsTable(db *sql.DB) error {
 	_, err := db.Exec("DROP TABLE IF EXISTS workspace_variable_groups")
-	return err
-}
-
-// createWorkspaceEnvironmentsTable creates the workspace_environments table (extra vars / env for Ansible per workspace)
-func createWorkspaceEnvironmentsTable(db *sql.DB) error {
-	driver := detectDriver(db)
-	var query string
-
-	switch driver {
-	case "sqlite":
-		query = `
-		CREATE TABLE workspace_environments (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			workspace_id INTEGER NOT NULL,
-			name VARCHAR(100) NOT NULL,
-			password TEXT,
-			json TEXT,
-			env TEXT,
-			secret_storage_key_prefix VARCHAR(128),
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
-		)`
-	case "postgres":
-		query = `
-		CREATE TABLE workspace_environments (
-			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
-			name VARCHAR(100) NOT NULL,
-			password TEXT,
-			json TEXT,
-			env TEXT,
-			secret_storage_key_prefix VARCHAR(128),
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-		);
-		CREATE INDEX idx_workspace_environments_workspace_id ON workspace_environments(workspace_id);
-		CREATE INDEX idx_workspace_environments_name ON workspace_environments(name)`
-	default:
-		return fmt.Errorf("unsupported database driver: %s", driver)
-	}
-
-	_, err := db.Exec(query)
-	return err
-}
-
-// dropWorkspaceEnvironmentsTable drops the workspace_environments table.
-func dropWorkspaceEnvironmentsTable(db *sql.DB) error {
-	_, err := db.Exec("DROP TABLE IF EXISTS workspace_environments")
 	return err
 }
 

@@ -17,7 +17,6 @@ import (
 const DefaultExecTimeout = 10 * time.Minute
 
 // ExecOptions configures a command execution inside a Docker container
-// with a workspace directory mounted.
 type ExecOptions struct {
 	Dir     string            // host directory to mount as /workspace
 	Image   string            // Docker image to run
@@ -29,7 +28,7 @@ type ExecOptions struct {
 	OnOutput func(stream, line string)
 }
 
-// Exec runs a command inside a Docker container with opts.Dir mounted at /workspace.
+// Exec runs a command inside a Docker container
 func Exec(ctx context.Context, opts *ExecOptions) error {
 	if opts.Dir == "" {
 		return fmt.Errorf("exec: workspace directory is required")

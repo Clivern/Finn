@@ -76,6 +76,15 @@
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
                     <button
+                      v-if="backend.locked && isPlatformAdmin"
+                      type="button"
+                      @click="unlockBackend(backend)"
+                      :disabled="unlockingId === backend.id"
+                      class="text-amber-700 hover:text-amber-800 hover:underline mr-3 font-medium"
+                    >
+                      {{ unlockingId === backend.id ? $t('backendsPage.unlocking') : $t('backendsPage.forceUnlock') }}
+                    </button>
+                    <button
                       type="button"
                       @click="openUsageModal(backend)"
                       class="text-primary-600 hover:text-primary-700 hover:underline mr-3"
@@ -483,6 +492,7 @@ import { useI18n } from 'vue-i18n'
 import AppNav from '@/components/AppNav.vue'
 import { loadWorkspaceFromStorage } from '@/utils/storage'
 import { backendsAPI } from '@/api'
+import { user } from '@/lib/auth'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -516,6 +526,9 @@ const copiedField = ref(null)
 
 const deleteModalBackend = ref(null)
 const deletingId = ref(null)
+const unlockingId = ref(null)
+
+const isPlatformAdmin = computed(() => user.value?.role === 'admin')
 
 const usageModalBackend = ref(null)
 const backendBaseUrl = typeof window !== 'undefined' ? window.location.origin : ''
@@ -694,6 +707,23 @@ async function saveEditBackend() {
 
 function openDeleteModal(backend) {
   deleteModalBackend.value = backend
+}
+
+async function unlockBackend(backend) {
+  if (!workspace.value?.id || !backend?.id || !isPlatformAdmin.value) return
+  unlockingId.value = backend.id
+  errorMessage.value = ''
+  successMessage.value = ''
+
+  try {
+    await backendsAPI.unlock(workspace.value.id, backend.id)
+    successMessage.value = t('backendsPage.unlockSuccess')
+    await loadBackends()
+  } catch (err) {
+    errorMessage.value = err.response?.data?.errorMessage || t('backendsPage.failedUnlock')
+  } finally {
+    unlockingId.value = null
+  }
 }
 
 function openUsageModal(backend) {

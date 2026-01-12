@@ -134,18 +134,21 @@ func ListWorkspacesAction(w http.ResponseWriter, r *http.Request) {
 
 	workspaceList := make([]map[string]interface{}, 0, len(result.Workspaces))
 	for _, w := range result.Workspaces {
+		role := ""
+		membership, _ := wsModule.GetWorkspaceMembership(w.ID, user.ID)
+		if membership != nil {
+			role = membership.Role
+		} else if user.Role == db.UserRoleAdmin {
+			role = db.UserRoleAdmin
+		}
 		membersCount, _ := wsModule.CountWorkspaceMembers(w.ID)
 		item := map[string]interface{}{
 			"id":           w.ID,
 			"name":         w.Name,
 			"membersCount": membersCount,
+			"role":         role,
 			"createdAt":    w.CreatedAt.UTC().Format(time.RFC3339),
 			"updatedAt":    w.UpdatedAt.UTC().Format(time.RFC3339),
-		}
-		if membership, _ := wsModule.GetWorkspaceMembership(w.ID, user.ID); membership != nil {
-			item["role"] = membership.Role
-		} else if user.Role == db.UserRoleAdmin {
-			item["role"] = db.UserRoleAdmin
 		}
 		workspaceList = append(workspaceList, item)
 	}
@@ -227,12 +230,20 @@ func GetWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	role := ""
 	membersCount, _ := wsModule.CountWorkspaceMembers(workspace.ID)
+	membership, _ := wsModule.GetWorkspaceMembership(workspace.ID, user.ID)
+	if membership != nil {
+		role = membership.Role
+	} else if user.Role == db.UserRoleAdmin {
+		role = db.UserRoleAdmin
+	}
 
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"id":           workspace.ID,
 		"name":         workspace.Name,
 		"membersCount": membersCount,
+		"role":         role,
 		"createdAt":    workspace.CreatedAt.UTC().Format(time.RFC3339),
 		"updatedAt":    workspace.UpdatedAt.UTC().Format(time.RFC3339),
 	})
@@ -336,10 +347,20 @@ func UpdateWorkspaceAction(w http.ResponseWriter, r *http.Request) {
 		Str("workspaceID", workspace.ID.String()).
 		Str("userID", user.ID.String()).
 		Msg("Workspace updated successfully")
+
+	role := ""
+	membership, _ := wsModule.GetWorkspaceMembership(workspace.ID, user.ID)
+	if membership != nil {
+		role = membership.Role
+	} else if user.Role == db.UserRoleAdmin {
+		role = db.UserRoleAdmin
+	}
+
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"id":           workspace.ID,
 		"name":         workspace.Name,
 		"membersCount": membersCount,
+		"role":         role,
 		"createdAt":    workspace.CreatedAt.UTC().Format(time.RFC3339),
 		"updatedAt":    workspace.UpdatedAt.UTC().Format(time.RFC3339),
 	})

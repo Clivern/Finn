@@ -45,8 +45,7 @@ type CloneOptions struct {
 	OnProgress func(msg string)
 }
 
-// Clone performs a shallow git clone into opts.Dir using go-git.
-// Returns the HEAD commit hash on success.
+// Clone performs a shallow git clone into opts.Dir
 func Clone(ctx context.Context, opts *CloneOptions) (string, error) {
 	if opts.URL == "" {
 		return "", fmt.Errorf("clone: repository URL is required")
