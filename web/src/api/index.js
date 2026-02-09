@@ -8,7 +8,7 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   try {
-    const locale = typeof localStorage !== 'undefined' && localStorage.getItem('finn-locale')
+    const locale = typeof localStorage !== 'undefined' && localStorage.getItem('_flocale')
     if (locale === 'en' || locale === 'fr') {
       config.headers['Accept-Language'] = locale
     }
@@ -180,6 +180,15 @@ export const variableGroupsAPI = {
   create: (workspaceId, data) => api.post(`/workspaces/${workspaceId}/gvars`, data),
   update: (workspaceId, id, data) => api.put(`/workspaces/${workspaceId}/gvars/${id}`, data),
   delete: (workspaceId, id) => api.delete(`/workspaces/${workspaceId}/gvars/${id}`),
+}
+
+// API endpoints for workspace task templates
+export const workspaceTemplatesAPI = {
+  list: (workspaceId, params = {}) => api.get(`/workspaces/${workspaceId}/templates`, { params }),
+  get: (workspaceId, id) => api.get(`/workspaces/${workspaceId}/templates/${id}`),
+  create: (workspaceId, data) => api.post(`/workspaces/${workspaceId}/templates`, data),
+  update: (workspaceId, id, data) => api.put(`/workspaces/${workspaceId}/templates/${id}`, data),
+  delete: (workspaceId, id) => api.delete(`/workspaces/${workspaceId}/templates/${id}`),
 }
 
 // API endpoints for workspace backends (Terraform state backends)

@@ -118,6 +118,21 @@ msgstr "Échec de la suppression de l'utilisateur"
 msgid "failedDeleteWorkspace"
 msgstr "Échec de la suppression de l'espace de travail"
 
+msgid "failedCreateTemplate"
+msgstr "Échec de la création du modèle"
+
+msgid "failedDeleteTemplate"
+msgstr "Échec de la suppression du modèle"
+
+msgid "failedGetTemplate"
+msgstr "Échec de la récupération du modèle"
+
+msgid "failedListTemplates"
+msgstr "Échec de la liste des modèles"
+
+msgid "failedUpdateTemplate"
+msgstr "Échec de la mise à jour du modèle"
+
 msgid "failedEncryptSecretEnvironmentVariables"
 msgstr "Échec du chiffrement des variables d'environnement secrètes"
 
@@ -274,6 +289,9 @@ msgstr "ID d'espace de travail invalide"
 msgid "invalidWorkspaceIDOrUserID"
 msgstr "ID d'espace de travail ou ID utilisateur invalide"
 
+msgid "invalidTemplateID"
+msgstr "ID de modèle invalide"
+
 msgid "inviteExpired"
 msgstr "L'invitation a expiré"
 
@@ -357,6 +375,9 @@ msgstr "Inscription réussie. Veuillez vous connecter."
 
 msgid "repositoryNotFound"
 msgstr "Dépôt introuvable"
+
+msgid "templateNotFound"
+msgstr "Modèle introuvable"
 
 msgid "resetLinkInvalidOrExpired"
 msgstr "Ce lien de réinitialisation est invalide ou a expiré."

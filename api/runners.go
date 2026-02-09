@@ -5,6 +5,7 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
@@ -22,22 +23,22 @@ import (
 
 // CreateRunnerRequest is the body for creating a runner.
 type CreateRunnerRequest struct {
-	Name             string `json:"name" validate:"required" label:"Name"`
-	Tags             string `json:"tags" label:"Tags"`
-	MaxParallelTasks int    `json:"maxParallelTasks" validate:"required,min=1" label:"Max parallel tasks"`
-	Status           string `json:"status" validate:"required,oneof=active inactive maintenance" label:"Status"`
-	URL              string `json:"url" validate:"required" label:"URL"`
-	Token            string `json:"token" validate:"required,min=1" label:"Token (UUID)"`
+	Name             string            `json:"name" validate:"required" label:"Name"`
+	Tags             map[string]string `json:"tags" label:"Tags"`
+	MaxParallelTasks int               `json:"maxParallelTasks" validate:"required,min=1" label:"Max parallel tasks"`
+	Status           string            `json:"status" validate:"required,oneof=active inactive maintenance" label:"Status"`
+	URL              string            `json:"url" validate:"required" label:"URL"`
+	Token            string            `json:"token" validate:"required,min=1" label:"Token (UUID)"`
 }
 
 // UpdateRunnerRequest is the body for updating a runner.
 type UpdateRunnerRequest struct {
-	Name             string `json:"name" validate:"required" label:"Name"`
-	Tags             string `json:"tags" label:"Tags"`
-	MaxParallelTasks int    `json:"maxParallelTasks" validate:"required,min=1" label:"Max parallel tasks"`
-	Status           string `json:"status" validate:"required,oneof=active inactive maintenance" label:"Status"`
-	URL              string `json:"url" validate:"required" label:"URL"`
-	Token            string `json:"token" validate:"required,min=1" label:"Token (UUID)"`
+	Name             string            `json:"name" validate:"required" label:"Name"`
+	Tags             map[string]string `json:"tags" label:"Tags"`
+	MaxParallelTasks int               `json:"maxParallelTasks" validate:"required,min=1" label:"Max parallel tasks"`
+	Status           string            `json:"status" validate:"required,oneof=active inactive maintenance" label:"Status"`
+	URL              string            `json:"url" validate:"required" label:"URL"`
+	Token            string            `json:"token" validate:"required,min=1" label:"Token (UUID)"`
 }
 
 // ListRunnersAction returns all runners (admin only).
@@ -92,7 +93,7 @@ func ListRunnersAction(w http.ResponseWriter, r *http.Request) {
 			"id":               runner.ID,
 			"token":            runner.Token,
 			"name":             runner.Name,
-			"tags":             runner.Tags,
+			"tags":             runnerTagsFromStr(runner.Tags),
 			"maxParallelTasks": runner.MaxParallelTasks,
 			"status":           runner.Status,
 			"url":              runner.URL,
@@ -148,7 +149,7 @@ func GetRunnerAction(w http.ResponseWriter, r *http.Request) {
 		"id":               runner.ID,
 		"token":            runner.Token,
 		"name":             runner.Name,
-		"tags":             runner.Tags,
+		"tags":             runnerTagsFromStr(runner.Tags),
 		"maxParallelTasks": runner.MaxParallelTasks,
 		"status":           runner.Status,
 		"url":              runner.URL,
@@ -198,9 +199,7 @@ func CreateRunnerAction(w http.ResponseWriter, r *http.Request) {
 		URL:              req.URL,
 		MaxParallelTasks: req.MaxParallelTasks,
 		Status:           status,
-	}
-	if req.Tags != "" {
-		runner.Tags = req.Tags
+		Tags:             runnerTagsToJSON(normalizeRunnerTags(req.Tags)),
 	}
 
 	if err := repo.Create(runner); err != nil {
@@ -222,7 +221,7 @@ func CreateRunnerAction(w http.ResponseWriter, r *http.Request) {
 		"id":               runner.ID,
 		"token":            token,
 		"name":             runner.Name,
-		"tags":             runner.Tags,
+		"tags":             runnerTagsFromStr(runner.Tags),
 		"maxParallelTasks": runner.MaxParallelTasks,
 		"status":           runner.Status,
 		"url":              runner.URL,
@@ -289,7 +288,7 @@ func UpdateRunnerAction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	runner.Name = req.Name
-	runner.Tags = req.Tags
+	runner.Tags = runnerTagsToJSON(normalizeRunnerTags(req.Tags))
 	runner.MaxParallelTasks = req.MaxParallelTasks
 	runner.Status = req.Status
 	runner.URL = req.URL
@@ -312,7 +311,7 @@ func UpdateRunnerAction(w http.ResponseWriter, r *http.Request) {
 		"id":               runner.ID,
 		"token":            runner.Token,
 		"name":             runner.Name,
-		"tags":             runner.Tags,
+		"tags":             runnerTagsFromStr(runner.Tags),
 		"maxParallelTasks": runner.MaxParallelTasks,
 		"status":           runner.Status,
 		"url":              runner.URL,
@@ -433,4 +432,42 @@ func PingRunnerAction(w http.ResponseWriter, r *http.Request) {
 		"status":       "ok",
 		"errorMessage": "",
 	})
+}
+
+func normalizeRunnerTags(in map[string]string) map[string]string {
+	if len(in) == 0 {
+		return map[string]string{}
+	}
+	out := make(map[string]string)
+	for k, v := range in {
+		k = strings.TrimSpace(k)
+		if k == "" {
+			continue
+		}
+		out[k] = strings.TrimSpace(v)
+	}
+	return out
+}
+
+func runnerTagsToJSON(m map[string]string) string {
+	if len(m) == 0 {
+		return "{}"
+	}
+	b, err := json.Marshal(m)
+	if err != nil {
+		return "{}"
+	}
+	return string(b)
+}
+
+func runnerTagsFromStr(s string) map[string]string {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return map[string]string{}
+	}
+	var m map[string]string
+	if err := json.Unmarshal([]byte(s), &m); err != nil || m == nil {
+		return map[string]string{}
+	}
+	return m
 }

@@ -196,6 +196,12 @@ func GetAll() []Migration {
 			Up:          createWorkspaceVariableGroupsTable,
 			Down:        dropWorkspaceVariableGroupsTable,
 		},
+		{
+			Version:     "20250101000028",
+			Description: "Create workspace_templates table",
+			Up:          createWorkspaceTemplatesTable,
+			Down:        dropWorkspaceTemplatesTable,
+		},
 	}
 }
 
@@ -1038,7 +1044,7 @@ func createRunnersTable(db *sql.DB) error {
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			token VARCHAR(255) NOT NULL UNIQUE,
 			name VARCHAR(100),
-			tags VARCHAR(128),
+			tags VARCHAR(200),
 			max_parallel_tasks INTEGER DEFAULT 10,
 			status VARCHAR(50) NOT NULL DEFAULT 'active',
 			url VARCHAR(255),
@@ -1051,7 +1057,7 @@ func createRunnersTable(db *sql.DB) error {
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			token VARCHAR(255) NOT NULL UNIQUE,
 			name VARCHAR(100),
-			tags VARCHAR(128),
+			tags VARCHAR(200),
 			max_parallel_tasks INTEGER DEFAULT 10,
 			status VARCHAR(50) NOT NULL DEFAULT 'active',
 			url VARCHAR(255),
@@ -1484,5 +1490,84 @@ func createSystemEventsDeliverablesTable(db *sql.DB) error {
 // dropSystemEventsDeliverablesTable drops the system_events_deliverables table.
 func dropSystemEventsDeliverablesTable(db *sql.DB) error {
 	_, err := db.Exec("DROP TABLE IF EXISTS system_events_deliverables")
+	return err
+}
+
+// createWorkspaceTemplatesTable creates the workspace_templates table.
+func createWorkspaceTemplatesTable(db *sql.DB) error {
+	driver := detectDriver(db)
+	var query string
+
+	switch driver {
+	case "sqlite":
+		query = `
+		CREATE TABLE workspace_templates (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			workspace_id INTEGER NOT NULL,
+			repository_id INTEGER NOT NULL,
+			name VARCHAR(100) NOT NULL,
+			description TEXT,
+			engine VARCHAR(100) NOT NULL DEFAULT '',
+			working_directory VARCHAR(512) NOT NULL DEFAULT '',
+			git_branch_override VARCHAR(100),
+			git_tag_override VARCHAR(100),
+			runner_tags VARCHAR(200),
+			allow_concurrent_runs INTEGER NOT NULL DEFAULT 0,
+			max_concurrent_runs INTEGER NOT NULL DEFAULT 0,
+			approval_required INTEGER NOT NULL DEFAULT 0,
+			script_config TEXT,
+			iac_config TEXT,
+			ansible_config TEXT,
+			extra_args TEXT,
+			group_vars_id INTEGER,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+			FOREIGN KEY (repository_id) REFERENCES workspace_repositories(id) ON DELETE CASCADE,
+			FOREIGN KEY (group_vars_id) REFERENCES workspace_variable_groups(id) ON DELETE SET NULL,
+			UNIQUE(workspace_id, name)
+		);
+		CREATE INDEX idx_workspace_templates_workspace_id ON workspace_templates(workspace_id);
+		CREATE INDEX idx_workspace_templates_repository_id ON workspace_templates(repository_id);
+		CREATE INDEX idx_workspace_templates_group_vars_id ON workspace_templates(group_vars_id)`
+	case "postgres":
+		query = `
+		CREATE TABLE workspace_templates (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+			repository_id UUID NOT NULL REFERENCES workspace_repositories(id) ON DELETE CASCADE,
+			name VARCHAR(100) NOT NULL,
+			description TEXT,
+			engine VARCHAR(100) NOT NULL DEFAULT '',
+			working_directory VARCHAR(512) NOT NULL DEFAULT '',
+			git_branch_override VARCHAR(100),
+			git_tag_override VARCHAR(100),
+			runner_tags VARCHAR(200),
+			allow_concurrent_runs BOOLEAN NOT NULL DEFAULT false,
+			max_concurrent_runs INTEGER NOT NULL DEFAULT 0,
+			approval_required BOOLEAN NOT NULL DEFAULT false,
+			script_config TEXT,
+			iac_config TEXT,
+			ansible_config TEXT,
+			extra_args TEXT,
+			group_vars_id UUID REFERENCES workspace_variable_groups(id) ON DELETE SET NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			UNIQUE (workspace_id, name)
+		);
+		CREATE INDEX idx_workspace_templates_workspace_id ON workspace_templates(workspace_id);
+		CREATE INDEX idx_workspace_templates_repository_id ON workspace_templates(repository_id);
+		CREATE INDEX idx_workspace_templates_group_vars_id ON workspace_templates(group_vars_id)`
+	default:
+		return fmt.Errorf("unsupported database driver: %s", driver)
+	}
+
+	_, err := db.Exec(query)
+	return err
+}
+
+// dropWorkspaceTemplatesTable drops the workspace_templates table.
+func dropWorkspaceTemplatesTable(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE IF EXISTS workspace_templates")
 	return err
 }

@@ -79,7 +79,8 @@ type userRepoSQLite struct {
 // Create inserts a row
 func (r *userRepoSQLite) Create(user *User) error {
 	result, err := r.db.Exec(
-		`INSERT INTO users (name, email, password_hash, role, is_active, last_login_at)
+		`INSERT INTO users
+		(name, email, password_hash, role, is_active, last_login_at)
 		VALUES (?, ?, ?, ?, ?, ?)`,
 		user.Name, user.Email, user.Password, user.Role, user.IsActive, user.LastLoginAt,
 	)
@@ -98,8 +99,11 @@ func (r *userRepoSQLite) Create(user *User) error {
 func (r *userRepoSQLite) GetByID(id ID) (*User, error) {
 	user := &User{}
 	err := r.db.QueryRow(
-		`SELECT id, name, email, password_hash, role, is_active, last_login_at, created_at, updated_at
-		FROM users WHERE id = ?`,
+		`SELECT
+			id, name, email, password_hash, role, is_active,
+			last_login_at, created_at, updated_at
+		FROM users
+		WHERE id = ?`,
 		id.String(),
 	).Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.Role,
 		&user.IsActive, &user.LastLoginAt, &user.CreatedAt, &user.UpdatedAt)
@@ -119,7 +123,9 @@ func (r *userRepoSQLite) GetByAPIKey(apiKey string) (*User, error) {
 	}
 	user := &User{}
 	err := r.db.QueryRow(
-		`SELECT u.id, u.name, u.email, u.password_hash, u.role, u.is_active, u.last_login_at, u.created_at, u.updated_at
+		`SELECT
+			u.id, u.name, u.email, u.password_hash, u.role,
+			u.is_active, u.last_login_at, u.created_at, u.updated_at
 		FROM users u
 		INNER JOIN user_api_keys k ON u.id = k.user_id
 		WHERE k.key = ? AND (k.expires_at IS NULL OR k.expires_at > CURRENT_TIMESTAMP)`,
@@ -139,8 +145,11 @@ func (r *userRepoSQLite) GetByAPIKey(apiKey string) (*User, error) {
 func (r *userRepoSQLite) GetByEmail(email string) (*User, error) {
 	user := &User{}
 	err := r.db.QueryRow(
-		`SELECT id, name, email, password_hash, role, is_active, last_login_at, created_at, updated_at
-		FROM users WHERE email = ?`,
+		`SELECT
+			id, name, email, password_hash, role, is_active,
+			last_login_at, created_at, updated_at
+		FROM users
+		WHERE email = ?`,
 		email,
 	).Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.Role,
 		&user.IsActive, &user.LastLoginAt, &user.CreatedAt, &user.UpdatedAt)
@@ -156,8 +165,15 @@ func (r *userRepoSQLite) GetByEmail(email string) (*User, error) {
 // Update updates a user
 func (r *userRepoSQLite) Update(user *User) error {
 	_, err := r.db.Exec(
-		`UPDATE users SET name = ?, email = ?, password_hash = ?, role = ?, is_active = ?,
-			last_login_at = ?, updated_at = ?
+		`UPDATE users
+		SET
+			name = ?,
+			email = ?,
+			password_hash = ?,
+			role = ?,
+			is_active = ?,
+			last_login_at = ?,
+			updated_at = ?
 		WHERE id = ?`,
 		user.Name, user.Email, user.Password, user.Role, user.IsActive,
 		user.LastLoginAt, time.Now().UTC(), user.ID.String(),
@@ -169,7 +185,11 @@ func (r *userRepoSQLite) Update(user *User) error {
 func (r *userRepoSQLite) UpdateLastLogin(id ID) error {
 	now := time.Now().UTC()
 	_, err := r.db.Exec(
-		`UPDATE users SET last_login_at = ?, updated_at = ? WHERE id = ?`,
+		`UPDATE users
+		SET
+			last_login_at = ?,
+			updated_at = ?
+		WHERE id = ?`,
 		now, now, id.String(),
 	)
 	return err
@@ -187,8 +207,12 @@ func (r *userRepoSQLite) Delete(id ID) error {
 // List returns a list of users
 func (r *userRepoSQLite) List(limit, offset int) ([]*User, error) {
 	rows, err := r.db.Query(
-		`SELECT id, name, email, password_hash, role, is_active, last_login_at, created_at, updated_at
-		FROM users ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+		`SELECT
+			id, name, email, password_hash, role, is_active,
+			last_login_at, created_at, updated_at
+		FROM users
+		ORDER BY created_at DESC
+		LIMIT ? OFFSET ?`,
 		limit, offset,
 	)
 	if err != nil {
@@ -202,7 +226,8 @@ func (r *userRepoSQLite) List(limit, offset int) ([]*User, error) {
 func (r *userRepoSQLite) Count() (int64, error) {
 	var count int64
 	err := r.db.QueryRow(
-		`SELECT COUNT(*) FROM users`,
+		`SELECT COUNT(*)
+		FROM users`,
 	).Scan(&count)
 	return count, err
 }
@@ -217,8 +242,10 @@ type userRepoPostgres struct {
 // Create inserts a row
 func (r *userRepoPostgres) Create(user *User) error {
 	err := r.db.QueryRow(
-		`INSERT INTO users (name, email, password_hash, role, is_active, last_login_at)
-		VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+		`INSERT INTO users
+		(name, email, password_hash, role, is_active, last_login_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING id`,
 		user.Name, user.Email, user.Password, user.Role, user.IsActive, user.LastLoginAt,
 	).Scan(&user.ID)
 	return err
@@ -228,8 +255,11 @@ func (r *userRepoPostgres) Create(user *User) error {
 func (r *userRepoPostgres) GetByID(id ID) (*User, error) {
 	user := &User{}
 	err := r.db.QueryRow(
-		`SELECT id, name, email, password_hash, role, is_active, last_login_at, created_at, updated_at
-		FROM users WHERE id = $1`,
+		`SELECT
+			id, name, email, password_hash, role, is_active,
+			last_login_at, created_at, updated_at
+		FROM users
+		WHERE id = $1`,
 		id.String(),
 	).Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.Role,
 		&user.IsActive, &user.LastLoginAt, &user.CreatedAt, &user.UpdatedAt)
@@ -249,7 +279,9 @@ func (r *userRepoPostgres) GetByAPIKey(apiKey string) (*User, error) {
 	}
 	user := &User{}
 	err := r.db.QueryRow(
-		`SELECT u.id, u.name, u.email, u.password_hash, u.role, u.is_active, u.last_login_at, u.created_at, u.updated_at
+		`SELECT
+			u.id, u.name, u.email, u.password_hash, u.role,
+			u.is_active, u.last_login_at, u.created_at, u.updated_at
 		FROM users u
 		INNER JOIN user_api_keys k ON u.id = k.user_id
 		WHERE k.key = $1 AND (k.expires_at IS NULL OR k.expires_at > CURRENT_TIMESTAMP)`,
@@ -269,8 +301,11 @@ func (r *userRepoPostgres) GetByAPIKey(apiKey string) (*User, error) {
 func (r *userRepoPostgres) GetByEmail(email string) (*User, error) {
 	user := &User{}
 	err := r.db.QueryRow(
-		`SELECT id, name, email, password_hash, role, is_active, last_login_at, created_at, updated_at
-		FROM users WHERE email = $1`,
+		`SELECT
+			id, name, email, password_hash, role, is_active,
+			last_login_at, created_at, updated_at
+		FROM users
+		WHERE email = $1`,
 		email,
 	).Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.Role,
 		&user.IsActive, &user.LastLoginAt, &user.CreatedAt, &user.UpdatedAt)
@@ -286,8 +321,15 @@ func (r *userRepoPostgres) GetByEmail(email string) (*User, error) {
 // Update updates a user
 func (r *userRepoPostgres) Update(user *User) error {
 	_, err := r.db.Exec(
-		`UPDATE users SET name = $1, email = $2, password_hash = $3, role = $4, is_active = $5,
-			last_login_at = $6, updated_at = $7
+		`UPDATE users
+		SET
+			name = $1,
+			email = $2,
+			password_hash = $3,
+			role = $4,
+			is_active = $5,
+			last_login_at = $6,
+			updated_at = $7
 		WHERE id = $8`,
 		user.Name, user.Email, user.Password, user.Role, user.IsActive,
 		user.LastLoginAt, time.Now().UTC(), user.ID.String(),
@@ -299,7 +341,11 @@ func (r *userRepoPostgres) Update(user *User) error {
 func (r *userRepoPostgres) UpdateLastLogin(id ID) error {
 	now := time.Now().UTC()
 	_, err := r.db.Exec(
-		`UPDATE users SET last_login_at = $1, updated_at = $2 WHERE id = $3`,
+		`UPDATE users
+		SET
+			last_login_at = $1,
+			updated_at = $2
+		WHERE id = $3`,
 		now, now, id.String(),
 	)
 	return err
@@ -317,8 +363,12 @@ func (r *userRepoPostgres) Delete(id ID) error {
 // List returns a list of users
 func (r *userRepoPostgres) List(limit, offset int) ([]*User, error) {
 	rows, err := r.db.Query(
-		`SELECT id, name, email, password_hash, role, is_active, last_login_at, created_at, updated_at
-		FROM users ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
+		`SELECT
+			id, name, email, password_hash, role, is_active,
+			last_login_at, created_at, updated_at
+		FROM users
+		ORDER BY created_at DESC
+		LIMIT $1 OFFSET $2`,
 		limit, offset,
 	)
 	if err != nil {
@@ -332,7 +382,8 @@ func (r *userRepoPostgres) List(limit, offset int) ([]*User, error) {
 func (r *userRepoPostgres) Count() (int64, error) {
 	var count int64
 	err := r.db.QueryRow(
-		`SELECT COUNT(*) FROM users`,
+		`SELECT COUNT(*)
+		FROM users`,
 	).Scan(&count)
 	return count, err
 }
@@ -389,7 +440,8 @@ type userMetaRepoSQLite struct {
 // Create inserts a user meta
 func (r *userMetaRepoSQLite) Create(userID ID, key, value string) error {
 	_, err := r.db.Exec(
-		`INSERT INTO users_meta (user_id, key, value) VALUES (?, ?, ?)`,
+		`INSERT INTO users_meta (user_id, key, value)
+		VALUES (?, ?, ?)`,
 		userID.String(), key, value,
 	)
 	return err
@@ -400,7 +452,8 @@ func (r *userMetaRepoSQLite) Get(userID ID, key string) (*UserMeta, error) {
 	meta := &UserMeta{}
 	err := r.db.QueryRow(
 		`SELECT id, key, value, user_id, created_at, updated_at
-		FROM users_meta WHERE user_id = ? AND key = ?`,
+		FROM users_meta
+		WHERE user_id = ? AND key = ?`,
 		userID.String(), key,
 	).Scan(&meta.ID, &meta.Key, &meta.Value, &meta.UserID, &meta.CreatedAt, &meta.UpdatedAt)
 	if err == sql.ErrNoRows {
@@ -415,7 +468,11 @@ func (r *userMetaRepoSQLite) Get(userID ID, key string) (*UserMeta, error) {
 // Update updates a user meta
 func (r *userMetaRepoSQLite) Update(userID ID, key, value string) error {
 	_, err := r.db.Exec(
-		`UPDATE users_meta SET value = ?, updated_at = ? WHERE user_id = ? AND key = ?`,
+		`UPDATE users_meta
+		SET
+			value = ?,
+			updated_at = ?
+		WHERE user_id = ? AND key = ?`,
 		value, time.Now().UTC(), userID.String(), key,
 	)
 	return err
@@ -434,7 +491,9 @@ func (r *userMetaRepoSQLite) Delete(userID ID, key string) error {
 func (r *userMetaRepoSQLite) ListByUser(userID ID) ([]*UserMeta, error) {
 	rows, err := r.db.Query(
 		`SELECT id, key, value, user_id, created_at, updated_at
-		FROM users_meta WHERE user_id = ? ORDER BY key`,
+		FROM users_meta
+		WHERE user_id = ?
+		ORDER BY key`,
 		userID.String(),
 	)
 	if err != nil {
@@ -466,7 +525,8 @@ type userMetaRepoPostgres struct {
 // Create inserts a user meta
 func (r *userMetaRepoPostgres) Create(userID ID, key, value string) error {
 	_, err := r.db.Exec(
-		`INSERT INTO users_meta (user_id, key, value) VALUES ($1, $2, $3)`,
+		`INSERT INTO users_meta (user_id, key, value)
+		VALUES ($1, $2, $3)`,
 		userID.String(), key, value,
 	)
 	return err
@@ -477,7 +537,8 @@ func (r *userMetaRepoPostgres) Get(userID ID, key string) (*UserMeta, error) {
 	meta := &UserMeta{}
 	err := r.db.QueryRow(
 		`SELECT id, key, value, user_id, created_at, updated_at
-		FROM users_meta WHERE user_id = $1 AND key = $2`,
+		FROM users_meta
+		WHERE user_id = $1 AND key = $2`,
 		userID.String(), key,
 	).Scan(&meta.ID, &meta.Key, &meta.Value, &meta.UserID, &meta.CreatedAt, &meta.UpdatedAt)
 	if err == sql.ErrNoRows {
@@ -492,7 +553,11 @@ func (r *userMetaRepoPostgres) Get(userID ID, key string) (*UserMeta, error) {
 // Update updates a user meta
 func (r *userMetaRepoPostgres) Update(userID ID, key, value string) error {
 	_, err := r.db.Exec(
-		`UPDATE users_meta SET value = $1, updated_at = $2 WHERE user_id = $3 AND key = $4`,
+		`UPDATE users_meta
+		SET
+			value = $1,
+			updated_at = $2
+		WHERE user_id = $3 AND key = $4`,
 		value, time.Now().UTC(), userID.String(), key,
 	)
 	return err
@@ -511,7 +576,9 @@ func (r *userMetaRepoPostgres) Delete(userID ID, key string) error {
 func (r *userMetaRepoPostgres) ListByUser(userID ID) ([]*UserMeta, error) {
 	rows, err := r.db.Query(
 		`SELECT id, key, value, user_id, created_at, updated_at
-		FROM users_meta WHERE user_id = $1 ORDER BY key`,
+		FROM users_meta
+		WHERE user_id = $1
+		ORDER BY key`,
 		userID.String(),
 	)
 	if err != nil {

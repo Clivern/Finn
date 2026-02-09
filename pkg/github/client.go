@@ -42,7 +42,7 @@ func (c *Client) Request(ctx context.Context, method, url string, body io.Reader
 	req.Header.Set("Authorization", fmt.Sprintf("%s %s", "Bearer", c.Token))
 	req.Header.Set("Accept", "application/vnd.github+json")
 	req.Header.Set("User-Agent", "finn-pkg-github")
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", contentType)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {

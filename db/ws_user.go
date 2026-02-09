@@ -209,7 +209,9 @@ func (r *workspaceUserRepoSQLite) ListByWorkspace(workspaceID ID, limit, offset 
 func (r *workspaceUserRepoSQLite) CountByWorkspace(workspaceID ID) (int64, error) {
 	var count int64
 	err := r.db.QueryRow(
-		`SELECT COUNT(*) FROM workspace_users WHERE workspace_id = ?`,
+		`SELECT COUNT(*)
+		FROM workspace_users
+		WHERE workspace_id = ?`,
 		workspaceID.String(),
 	).Scan(&count)
 	return count, err
@@ -328,7 +330,8 @@ func (r *workspaceUserRepoPostgres) List(limit, offset int) ([]*WorkspaceUser, e
 func (r *workspaceUserRepoPostgres) Count() (int64, error) {
 	var count int64
 	err := r.db.QueryRow(
-		`SELECT COUNT(*) FROM workspace_users`,
+		`SELECT COUNT(*)
+		FROM workspace_users`,
 	).Scan(&count)
 	return count, err
 }
@@ -356,7 +359,9 @@ func (r *workspaceUserRepoPostgres) ListByWorkspace(workspaceID ID, limit, offse
 func (r *workspaceUserRepoPostgres) CountByWorkspace(workspaceID ID) (int64, error) {
 	var count int64
 	err := r.db.QueryRow(
-		`SELECT COUNT(*) FROM workspace_users WHERE workspace_id = $1`,
+		`SELECT COUNT(*)
+		FROM workspace_users
+		WHERE workspace_id = $1`,
 		workspaceID.String(),
 	).Scan(&count)
 	return count, err

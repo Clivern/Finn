@@ -1,3 +1,14 @@
+/** Short date for tables (e.g. "Mar 27, 2026"). Pass `locale` from `useI18n()` for correct formatting. */
+export function formatCreatedAt(iso, locale = 'en') {
+  if (!iso) return '—'
+  try {
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return '—'
+    return d.toLocaleDateString(locale || 'en', { month: 'short', day: 'numeric', year: 'numeric' })
+  } catch {
+    return '—'
+  }
+}
 
 export function formatRelative(dateString, fallback = '—') {
   if (dateString == null || dateString === '') return fallback

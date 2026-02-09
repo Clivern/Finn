@@ -68,7 +68,8 @@ type workspaceBackendStateRepoSQLite struct {
 
 func (r *workspaceBackendStateRepoSQLite) Create(s *WorkspaceBackendState) error {
 	result, err := r.db.Exec(
-		`INSERT INTO workspace_backend_state (backend_id, name, value, checksum)
+		`INSERT INTO workspace_backend_state
+		(backend_id, name, value, checksum)
 		VALUES (?, ?, ?, ?)`,
 		s.BackendID.String(),
 		s.Name,
@@ -84,7 +85,11 @@ func (r *workspaceBackendStateRepoSQLite) Create(s *WorkspaceBackendState) error
 	}
 	s.ID = ID(strconv.FormatInt(lid, 10))
 	row := r.db.QueryRow(
-		`SELECT created_at, updated_at FROM workspace_backend_state WHERE id = ?`,
+		`SELECT
+			created_at,
+			updated_at
+		FROM workspace_backend_state
+		WHERE id = ?`,
 		s.ID.String(),
 	)
 	return row.Scan(
@@ -96,8 +101,10 @@ func (r *workspaceBackendStateRepoSQLite) Create(s *WorkspaceBackendState) error
 func (r *workspaceBackendStateRepoSQLite) GetByID(id ID) (*WorkspaceBackendState, error) {
 	s := &WorkspaceBackendState{}
 	err := r.db.QueryRow(
-		`SELECT id, backend_id, name, value, checksum, created_at, updated_at
-		FROM workspace_backend_state WHERE id = ?`,
+		`SELECT
+			id, backend_id, name, value, checksum, created_at, updated_at
+		FROM workspace_backend_state
+		WHERE id = ?`,
 		id.String(),
 	).Scan(
 		&s.ID,
@@ -120,8 +127,10 @@ func (r *workspaceBackendStateRepoSQLite) GetByID(id ID) (*WorkspaceBackendState
 func (r *workspaceBackendStateRepoSQLite) GetByBackendIDAndName(backendID ID, name string) (*WorkspaceBackendState, error) {
 	s := &WorkspaceBackendState{}
 	err := r.db.QueryRow(
-		`SELECT id, backend_id, name, value, checksum, created_at, updated_at
-		FROM workspace_backend_state WHERE backend_id = ? AND name = ?`,
+		`SELECT
+			id, backend_id, name, value, checksum, created_at, updated_at
+		FROM workspace_backend_state
+		WHERE backend_id = ? AND name = ?`,
 		backendID.String(),
 		name,
 	).Scan(
@@ -145,8 +154,12 @@ func (r *workspaceBackendStateRepoSQLite) GetByBackendIDAndName(backendID ID, na
 func (r *workspaceBackendStateRepoSQLite) GetLatestByBackendID(backendID ID) (*WorkspaceBackendState, error) {
 	s := &WorkspaceBackendState{}
 	err := r.db.QueryRow(
-		`SELECT id, backend_id, name, value, checksum, created_at, updated_at
-		FROM workspace_backend_state WHERE backend_id = ? ORDER BY created_at DESC LIMIT 1`,
+		`SELECT
+			id, backend_id, name, value, checksum, created_at, updated_at
+		FROM workspace_backend_state
+		WHERE backend_id = ?
+		ORDER BY created_at DESC
+		LIMIT 1`,
 		backendID.String(),
 	).Scan(
 		&s.ID,
@@ -168,7 +181,11 @@ func (r *workspaceBackendStateRepoSQLite) GetLatestByBackendID(backendID ID) (*W
 
 func (r *workspaceBackendStateRepoSQLite) Update(s *WorkspaceBackendState) error {
 	_, err := r.db.Exec(
-		`UPDATE workspace_backend_state SET value = ?, checksum = ?, updated_at = ?
+		`UPDATE workspace_backend_state
+		SET
+			value = ?,
+			checksum = ?,
+			updated_at = ?
 		WHERE id = ?`,
 		s.Value,
 		s.Checksum,
@@ -191,8 +208,12 @@ func (r *workspaceBackendStateRepoSQLite) ListByBackendID(backendID ID, limit, o
 		limit = 50
 	}
 	rows, err := r.db.Query(
-		`SELECT id, backend_id, name, value, checksum, created_at, updated_at
-		FROM workspace_backend_state WHERE backend_id = ? ORDER BY name LIMIT ? OFFSET ?`,
+		`SELECT
+			id, backend_id, name, value, checksum, created_at, updated_at
+		FROM workspace_backend_state
+		WHERE backend_id = ?
+		ORDER BY name
+		LIMIT ? OFFSET ?`,
 		backendID.String(),
 		limit,
 		offset,
@@ -207,7 +228,9 @@ func (r *workspaceBackendStateRepoSQLite) ListByBackendID(backendID ID, limit, o
 func (r *workspaceBackendStateRepoSQLite) CountByBackendID(backendID ID) (int64, error) {
 	var count int64
 	err := r.db.QueryRow(
-		`SELECT COUNT(*) FROM workspace_backend_state WHERE backend_id = ?`,
+		`SELECT COUNT(*)
+		FROM workspace_backend_state
+		WHERE backend_id = ?`,
 		backendID.String(),
 	).Scan(&count)
 	return count, err
@@ -219,8 +242,10 @@ type workspaceBackendStateRepoPostgres struct {
 
 func (r *workspaceBackendStateRepoPostgres) Create(s *WorkspaceBackendState) error {
 	return r.db.QueryRow(
-		`INSERT INTO workspace_backend_state (backend_id, name, value, checksum)
-		VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at`,
+		`INSERT INTO workspace_backend_state
+		(backend_id, name, value, checksum)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, created_at, updated_at`,
 		s.BackendID.String(),
 		s.Name,
 		s.Value,
@@ -235,8 +260,10 @@ func (r *workspaceBackendStateRepoPostgres) Create(s *WorkspaceBackendState) err
 func (r *workspaceBackendStateRepoPostgres) GetByID(id ID) (*WorkspaceBackendState, error) {
 	s := &WorkspaceBackendState{}
 	err := r.db.QueryRow(
-		`SELECT id, backend_id, name, value, checksum, created_at, updated_at
-		FROM workspace_backend_state WHERE id = $1`,
+		`SELECT
+			id, backend_id, name, value, checksum, created_at, updated_at
+		FROM workspace_backend_state
+		WHERE id = $1`,
 		id.String(),
 	).Scan(
 		&s.ID,
@@ -259,8 +286,10 @@ func (r *workspaceBackendStateRepoPostgres) GetByID(id ID) (*WorkspaceBackendSta
 func (r *workspaceBackendStateRepoPostgres) GetByBackendIDAndName(backendID ID, name string) (*WorkspaceBackendState, error) {
 	s := &WorkspaceBackendState{}
 	err := r.db.QueryRow(
-		`SELECT id, backend_id, name, value, checksum, created_at, updated_at
-		FROM workspace_backend_state WHERE backend_id = $1 AND name = $2`,
+		`SELECT
+			id, backend_id, name, value, checksum, created_at, updated_at
+		FROM workspace_backend_state
+		WHERE backend_id = $1 AND name = $2`,
 		backendID.String(),
 		name,
 	).Scan(
@@ -284,8 +313,12 @@ func (r *workspaceBackendStateRepoPostgres) GetByBackendIDAndName(backendID ID, 
 func (r *workspaceBackendStateRepoPostgres) GetLatestByBackendID(backendID ID) (*WorkspaceBackendState, error) {
 	s := &WorkspaceBackendState{}
 	err := r.db.QueryRow(
-		`SELECT id, backend_id, name, value, checksum, created_at, updated_at
-		FROM workspace_backend_state WHERE backend_id = $1 ORDER BY created_at DESC LIMIT 1`,
+		`SELECT
+			id, backend_id, name, value, checksum, created_at, updated_at
+		FROM workspace_backend_state
+		WHERE backend_id = $1
+		ORDER BY created_at DESC
+		LIMIT 1`,
 		backendID.String(),
 	).Scan(
 		&s.ID,
@@ -307,7 +340,12 @@ func (r *workspaceBackendStateRepoPostgres) GetLatestByBackendID(backendID ID) (
 
 func (r *workspaceBackendStateRepoPostgres) Update(s *WorkspaceBackendState) error {
 	_, err := r.db.Exec(
-		`UPDATE workspace_backend_state SET value = $1, checksum = $2, updated_at = $3 WHERE id = $4`,
+		`UPDATE workspace_backend_state
+		SET
+			value = $1,
+			checksum = $2,
+			updated_at = $3
+		WHERE id = $4`,
 		s.Value,
 		s.Checksum,
 		time.Now().UTC(),
@@ -329,8 +367,12 @@ func (r *workspaceBackendStateRepoPostgres) ListByBackendID(backendID ID, limit,
 		limit = 50
 	}
 	rows, err := r.db.Query(
-		`SELECT id, backend_id, name, value, checksum, created_at, updated_at
-		FROM workspace_backend_state WHERE backend_id = $1 ORDER BY name LIMIT $2 OFFSET $3`,
+		`SELECT
+			id, backend_id, name, value, checksum, created_at, updated_at
+		FROM workspace_backend_state
+		WHERE backend_id = $1
+		ORDER BY name
+		LIMIT $2 OFFSET $3`,
 		backendID.String(),
 		limit,
 		offset,
@@ -345,7 +387,9 @@ func (r *workspaceBackendStateRepoPostgres) ListByBackendID(backendID ID, limit,
 func (r *workspaceBackendStateRepoPostgres) CountByBackendID(backendID ID) (int64, error) {
 	var count int64
 	err := r.db.QueryRow(
-		`SELECT COUNT(*) FROM workspace_backend_state WHERE backend_id = $1`,
+		`SELECT COUNT(*)
+		FROM workspace_backend_state
+		WHERE backend_id = $1`,
 		backendID.String(),
 	).Scan(&count)
 	return count, err

@@ -156,6 +156,9 @@
         >
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
             <h2 id="add-repo-title" class="text-lg font-semibold text-theme-text">{{ $t('repositoriesPage.addRepo') }}</h2>
+            <div v-if="addModalError" class="mt-4 rounded-md border border-red-200 bg-red-50 p-3" role="alert">
+              <p class="text-sm text-red-800">{{ addModalError }}</p>
+            </div>
             <form @submit.prevent="handleCreate" class="mt-4 space-y-4">
               <div>
                 <label for="add-repo-name" class="form-label">{{ $t('repositoriesPage.name') }}</label>
@@ -242,6 +245,9 @@
         >
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
             <h2 id="edit-repo-title" class="text-lg font-semibold text-theme-text">{{ $t('repositoriesPage.editRepo') }}</h2>
+            <div v-if="editModalError" class="mt-4 rounded-md border border-red-200 bg-red-50 p-3" role="alert">
+              <p class="text-sm text-red-800">{{ editModalError }}</p>
+            </div>
             <form @submit.prevent="handleUpdate" class="mt-4 space-y-4">
               <div>
                 <label for="edit-repo-name" class="form-label">{{ $t('repositoriesPage.name') }}</label>
@@ -324,15 +330,18 @@
           role="dialog"
           aria-modal="true"
           aria-labelledby="delete-repo-title"
-          @click.self="deleteModalRepo = null"
+          @click.self="closeDeleteModal"
         >
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-md p-6">
             <h2 id="delete-repo-title" class="text-lg font-semibold text-theme-text">{{ $t('repositoriesPage.deleteRepoTitle') }}</h2>
+            <div v-if="deleteModalError" class="mt-4 rounded-md border border-red-200 bg-red-50 p-3" role="alert">
+              <p class="text-sm text-red-800">{{ deleteModalError }}</p>
+            </div>
             <p class="mt-2 text-sm text-theme-textLight">
               {{ $t('repositoriesPage.deleteRepoConfirm', { name: deleteModalRepo?.name }) }}
             </p>
             <div class="flex gap-3 justify-end mt-6">
-              <button type="button" @click="deleteModalRepo = null" class="btn-secondary">{{ $t('common.cancel') }}</button>
+              <button type="button" @click="closeDeleteModal" class="btn-secondary">{{ $t('common.cancel') }}</button>
               <button
                 type="button"
                 @click="confirmDelete"
@@ -459,6 +468,9 @@ const credentialsList = ref([])
 
 const deleteModalRepo = ref(null)
 const deletingId = ref(null)
+const addModalError = ref(null)
+const editModalError = ref(null)
+const deleteModalError = ref(null)
 const cloningId = ref(null)
 
 const cloneTaskModal = ref(null)
@@ -523,12 +535,14 @@ function openAddModal() {
   addForm.gitTag = ''
   addForm.sshKeyId = ''
   addForm.gitCredentialsId = ''
+  addModalError.value = null
   showAddModal.value = true
   loadSshKeysAndCredentials()
 }
 
 function closeAddModal() {
   showAddModal.value = false
+  addModalError.value = null
 }
 
 function openEditModal(repo) {
@@ -539,12 +553,14 @@ function openEditModal(repo) {
   editForm.gitTag = repo.gitTag
   editForm.sshKeyId = repo.sshKeyId ?? ''
   editForm.gitCredentialsId = repo.gitCredentialsId ?? ''
+  editModalError.value = null
   showEditModal.value = true
   loadSshKeysAndCredentials()
 }
 
 function closeEditModal() {
   showEditModal.value = false
+  editModalError.value = null
   editingRepo.value = null
 }
 
@@ -554,6 +570,7 @@ async function handleCreate() {
   addSaving.value = true
   errorMessage.value = ''
   successMessage.value = ''
+  addModalError.value = null
 
   try {
     await repositoriesAPI.create(workspace.value.id, {
@@ -568,7 +585,7 @@ async function handleCreate() {
     closeAddModal()
     await loadRepositories()
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || t('repositoriesPage.failedAdd')
+    addModalError.value = err.response?.data?.errorMessage || t('repositoriesPage.failedAdd')
   } finally {
     addSaving.value = false
   }
@@ -580,6 +597,7 @@ async function handleUpdate() {
   editSaving.value = true
   errorMessage.value = ''
   successMessage.value = ''
+  editModalError.value = null
 
   try {
     await repositoriesAPI.update(workspace.value.id, editingRepo.value.id, {
@@ -594,14 +612,20 @@ async function handleUpdate() {
     closeEditModal()
     await loadRepositories()
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || t('repositoriesPage.failedUpdate')
+    editModalError.value = err.response?.data?.errorMessage || t('repositoriesPage.failedUpdate')
   } finally {
     editSaving.value = false
   }
 }
 
 function openDeleteModal(repo) {
+  deleteModalError.value = null
   deleteModalRepo.value = repo
+}
+
+function closeDeleteModal() {
+  deleteModalRepo.value = null
+  deleteModalError.value = null
 }
 
 async function confirmDelete() {
@@ -609,13 +633,14 @@ async function confirmDelete() {
   if (!repo) return
   deletingId.value = repo.id
   errorMessage.value = ''
+  deleteModalError.value = null
   try {
     await repositoriesAPI.delete(workspace.value.id, repo.id)
     successMessage.value = t('repositoriesPage.repoDeleted')
-    deleteModalRepo.value = null
+    closeDeleteModal()
     await loadRepositories()
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || t('repositoriesPage.failedDelete')
+    deleteModalError.value = err.response?.data?.errorMessage || t('repositoriesPage.failedDelete')
   } finally {
     deletingId.value = null
   }

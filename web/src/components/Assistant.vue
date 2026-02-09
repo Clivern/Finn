@@ -53,9 +53,45 @@
             </div>
 
             <!-- Chat messages -->
-            <div ref="messagesEl" class="flex-1 overflow-y-auto p-4 space-y-4">
+            <div
+              ref="messagesEl"
+              class="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 flex flex-col"
+            >
               <div v-if="loadingMessages" class="flex justify-center py-8 text-theme-textLight text-sm">
                 {{ $t('aiAssistant.loading') }}
+              </div>
+              <div
+                v-else-if="messages.length === 0"
+                class="flex flex-1 flex-col items-center justify-center text-center px-2 py-6 min-h-[12rem]"
+              >
+                <div
+                  class="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-50 text-primary-600 ring-1 ring-primary-100"
+                  aria-hidden="true"
+                >
+                  <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM16.5 7.5h.008v.008H16.5V7.5z" />
+                  </svg>
+                </div>
+                <h3 class="text-base font-semibold text-theme-text mb-2">
+                  {{ $t('aiAssistant.emptyTitle') }}
+                </h3>
+                <p class="text-sm text-theme-textLight max-w-sm leading-relaxed mb-6">
+                  {{ $t('aiAssistant.description') }}
+                </p>
+                <p class="text-xs font-medium text-theme-textLight uppercase tracking-wide mb-2 w-full max-w-sm text-left">
+                  {{ $t('aiAssistant.tryAsking') }}
+                </p>
+                <div class="flex w-full max-w-sm flex-col gap-2">
+                  <button
+                    v-for="(prompt, idx) in starterPrompts"
+                    :key="idx"
+                    type="button"
+                    class="rounded-lg border border-theme-border bg-white px-3 py-2.5 text-left text-sm text-theme-text transition-colors hover:bg-theme-hover hover:border-theme-border focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
+                    @click="inputText = prompt"
+                  >
+                    {{ prompt }}
+                  </button>
+                </div>
               </div>
               <template v-else>
                 <div
@@ -121,8 +157,17 @@
 </template>
 
 <script setup>
-import { ref, nextTick, watch, onMounted } from 'vue'
+import { ref, computed, nextTick, watch, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { aiAPI } from '@/api'
+
+const { t } = useI18n()
+
+const starterPrompts = computed(() => [
+  t('aiAssistant.suggestion1'),
+  t('aiAssistant.suggestion2'),
+  t('aiAssistant.suggestion3')
+])
 
 const open = ref(false)
 const inputText = ref('')

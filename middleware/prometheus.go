@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/clivern/finn/db"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
@@ -49,17 +50,107 @@ var (
 		},
 		[]string{"method", "path", "status"},
 	)
+
+	_ = promauto.NewGaugeFunc(
+		prometheus.GaugeOpts{
+			Name: "db_users_total",
+			Help: "Current number of users in database.",
+		},
+		func() float64 {
+			conn := db.GetDB()
+			if conn == nil {
+				return 0
+			}
+			count, err := db.NewUserRepository(conn).Count()
+			if err != nil {
+				return 0
+			}
+			return float64(count)
+		},
+	)
+
+	_ = promauto.NewGaugeFunc(
+		prometheus.GaugeOpts{
+			Name: "db_workspaces_total",
+			Help: "Current number of workspaces in database.",
+		},
+		func() float64 {
+			conn := db.GetDB()
+			if conn == nil {
+				return 0
+			}
+			count, err := db.NewWorkspaceRepository(conn).Count(nil)
+			if err != nil {
+				return 0
+			}
+			return float64(count)
+		},
+	)
+
+	_ = promauto.NewGaugeFunc(
+		prometheus.GaugeOpts{
+			Name: "db_runners_total",
+			Help: "Current number of runners in database.",
+		},
+		func() float64 {
+			conn := db.GetDB()
+			if conn == nil {
+				return 0
+			}
+			count, err := db.NewRunnerRepository(conn).Count()
+			if err != nil {
+				return 0
+			}
+			return float64(count)
+		},
+	)
+
+	_ = promauto.NewGaugeFunc(
+		prometheus.GaugeOpts{
+			Name: "db_runners_active_total",
+			Help: "Current number of active runners in database.",
+		},
+		func() float64 {
+			conn := db.GetDB()
+			if conn == nil {
+				return 0
+			}
+			count, err := db.NewRunnerRepository(conn).CountActive()
+			if err != nil {
+				return 0
+			}
+			return float64(count)
+		},
+	)
+
+	_ = promauto.NewGaugeFunc(
+		prometheus.GaugeOpts{
+			Name: "db_user_sessions_total",
+			Help: "Current number of non-expired user sessions in database.",
+		},
+		func() float64 {
+			conn := db.GetDB()
+			if conn == nil {
+				return 0
+			}
+			count, err := db.NewSessionRepository(conn).Count()
+			if err != nil {
+				return 0
+			}
+			return float64(count)
+		},
+	)
 )
 
-// metricsResponseWriter wraps the response to capture status and size for metrics.
-type metricsResponseWriter struct {
+// MetricsResponseWriter wraps the response to capture status and size for metrics.
+type MetricsResponseWriter struct {
 	http.ResponseWriter
 	statusCode  int
 	size        int
 	wroteHeader bool
 }
 
-func (mrw *metricsResponseWriter) WriteHeader(code int) {
+func (mrw *MetricsResponseWriter) WriteHeader(code int) {
 	if !mrw.wroteHeader {
 		mrw.statusCode = code
 		mrw.ResponseWriter.WriteHeader(code)
@@ -67,7 +158,7 @@ func (mrw *metricsResponseWriter) WriteHeader(code int) {
 	}
 }
 
-func (mrw *metricsResponseWriter) Write(b []byte) (int, error) {
+func (mrw *MetricsResponseWriter) Write(b []byte) (int, error) {
 	n, err := mrw.ResponseWriter.Write(b)
 	mrw.size += n
 	return n, err
@@ -92,7 +183,7 @@ func PrometheusMiddleware(next http.Handler) http.Handler {
 			httpRequestSize.WithLabelValues(r.Method, path).Observe(reqSize)
 		}
 
-		wrapped := &metricsResponseWriter{
+		wrapped := &MetricsResponseWriter{
 			ResponseWriter: w,
 			statusCode:     http.StatusOK,
 		}

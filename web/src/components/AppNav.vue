@@ -194,24 +194,9 @@ const isWorkspaceAdminOrOwner = computed(() => {
 
 const { t, locale } = useI18n()
 
-const THEME_KEY = 'finn-theme'
-
 const theme = ref('default')
 
-function initTheme() {
-  try {
-    const stored = localStorage.getItem(THEME_KEY)
-    theme.value = stored === 'blue' ? 'blue' : 'default'
-  } catch (_) {
-    theme.value = 'default'
-  }
-}
-
-function setTheme(name) {
-  theme.value = name
-  try {
-    localStorage.setItem(THEME_KEY, name)
-  } catch (_) {}
+function applyThemeClass(name) {
   if (name === 'blue') {
     document.documentElement.classList.add('theme-blue')
   } else {
@@ -219,10 +204,28 @@ function setTheme(name) {
   }
 }
 
+function initTheme() {
+  try {
+    const stored = localStorage.getItem('_ftheme')
+    theme.value = stored === 'blue' ? 'blue' : 'default'
+  } catch (_) {
+    theme.value = 'default'
+  }
+  applyThemeClass(theme.value)
+}
+
+function setTheme(name) {
+  theme.value = name
+  try {
+    localStorage.setItem('_ftheme', name)
+  } catch (_) {}
+  applyThemeClass(name)
+}
+
 function setLocale(newLocale) {
   locale.value = newLocale
   try {
-    localStorage.setItem('finn-locale', newLocale)
+    localStorage.setItem('_flocale', newLocale)
   } catch (_) {}
 }
 

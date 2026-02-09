@@ -151,6 +151,9 @@
                   </svg>
                 </button>
               </div>
+              <div v-if="createModalError" class="mb-4 rounded-md border border-red-200 bg-red-50 p-3" role="alert">
+                <p class="text-sm text-red-800">{{ createModalError }}</p>
+              </div>
               <div class="space-y-4">
                 <div>
                   <label for="create-name" class="block text-sm font-medium text-theme-text mb-2">
@@ -265,6 +268,9 @@
                   </svg>
                 </button>
               </div>
+              <div v-if="editModalError" class="mb-4 rounded-md border border-red-200 bg-red-50 p-3" role="alert">
+                <p class="text-sm text-red-800">{{ editModalError }}</p>
+              </div>
               <div class="space-y-4">
                 <div>
                   <label for="edit-email" class="block text-sm font-medium text-theme-text mb-2">
@@ -365,6 +371,9 @@
                 </svg>
               </button>
             </div>
+            <div v-if="deleteModalError" class="mb-4 rounded-md border border-red-200 bg-red-50 p-3" role="alert">
+              <p class="text-sm text-red-800">{{ deleteModalError }}</p>
+            </div>
             <p class="text-sm text-theme-textLight">
               {{ $t('usersPage.deleteUserConfirm', { email: userToDelete?.email }) }}
             </p>
@@ -423,6 +432,10 @@ const editLoading = ref(false)
 const deleteLoading = ref(false)
 const userToDelete = ref(null)
 
+const createModalError = ref(null)
+const editModalError = ref(null)
+const deleteModalError = ref(null)
+
 const createForm = reactive({
   name: '',
   email: '',
@@ -472,11 +485,13 @@ const openCreateModal = () => {
   createForm.password = ''
   createForm.role = 'regular'
   createForm.isActive = true
+  createModalError.value = null
   showCreateModal.value = true
 }
 
 const closeCreateModal = () => {
   showCreateModal.value = false
+  createModalError.value = null
   createForm.name = ''
   createForm.email = ''
   createForm.password = ''
@@ -488,6 +503,7 @@ const handleCreate = async () => {
   createLoading.value = true
   errorMessage.value = null
   successMessage.value = null
+  createModalError.value = null
 
   try {
     await userAPI.createUser({
@@ -503,7 +519,7 @@ const handleCreate = async () => {
     setTimeout(() => { successMessage.value = null }, 3000)
   } catch (err) {
     console.error('Failed to create user:', err)
-    errorMessage.value = err.response?.data?.errorMessage || t('usersPage.failedCreate')
+    createModalError.value = err.response?.data?.errorMessage || t('usersPage.failedCreate')
   } finally {
     createLoading.value = false
   }
@@ -515,11 +531,13 @@ const openEditModal = (user) => {
   editForm.password = ''
   editForm.role = user.role
   editForm.isActive = user.isActive
+  editModalError.value = null
   showEditModal.value = true
 }
 
 const closeEditModal = () => {
   showEditModal.value = false
+  editModalError.value = null
   editForm.id = null
   editForm.email = ''
   editForm.password = ''
@@ -531,6 +549,7 @@ const handleUpdate = async () => {
   editLoading.value = true
   errorMessage.value = null
   successMessage.value = null
+  editModalError.value = null
 
   const payload = {
     email: editForm.email,
@@ -547,7 +566,7 @@ const handleUpdate = async () => {
     setTimeout(() => { successMessage.value = null }, 3000)
   } catch (err) {
     console.error('Failed to update user:', err)
-    errorMessage.value = err.response?.data?.errorMessage || t('usersPage.failedUpdate')
+    editModalError.value = err.response?.data?.errorMessage || t('usersPage.failedUpdate')
   } finally {
     editLoading.value = false
   }
@@ -555,11 +574,13 @@ const handleUpdate = async () => {
 
 const openDeleteModal = (user) => {
   userToDelete.value = user
+  deleteModalError.value = null
   showDeleteModal.value = true
 }
 
 const closeDeleteModal = () => {
   showDeleteModal.value = false
+  deleteModalError.value = null
   userToDelete.value = null
 }
 
@@ -569,6 +590,7 @@ const handleDelete = async () => {
   deleteLoading.value = true
   errorMessage.value = null
   successMessage.value = null
+  deleteModalError.value = null
 
   try {
     await userAPI.deleteUser(userToDelete.value.id)
@@ -578,7 +600,7 @@ const handleDelete = async () => {
     setTimeout(() => { successMessage.value = null }, 3000)
   } catch (err) {
     console.error('Failed to delete user:', err)
-    errorMessage.value = err.response?.data?.errorMessage || t('usersPage.failedDelete')
+    deleteModalError.value = err.response?.data?.errorMessage || t('usersPage.failedDelete')
   } finally {
     deleteLoading.value = false
   }

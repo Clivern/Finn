@@ -70,7 +70,8 @@ type workspaceBackendRepoSQLite struct {
 
 func (r *workspaceBackendRepoSQLite) Create(b *WorkspaceBackend) error {
 	result, err := r.db.Exec(
-		`INSERT INTO workspace_backend (workspace_id, name, slug, username, password)
+		`INSERT INTO workspace_backend
+		(workspace_id, name, slug, username, password)
 		VALUES (?, ?, ?, ?, ?)`,
 		b.WorkspaceID.String(),
 		b.Name,
@@ -87,7 +88,11 @@ func (r *workspaceBackendRepoSQLite) Create(b *WorkspaceBackend) error {
 	}
 	b.ID = ID(strconv.FormatInt(lid, 10))
 	row := r.db.QueryRow(
-		`SELECT created_at, updated_at FROM workspace_backend WHERE id = ?`,
+		`SELECT
+			created_at,
+			updated_at
+		FROM workspace_backend
+		WHERE id = ?`,
 		b.ID.String(),
 	)
 	return row.Scan(
@@ -99,8 +104,10 @@ func (r *workspaceBackendRepoSQLite) Create(b *WorkspaceBackend) error {
 func (r *workspaceBackendRepoSQLite) GetByID(id ID) (*WorkspaceBackend, error) {
 	b := &WorkspaceBackend{}
 	err := r.db.QueryRow(
-		`SELECT id, workspace_id, name, slug, username, password, created_at, updated_at
-		FROM workspace_backend WHERE id = ?`,
+		`SELECT
+			id, workspace_id, name, slug, username, password, created_at, updated_at
+		FROM workspace_backend
+		WHERE id = ?`,
 		id.String(),
 	).Scan(
 		&b.ID,
@@ -135,8 +142,10 @@ func (r *workspaceBackendRepoSQLite) GetByIDAndWorkspace(id, workspaceID ID) (*W
 func (r *workspaceBackendRepoSQLite) GetBySlug(slug string) (*WorkspaceBackend, error) {
 	b := &WorkspaceBackend{}
 	err := r.db.QueryRow(
-		`SELECT id, workspace_id, name, slug, username, password, created_at, updated_at
-		FROM workspace_backend WHERE slug = ?`,
+		`SELECT
+			id, workspace_id, name, slug, username, password, created_at, updated_at
+		FROM workspace_backend
+		WHERE slug = ?`,
 		slug,
 	).Scan(
 		&b.ID,
@@ -159,7 +168,13 @@ func (r *workspaceBackendRepoSQLite) GetBySlug(slug string) (*WorkspaceBackend, 
 
 func (r *workspaceBackendRepoSQLite) Update(b *WorkspaceBackend) error {
 	_, err := r.db.Exec(
-		`UPDATE workspace_backend SET name = ?, slug = ?, username = ?, password = ?, updated_at = ?
+		`UPDATE workspace_backend
+		SET
+			name = ?,
+			slug = ?,
+			username = ?,
+			password = ?,
+			updated_at = ?
 		WHERE id = ?`,
 		b.Name,
 		b.Slug,
@@ -184,8 +199,12 @@ func (r *workspaceBackendRepoSQLite) ListByWorkspaceID(workspaceID ID, limit, of
 		limit = 50
 	}
 	rows, err := r.db.Query(
-		`SELECT id, workspace_id, name, slug, username, password, created_at, updated_at
-		FROM workspace_backend WHERE workspace_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+		`SELECT
+			id, workspace_id, name, slug, username, password, created_at, updated_at
+		FROM workspace_backend
+		WHERE workspace_id = ?
+		ORDER BY created_at DESC
+		LIMIT ? OFFSET ?`,
 		workspaceID.String(),
 		limit,
 		offset,
@@ -200,7 +219,9 @@ func (r *workspaceBackendRepoSQLite) ListByWorkspaceID(workspaceID ID, limit, of
 func (r *workspaceBackendRepoSQLite) CountByWorkspaceID(workspaceID ID) (int64, error) {
 	var count int64
 	err := r.db.QueryRow(
-		`SELECT COUNT(*) FROM workspace_backend WHERE workspace_id = ?`,
+		`SELECT COUNT(*)
+		FROM workspace_backend
+		WHERE workspace_id = ?`,
 		workspaceID.String(),
 	).Scan(&count)
 	return count, err
@@ -212,8 +233,10 @@ type workspaceBackendRepoPostgres struct {
 
 func (r *workspaceBackendRepoPostgres) Create(b *WorkspaceBackend) error {
 	return r.db.QueryRow(
-		`INSERT INTO workspace_backend (workspace_id, name, slug, username, password)
-		VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at, updated_at`,
+		`INSERT INTO workspace_backend
+		(workspace_id, name, slug, username, password)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id, created_at, updated_at`,
 		b.WorkspaceID.String(),
 		b.Name,
 		b.Slug,
@@ -229,8 +252,10 @@ func (r *workspaceBackendRepoPostgres) Create(b *WorkspaceBackend) error {
 func (r *workspaceBackendRepoPostgres) GetByID(id ID) (*WorkspaceBackend, error) {
 	b := &WorkspaceBackend{}
 	err := r.db.QueryRow(
-		`SELECT id, workspace_id, name, slug, username, password, created_at, updated_at
-		FROM workspace_backend WHERE id = $1`,
+		`SELECT
+			id, workspace_id, name, slug, username, password, created_at, updated_at
+		FROM workspace_backend
+		WHERE id = $1`,
 		id.String(),
 	).Scan(
 		&b.ID,
@@ -265,8 +290,10 @@ func (r *workspaceBackendRepoPostgres) GetByIDAndWorkspace(id, workspaceID ID) (
 func (r *workspaceBackendRepoPostgres) GetBySlug(slug string) (*WorkspaceBackend, error) {
 	b := &WorkspaceBackend{}
 	err := r.db.QueryRow(
-		`SELECT id, workspace_id, name, slug, username, password, created_at, updated_at
-		FROM workspace_backend WHERE slug = $1`,
+		`SELECT
+			id, workspace_id, name, slug, username, password, created_at, updated_at
+		FROM workspace_backend
+		WHERE slug = $1`,
 		slug,
 	).Scan(
 		&b.ID,
@@ -289,7 +316,14 @@ func (r *workspaceBackendRepoPostgres) GetBySlug(slug string) (*WorkspaceBackend
 
 func (r *workspaceBackendRepoPostgres) Update(b *WorkspaceBackend) error {
 	_, err := r.db.Exec(
-		`UPDATE workspace_backend SET name = $1, slug = $2, username = $3, password = $4, updated_at = $5 WHERE id = $6`,
+		`UPDATE workspace_backend
+		SET
+			name = $1,
+			slug = $2,
+			username = $3,
+			password = $4,
+			updated_at = $5
+		WHERE id = $6`,
 		b.Name,
 		b.Slug,
 		b.Username,
@@ -313,8 +347,12 @@ func (r *workspaceBackendRepoPostgres) ListByWorkspaceID(workspaceID ID, limit, 
 		limit = 50
 	}
 	rows, err := r.db.Query(
-		`SELECT id, workspace_id, name, slug, username, password, created_at, updated_at
-		FROM workspace_backend WHERE workspace_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
+		`SELECT
+			id, workspace_id, name, slug, username, password, created_at, updated_at
+		FROM workspace_backend
+		WHERE workspace_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2 OFFSET $3`,
 		workspaceID.String(),
 		limit,
 		offset,
@@ -329,7 +367,9 @@ func (r *workspaceBackendRepoPostgres) ListByWorkspaceID(workspaceID ID, limit, 
 func (r *workspaceBackendRepoPostgres) CountByWorkspaceID(workspaceID ID) (int64, error) {
 	var count int64
 	err := r.db.QueryRow(
-		`SELECT COUNT(*) FROM workspace_backend WHERE workspace_id = $1`,
+		`SELECT COUNT(*)
+		FROM workspace_backend
+		WHERE workspace_id = $1`,
 		workspaceID.String(),
 	).Scan(&count)
 	return count, err

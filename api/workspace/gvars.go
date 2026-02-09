@@ -172,8 +172,8 @@ func CreateWorkspaceVariableGroupAction(w http.ResponseWriter, r *http.Request) 
 		"name":                       group.Name,
 		"extraVariables":             group.ExtraVariables,
 		"environmentVariables":       group.EnvironmentVariables,
-		"secretExtraVariables":       group.SecretExtraVariables,
-		"secretEnvironmentVariables": group.SecretEnvironmentVariables,
+		"secretExtraVariables":       secretExtraVariables,
+		"secretEnvironmentVariables": secretEnvironmentVariables,
 		"createdAt":                  group.CreatedAt.UTC().Format(time.RFC3339),
 		"updatedAt":                  group.UpdatedAt.UTC().Format(time.RFC3339),
 	})
@@ -397,14 +397,23 @@ func GetWorkspaceVariableGroupAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	secretExtraVariables := util.DecryptFromBase64String(
+		group.SecretExtraVariables,
+		util.GetEncryptionKey(),
+	)
+	secretEnvironmentVariables := util.DecryptFromBase64String(
+		group.SecretEnvironmentVariables,
+		util.GetEncryptionKey(),
+	)
+
 	util.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"id":                         group.ID,
 		"workspaceId":                group.WorkspaceID,
 		"name":                       group.Name,
 		"extraVariables":             group.ExtraVariables,
 		"environmentVariables":       group.EnvironmentVariables,
-		"secretExtraVariables":       group.SecretExtraVariables,
-		"secretEnvironmentVariables": group.SecretEnvironmentVariables,
+		"secretExtraVariables":       secretExtraVariables,
+		"secretEnvironmentVariables": secretEnvironmentVariables,
 		"createdAt":                  group.CreatedAt.UTC().Format(time.RFC3339),
 		"updatedAt":                  group.UpdatedAt.UTC().Format(time.RFC3339),
 	})
@@ -557,8 +566,8 @@ func UpdateWorkspaceVariableGroupAction(w http.ResponseWriter, r *http.Request) 
 		"name":                       group.Name,
 		"extraVariables":             group.ExtraVariables,
 		"environmentVariables":       group.EnvironmentVariables,
-		"secretExtraVariables":       group.SecretExtraVariables,
-		"secretEnvironmentVariables": group.SecretEnvironmentVariables,
+		"secretExtraVariables":       secretExtraVariables,
+		"secretEnvironmentVariables": secretEnvironmentVariables,
 		"createdAt":                  group.CreatedAt.UTC().Format(time.RFC3339),
 		"updatedAt":                  group.UpdatedAt.UTC().Format(time.RFC3339),
 	})

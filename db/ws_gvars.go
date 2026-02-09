@@ -71,7 +71,8 @@ type workspaceVariableGroupRepoSQLite struct {
 // Create creates a new workspace variable group.
 func (x *workspaceVariableGroupRepoSQLite) Create(g *WorkspaceVariableGroup) error {
 	result, err := x.db.Exec(
-		`INSERT INTO workspace_variable_groups (workspace_id, name, extra_variables, environment_variables, secret_extra_variables, secret_environment_variables)
+		`INSERT INTO workspace_variable_groups
+		(workspace_id, name, extra_variables, environment_variables, secret_extra_variables, secret_environment_variables)
 		VALUES (?, ?, ?, ?, ?, ?)`,
 		g.WorkspaceID.String(),
 		g.Name,
@@ -89,7 +90,11 @@ func (x *workspaceVariableGroupRepoSQLite) Create(g *WorkspaceVariableGroup) err
 	}
 	g.ID = ID(strconv.FormatInt(lid, 10))
 	row := x.db.QueryRow(
-		`SELECT created_at, updated_at FROM workspace_variable_groups WHERE id = ?`,
+		`SELECT
+			created_at,
+			updated_at
+		FROM workspace_variable_groups
+		WHERE id = ?`,
 		g.ID.String(),
 	)
 	_ = row.Scan(&g.CreatedAt, &g.UpdatedAt)
@@ -100,8 +105,11 @@ func (x *workspaceVariableGroupRepoSQLite) Create(g *WorkspaceVariableGroup) err
 func (x *workspaceVariableGroupRepoSQLite) GetByID(id ID) (*WorkspaceVariableGroup, error) {
 	g := &WorkspaceVariableGroup{}
 	err := x.db.QueryRow(
-		`SELECT id, workspace_id, name, extra_variables, environment_variables, secret_extra_variables, secret_environment_variables, created_at, updated_at
-		FROM workspace_variable_groups WHERE id = ?`,
+		`SELECT
+			id, workspace_id, name, extra_variables, environment_variables,
+			secret_extra_variables, secret_environment_variables, created_at, updated_at
+		FROM workspace_variable_groups
+		WHERE id = ?`,
 		id.String(),
 	).Scan(
 		&g.ID,
@@ -139,7 +147,13 @@ func (x *workspaceVariableGroupRepoSQLite) GetByIDAndWorkspace(id, workspaceID I
 func (x *workspaceVariableGroupRepoSQLite) Update(g *WorkspaceVariableGroup) error {
 	_, err := x.db.Exec(
 		`UPDATE workspace_variable_groups
-		SET name = ?, extra_variables = ?, environment_variables = ?, secret_extra_variables = ?, secret_environment_variables = ?, updated_at = ?
+		SET
+			name = ?,
+			extra_variables = ?,
+			environment_variables = ?,
+			secret_extra_variables = ?,
+			secret_environment_variables = ?,
+			updated_at = ?
 		WHERE id = ?`,
 		g.Name,
 		g.ExtraVariables,
@@ -164,7 +178,9 @@ func (x *workspaceVariableGroupRepoSQLite) Delete(id ID) error {
 // ListByWorkspaceID lists workspace variable groups for a workspace with pagination.
 func (x *workspaceVariableGroupRepoSQLite) ListByWorkspaceID(workspaceID ID, limit, offset int) ([]*WorkspaceVariableGroup, error) {
 	rows, err := x.db.Query(
-		`SELECT id, workspace_id, name, extra_variables, environment_variables, secret_extra_variables, secret_environment_variables, created_at, updated_at
+		`SELECT
+			id, workspace_id, name, extra_variables, environment_variables,
+			secret_extra_variables, secret_environment_variables, created_at, updated_at
 		FROM workspace_variable_groups
 		WHERE workspace_id = ?
 		ORDER BY created_at DESC
@@ -184,7 +200,9 @@ func (x *workspaceVariableGroupRepoSQLite) ListByWorkspaceID(workspaceID ID, lim
 func (x *workspaceVariableGroupRepoSQLite) CountByWorkspaceID(workspaceID ID) (int64, error) {
 	var count int64
 	err := x.db.QueryRow(
-		`SELECT COUNT(*) FROM workspace_variable_groups WHERE workspace_id = ?`,
+		`SELECT COUNT(*)
+		FROM workspace_variable_groups
+		WHERE workspace_id = ?`,
 		workspaceID.String(),
 	).Scan(&count)
 	return count, err
@@ -197,7 +215,8 @@ type workspaceVariableGroupRepoPostgres struct {
 // Create creates a new workspace variable group.
 func (x *workspaceVariableGroupRepoPostgres) Create(g *WorkspaceVariableGroup) error {
 	err := x.db.QueryRow(
-		`INSERT INTO workspace_variable_groups (workspace_id, name, extra_variables, environment_variables, secret_extra_variables, secret_environment_variables)
+		`INSERT INTO workspace_variable_groups
+		(workspace_id, name, extra_variables, environment_variables, secret_extra_variables, secret_environment_variables)
 		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, created_at, updated_at`,
 		g.WorkspaceID.String(),
@@ -214,8 +233,11 @@ func (x *workspaceVariableGroupRepoPostgres) Create(g *WorkspaceVariableGroup) e
 func (x *workspaceVariableGroupRepoPostgres) GetByID(id ID) (*WorkspaceVariableGroup, error) {
 	g := &WorkspaceVariableGroup{}
 	err := x.db.QueryRow(
-		`SELECT id, workspace_id, name, extra_variables, environment_variables, secret_extra_variables, secret_environment_variables, created_at, updated_at
-		FROM workspace_variable_groups WHERE id = $1`,
+		`SELECT
+			id, workspace_id, name, extra_variables, environment_variables,
+			secret_extra_variables, secret_environment_variables, created_at, updated_at
+		FROM workspace_variable_groups
+		WHERE id = $1`,
 		id.String(),
 	).Scan(
 		&g.ID,
@@ -253,7 +275,13 @@ func (x *workspaceVariableGroupRepoPostgres) GetByIDAndWorkspace(id, workspaceID
 func (x *workspaceVariableGroupRepoPostgres) Update(g *WorkspaceVariableGroup) error {
 	_, err := x.db.Exec(
 		`UPDATE workspace_variable_groups
-		SET name = $1, extra_variables = $2, environment_variables = $3, secret_extra_variables = $4, secret_environment_variables = $5, updated_at = $6
+		SET
+			name = $1,
+			extra_variables = $2,
+			environment_variables = $3,
+			secret_extra_variables = $4,
+			secret_environment_variables = $5,
+			updated_at = $6
 		WHERE id = $7`,
 		g.Name,
 		g.ExtraVariables,
@@ -278,7 +306,9 @@ func (x *workspaceVariableGroupRepoPostgres) Delete(id ID) error {
 // ListByWorkspaceID lists workspace variable groups for a workspace with pagination.
 func (x *workspaceVariableGroupRepoPostgres) ListByWorkspaceID(workspaceID ID, limit, offset int) ([]*WorkspaceVariableGroup, error) {
 	rows, err := x.db.Query(
-		`SELECT id, workspace_id, name, extra_variables, environment_variables, secret_extra_variables, secret_environment_variables, created_at, updated_at
+		`SELECT
+			id, workspace_id, name, extra_variables, environment_variables,
+			secret_extra_variables, secret_environment_variables, created_at, updated_at
 		FROM workspace_variable_groups
 		WHERE workspace_id = $1
 		ORDER BY created_at DESC
@@ -298,7 +328,9 @@ func (x *workspaceVariableGroupRepoPostgres) ListByWorkspaceID(workspaceID ID, l
 func (x *workspaceVariableGroupRepoPostgres) CountByWorkspaceID(workspaceID ID) (int64, error) {
 	var count int64
 	err := x.db.QueryRow(
-		`SELECT COUNT(*) FROM workspace_variable_groups WHERE workspace_id = $1`,
+		`SELECT COUNT(*)
+		FROM workspace_variable_groups
+		WHERE workspace_id = $1`,
 		workspaceID.String(),
 	).Scan(&count)
 	return count, err

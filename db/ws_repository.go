@@ -84,7 +84,8 @@ type workspaceRepoRepoSQLite struct {
 
 func (x *workspaceRepoRepoSQLite) Create(r *WorkspaceRepo) error {
 	result, err := x.db.Exec(
-		`INSERT INTO workspace_repositories (workspace_id, name, git_url, git_branch, git_tag, ssh_key_id, credentials_id)
+		`INSERT INTO workspace_repositories
+		(workspace_id, name, git_url, git_branch, git_tag, ssh_key_id, credentials_id)
 		VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		r.WorkspaceID.String(),
 		r.Name,
@@ -103,7 +104,11 @@ func (x *workspaceRepoRepoSQLite) Create(r *WorkspaceRepo) error {
 	}
 	r.ID = ID(strconv.FormatInt(lid, 10))
 	row := x.db.QueryRow(
-		`SELECT created_at, updated_at FROM workspace_repositories WHERE id = ?`,
+		`SELECT
+			created_at,
+			updated_at
+		FROM workspace_repositories
+		WHERE id = ?`,
 		r.ID.String(),
 	)
 	_ = row.Scan(&r.CreatedAt, &r.UpdatedAt)
@@ -114,8 +119,11 @@ func (x *workspaceRepoRepoSQLite) GetByID(id ID) (*WorkspaceRepo, error) {
 	r := &WorkspaceRepo{}
 	var sshKeyID, gitCredID interface{}
 	err := x.db.QueryRow(
-		`SELECT id, workspace_id, name, git_url, git_branch, git_tag, ssh_key_id, credentials_id, created_at, updated_at
-		FROM workspace_repositories WHERE id = ?`,
+		`SELECT
+			id, workspace_id, name, git_url, git_branch, git_tag,
+			ssh_key_id, credentials_id, created_at, updated_at
+		FROM workspace_repositories
+		WHERE id = ?`,
 		id.String(),
 	).Scan(
 		&r.ID,
@@ -161,7 +169,15 @@ func (x *workspaceRepoRepoSQLite) GetByIDAndWorkspace(id, workspaceID ID) (*Work
 
 func (x *workspaceRepoRepoSQLite) Update(r *WorkspaceRepo) error {
 	_, err := x.db.Exec(
-		`UPDATE workspace_repositories SET name = ?, git_url = ?, git_branch = ?, git_tag = ?, ssh_key_id = ?, credentials_id = ?, updated_at = ?
+		`UPDATE workspace_repositories
+		SET
+			name = ?,
+			git_url = ?,
+			git_branch = ?,
+			git_tag = ?,
+			ssh_key_id = ?,
+			credentials_id = ?,
+			updated_at = ?
 		WHERE id = ?`,
 		r.Name,
 		r.GitURL,
@@ -185,9 +201,13 @@ func (x *workspaceRepoRepoSQLite) Delete(id ID) error {
 
 func (x *workspaceRepoRepoSQLite) ListByWorkspaceID(workspaceID ID, limit, offset int) ([]*WorkspaceRepo, error) {
 	rows, err := x.db.Query(
-		`SELECT id, workspace_id, name, git_url, git_branch, git_tag, ssh_key_id, credentials_id, created_at, updated_at
-		FROM workspace_repositories WHERE workspace_id = ?
-		ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+		`SELECT
+			id, workspace_id, name, git_url, git_branch, git_tag,
+			ssh_key_id, credentials_id, created_at, updated_at
+		FROM workspace_repositories
+		WHERE workspace_id = ?
+		ORDER BY created_at DESC
+		LIMIT ? OFFSET ?`,
 		workspaceID.String(),
 		limit,
 		offset,
@@ -202,7 +222,9 @@ func (x *workspaceRepoRepoSQLite) ListByWorkspaceID(workspaceID ID, limit, offse
 func (x *workspaceRepoRepoSQLite) CountByWorkspaceID(workspaceID ID) (int64, error) {
 	var count int64
 	err := x.db.QueryRow(
-		`SELECT COUNT(*) FROM workspace_repositories WHERE workspace_id = ?`,
+		`SELECT COUNT(*)
+		FROM workspace_repositories
+		WHERE workspace_id = ?`,
 		workspaceID.String(),
 	).Scan(&count)
 	return count, err
@@ -214,8 +236,10 @@ type workspaceRepoRepoPostgres struct {
 
 func (x *workspaceRepoRepoPostgres) Create(r *WorkspaceRepo) error {
 	err := x.db.QueryRow(
-		`INSERT INTO workspace_repositories (workspace_id, name, git_url, git_branch, git_tag, ssh_key_id, credentials_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, created_at, updated_at`,
+		`INSERT INTO workspace_repositories
+		(workspace_id, name, git_url, git_branch, git_tag, ssh_key_id, credentials_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		RETURNING id, created_at, updated_at`,
 		r.WorkspaceID.String(),
 		r.Name,
 		r.GitURL,
@@ -231,8 +255,11 @@ func (x *workspaceRepoRepoPostgres) GetByID(id ID) (*WorkspaceRepo, error) {
 	r := &WorkspaceRepo{}
 	var sshKeyID, gitCredID interface{}
 	err := x.db.QueryRow(
-		`SELECT id, workspace_id, name, git_url, git_branch, git_tag, ssh_key_id, credentials_id, created_at, updated_at
-		FROM workspace_repositories WHERE id = $1`,
+		`SELECT
+			id, workspace_id, name, git_url, git_branch, git_tag,
+			ssh_key_id, credentials_id, created_at, updated_at
+		FROM workspace_repositories
+		WHERE id = $1`,
 		id.String(),
 	).Scan(
 		&r.ID,
@@ -278,7 +305,16 @@ func (x *workspaceRepoRepoPostgres) GetByIDAndWorkspace(id, workspaceID ID) (*Wo
 
 func (x *workspaceRepoRepoPostgres) Update(r *WorkspaceRepo) error {
 	_, err := x.db.Exec(
-		`UPDATE workspace_repositories SET name = $1, git_url = $2, git_branch = $3, git_tag = $4, ssh_key_id = $5, credentials_id = $6, updated_at = $7 WHERE id = $8`,
+		`UPDATE workspace_repositories
+		SET
+			name = $1,
+			git_url = $2,
+			git_branch = $3,
+			git_tag = $4,
+			ssh_key_id = $5,
+			credentials_id = $6,
+			updated_at = $7
+		WHERE id = $8`,
 		r.Name,
 		r.GitURL,
 		r.GitBranch,
@@ -301,8 +337,13 @@ func (x *workspaceRepoRepoPostgres) Delete(id ID) error {
 
 func (x *workspaceRepoRepoPostgres) ListByWorkspaceID(workspaceID ID, limit, offset int) ([]*WorkspaceRepo, error) {
 	rows, err := x.db.Query(
-		`SELECT id, workspace_id, name, git_url, git_branch, git_tag, ssh_key_id, credentials_id, created_at, updated_at
-		FROM workspace_repositories WHERE workspace_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
+		`SELECT
+			id, workspace_id, name, git_url, git_branch, git_tag,
+			ssh_key_id, credentials_id, created_at, updated_at
+		FROM workspace_repositories
+		WHERE workspace_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2 OFFSET $3`,
 		workspaceID.String(),
 		limit,
 		offset,
@@ -317,7 +358,9 @@ func (x *workspaceRepoRepoPostgres) ListByWorkspaceID(workspaceID ID, limit, off
 func (x *workspaceRepoRepoPostgres) CountByWorkspaceID(workspaceID ID) (int64, error) {
 	var count int64
 	err := x.db.QueryRow(
-		`SELECT COUNT(*) FROM workspace_repositories WHERE workspace_id = $1`,
+		`SELECT COUNT(*)
+		FROM workspace_repositories
+		WHERE workspace_id = $1`,
 		workspaceID.String(),
 	).Scan(&count)
 	return count, err

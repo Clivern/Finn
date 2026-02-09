@@ -49,7 +49,7 @@
       <div class="mt-6">
         <button
           type="button"
-          @click="showCreateModal = true"
+          @click="openCreateModal"
           :class="[
             'w-full flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-800 focus:ring-offset-1 transition-colors',
             workspaces.length ? 'border border-theme-border bg-white text-theme-text hover:bg-theme-hover' : 'border-2 border-dashed border-primary-400 bg-primary-50/50 text-primary-800 hover:bg-primary-100'
@@ -78,6 +78,9 @@
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-sm p-6">
             <h2 id="create-workspace-title" class="text-lg font-semibold text-theme-text">{{ $t('selectWorkspace.createModalTitle') }}</h2>
             <p class="mt-1 text-sm text-theme-textLight">{{ $t('selectWorkspace.createModalDescription') }}</p>
+            <div v-if="createModalError" class="mt-4 rounded-md border border-red-200 bg-red-50 p-3" role="alert">
+              <p class="text-sm text-red-800">{{ createModalError }}</p>
+            </div>
             <form @submit.prevent="handleCreate" class="mt-4 space-y-4">
               <div>
                 <label for="workspace-name" class="form-label">{{ $t('selectWorkspace.workspaceName') }}</label>
@@ -115,6 +118,7 @@ const router = useRouter()
 const workspaces = ref([])
 const error = ref(null)
 const showCreateModal = ref(false)
+const createModalError = ref(null)
 const newWorkspaceName = ref('')
 const createLoading = ref(false)
 
@@ -127,8 +131,14 @@ function formatDate(iso) {
   }
 }
 
+function openCreateModal() {
+  createModalError.value = null
+  showCreateModal.value = true
+}
+
 function closeCreateModal() {
   showCreateModal.value = false
+  createModalError.value = null
   newWorkspaceName.value = ''
 }
 
@@ -150,7 +160,7 @@ async function loadWorkspaces() {
 
 async function handleCreate() {
   createLoading.value = true
-  error.value = null
+  createModalError.value = null
 
   try {
     const res = await workspaceAPI.create({ name: newWorkspaceName.value })
@@ -159,10 +169,10 @@ async function handleCreate() {
       closeCreateModal()
       router.push('/dashboard')
     } else {
-      error.value = 'Invalid response'
+      createModalError.value = 'Invalid response'
     }
   } catch (err) {
-    error.value = err.response?.data?.errorMessage || 'Failed to create workspace'
+    createModalError.value = err.response?.data?.errorMessage || 'Failed to create workspace'
   } finally {
     createLoading.value = false
   }
@@ -170,6 +180,6 @@ async function handleCreate() {
 
 onMounted(async () => {
   await loadWorkspaces()
-  if (workspaces.value.length === 0 && !error.value) showCreateModal.value = true
+  if (workspaces.value.length === 0 && !error.value) openCreateModal()
 })
 </script>

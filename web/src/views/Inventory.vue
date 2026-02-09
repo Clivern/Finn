@@ -55,7 +55,7 @@
                     {{ typeLabel(inv.type) }}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-theme-textLight">
-                    {{ formatCreatedAt(inv.createdAt) }}
+                    {{ formatCreatedAt(inv.createdAt, locale) }}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
                     <button type="button" class="text-primary-600 hover:text-primary-700 p-1 rounded mr-1" :title="$t('common.edit')" :aria-label="$t('common.edit')" @click="openEditModal(inv)">
@@ -245,6 +245,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppNav from '@/components/AppNav.vue'
 import { loadWorkspaceFromStorage } from '@/utils/storage'
+import { formatCreatedAt } from '@/utils/date'
 import { inventoriesAPI, sshKeysAPI, credentialsAPI, repositoriesAPI } from '@/api'
 
 const { t, locale } = useI18n()
@@ -289,17 +290,6 @@ const form = ref(defaultForm())
 function idFromApi(v) {
   if (v == null || v === '') return ''
   return String(v)
-}
-
-function formatCreatedAt(iso) {
-  if (!iso) return '—'
-  try {
-    const d = new Date(iso)
-    if (Number.isNaN(d.getTime())) return '—'
-    return d.toLocaleDateString(locale.value || 'en', { month: 'short', day: 'numeric', year: 'numeric' })
-  } catch {
-    return '—'
-  }
 }
 
 function typeLabel(type) {

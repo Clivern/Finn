@@ -58,6 +58,12 @@ const (
 	CanGetWorkspaceInventory    = "CAN_GET_WORKSPACE_INVENTORY"
 	CanUpdateWorkspaceInventory = "CAN_UPDATE_WORKSPACE_INVENTORY"
 	CanDeleteWorkspaceInventory = "CAN_DELETE_WORKSPACE_INVENTORY"
+
+	CanGetWorkspaceTemplates   = "CAN_GET_WORKSPACE_TEMPLATES"
+	CanAddWorkspaceTemplate    = "CAN_ADD_WORKSPACE_TEMPLATE"
+	CanGetWorkspaceTemplate    = "CAN_GET_WORKSPACE_TEMPLATE"
+	CanUpdateWorkspaceTemplate = "CAN_UPDATE_WORKSPACE_TEMPLATE"
+	CanDeleteWorkspaceTemplate = "CAN_DELETE_WORKSPACE_TEMPLATE"
 )
 
 // Permission checks user permissions for resources (e.g. workspace).
@@ -272,6 +278,30 @@ func (p *Permission) CheckWorkspaceInventoryPermission(user *db.User, inventory 
 	case CanGetWorkspaceInventory, CanGetWorkspaceInventories:
 		return true, nil
 	case CanUpdateWorkspaceInventory, CanDeleteWorkspaceInventory, CanAddWorkspaceInventory:
+		return membership.Role == db.UserRoleAdmin || membership.Role == db.UserRoleOwner, nil
+	default:
+		return false, nil
+	}
+}
+
+// CheckWorkspaceTemplatePermission checks if the user has the given permission on the workspace template.
+func (p *Permission) CheckWorkspaceTemplatePermission(user *db.User, tmpl *db.WorkspaceTemplate, permission string) (bool, error) {
+	if user.Role == db.UserRoleAdmin {
+		return true, nil
+	}
+
+	membership, err := p.WorkspaceRepository.GetWorkspaceMembership(tmpl.WorkspaceID, user.ID)
+	if err != nil {
+		return false, err
+	}
+	if membership == nil {
+		return false, nil
+	}
+
+	switch permission {
+	case CanGetWorkspaceTemplate, CanGetWorkspaceTemplates:
+		return true, nil
+	case CanUpdateWorkspaceTemplate, CanDeleteWorkspaceTemplate, CanAddWorkspaceTemplate:
 		return membership.Role == db.UserRoleAdmin || membership.Role == db.UserRoleOwner, nil
 	default:
 		return false, nil

@@ -1041,6 +1041,18 @@ func LockBackendStateAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	count, err := repo.DeleteOlderThan(backendLockHistoryRetentionDays)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Msg("Failed to delete older than backend locks")
+	}
+	if count > 0 {
+		log.Info().
+			Int64("count", count).
+			Msg("Deleted older than backend locks")
+	}
+
 	util.WriteJSON(w, http.StatusOK, lockInfoResponse(lock))
 }
 

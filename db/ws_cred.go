@@ -91,7 +91,8 @@ func (x *workspaceCredRepoSQLite) Create(c *WorkspaceCred) error {
 		c.Type = CredentialTypeGit
 	}
 	result, err := x.db.Exec(
-		`INSERT INTO workspace_credentials (workspace_id, name, type, committer_name, committer_email, username, password_or_token)
+		`INSERT INTO workspace_credentials
+		(workspace_id, name, type, committer_name, committer_email, username, password_or_token)
 		VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		c.WorkspaceID.String(),
 		c.Name,
@@ -110,7 +111,11 @@ func (x *workspaceCredRepoSQLite) Create(c *WorkspaceCred) error {
 	}
 	c.ID = ID(strconv.FormatInt(lid, 10))
 	row := x.db.QueryRow(
-		`SELECT created_at, updated_at FROM workspace_credentials WHERE id = ?`,
+		`SELECT
+			created_at,
+			updated_at
+		FROM workspace_credentials
+		WHERE id = ?`,
 		c.ID.String(),
 	)
 	_ = row.Scan(&c.CreatedAt, &c.UpdatedAt)
@@ -122,8 +127,11 @@ func (x *workspaceCredRepoSQLite) GetByID(id ID) (*WorkspaceCred, error) {
 	c := &WorkspaceCred{}
 	var committerName, committerEmail sql.NullString
 	err := x.db.QueryRow(
-		`SELECT id, workspace_id, name, type, committer_name, committer_email, username, password_or_token, created_at, updated_at
-		FROM workspace_credentials WHERE id = ?`,
+		`SELECT
+			id, workspace_id, name, type, committer_name, committer_email,
+			username, password_or_token, created_at, updated_at
+		FROM workspace_credentials
+		WHERE id = ?`,
 		id.String(),
 	).Scan(
 		&c.ID,
@@ -173,7 +181,15 @@ func (x *workspaceCredRepoSQLite) Update(c *WorkspaceCred) error {
 		c.Type = CredentialTypeGit
 	}
 	_, err := x.db.Exec(
-		`UPDATE workspace_credentials SET name = ?, type = ?, committer_name = ?, committer_email = ?, username = ?, password_or_token = ?, updated_at = ?
+		`UPDATE workspace_credentials
+		SET
+			name = ?,
+			type = ?,
+			committer_name = ?,
+			committer_email = ?,
+			username = ?,
+			password_or_token = ?,
+			updated_at = ?
 		WHERE id = ?`,
 		c.Name,
 		c.Type,
@@ -199,9 +215,13 @@ func (x *workspaceCredRepoSQLite) Delete(id ID) error {
 // ListByWorkspaceID returns credentials for the given workspace with pagination.
 func (x *workspaceCredRepoSQLite) ListByWorkspaceID(workspaceID ID, limit, offset int) ([]*WorkspaceCred, error) {
 	rows, err := x.db.Query(
-		`SELECT id, workspace_id, name, type, committer_name, committer_email, username, password_or_token, created_at, updated_at
-		FROM workspace_credentials WHERE workspace_id = ?
-		ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+		`SELECT
+			id, workspace_id, name, type, committer_name, committer_email,
+			username, password_or_token, created_at, updated_at
+		FROM workspace_credentials
+		WHERE workspace_id = ?
+		ORDER BY created_at DESC
+		LIMIT ? OFFSET ?`,
 		workspaceID.String(),
 		limit,
 		offset,
@@ -217,7 +237,9 @@ func (x *workspaceCredRepoSQLite) ListByWorkspaceID(workspaceID ID, limit, offse
 func (x *workspaceCredRepoSQLite) CountByWorkspaceID(workspaceID ID) (int64, error) {
 	var count int64
 	err := x.db.QueryRow(
-		`SELECT COUNT(*) FROM workspace_credentials WHERE workspace_id = ?`,
+		`SELECT COUNT(*)
+		FROM workspace_credentials
+		WHERE workspace_id = ?`,
 		workspaceID.String(),
 	).Scan(&count)
 	return count, err
@@ -240,8 +262,10 @@ func (x *workspaceCredRepoPostgres) Create(c *WorkspaceCred) error {
 		c.Type = CredentialTypeGit
 	}
 	err := x.db.QueryRow(
-		`INSERT INTO workspace_credentials (workspace_id, name, type, committer_name, committer_email, username, password_or_token)
-		VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, created_at, updated_at`,
+		`INSERT INTO workspace_credentials
+		(workspace_id, name, type, committer_name, committer_email, username, password_or_token)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		RETURNING id, created_at, updated_at`,
 		c.WorkspaceID.String(),
 		c.Name,
 		c.Type,
@@ -258,8 +282,11 @@ func (x *workspaceCredRepoPostgres) GetByID(id ID) (*WorkspaceCred, error) {
 	c := &WorkspaceCred{}
 	var committerName, committerEmail sql.NullString
 	err := x.db.QueryRow(
-		`SELECT id, workspace_id, name, type, committer_name, committer_email, username, password_or_token, created_at, updated_at
-		FROM workspace_credentials WHERE id = $1`,
+		`SELECT
+			id, workspace_id, name, type, committer_name, committer_email,
+			username, password_or_token, created_at, updated_at
+		FROM workspace_credentials
+		WHERE id = $1`,
 		id.String(),
 	).Scan(
 		&c.ID,
@@ -309,7 +336,16 @@ func (x *workspaceCredRepoPostgres) Update(c *WorkspaceCred) error {
 		c.Type = CredentialTypeGit
 	}
 	_, err := x.db.Exec(
-		`UPDATE workspace_credentials SET name = $1, type = $2, committer_name = $3, committer_email = $4, username = $5, password_or_token = $6, updated_at = $7 WHERE id = $8`,
+		`UPDATE workspace_credentials
+		SET
+			name = $1,
+			type = $2,
+			committer_name = $3,
+			committer_email = $4,
+			username = $5,
+			password_or_token = $6,
+			updated_at = $7
+		WHERE id = $8`,
 		c.Name,
 		c.Type,
 		nullString(c.CommitterName),
@@ -334,8 +370,13 @@ func (x *workspaceCredRepoPostgres) Delete(id ID) error {
 // ListByWorkspaceID returns credentials for the given workspace with pagination.
 func (x *workspaceCredRepoPostgres) ListByWorkspaceID(workspaceID ID, limit, offset int) ([]*WorkspaceCred, error) {
 	rows, err := x.db.Query(
-		`SELECT id, workspace_id, name, type, committer_name, committer_email, username, password_or_token, created_at, updated_at
-		FROM workspace_credentials WHERE workspace_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
+		`SELECT
+			id, workspace_id, name, type, committer_name, committer_email,
+			username, password_or_token, created_at, updated_at
+		FROM workspace_credentials
+		WHERE workspace_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2 OFFSET $3`,
 		workspaceID.String(),
 		limit,
 		offset,
@@ -351,7 +392,9 @@ func (x *workspaceCredRepoPostgres) ListByWorkspaceID(workspaceID ID, limit, off
 func (x *workspaceCredRepoPostgres) CountByWorkspaceID(workspaceID ID) (int64, error) {
 	var count int64
 	err := x.db.QueryRow(
-		`SELECT COUNT(*) FROM workspace_credentials WHERE workspace_id = $1`,
+		`SELECT COUNT(*)
+		FROM workspace_credentials
+		WHERE workspace_id = $1`,
 		workspaceID.String(),
 	).Scan(&count)
 	return count, err

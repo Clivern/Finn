@@ -51,7 +51,7 @@
                     <p class="text-sm font-medium text-theme-text">{{ g.name }}</p>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-theme-textLight">
-                    {{ formatCreatedAt(g.createdAt) }}
+                    {{ formatCreatedAt(g.createdAt, locale) }}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
                     <button type="button" class="text-primary-600 hover:text-primary-700 p-1 rounded mr-1" :title="$t('common.edit')" :aria-label="$t('common.edit')" @click="openEditModal(g)">
@@ -241,6 +241,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppNav from '@/components/AppNav.vue'
 import { loadWorkspaceFromStorage } from '@/utils/storage'
+import { formatCreatedAt } from '@/utils/date'
 import { variableGroupsAPI } from '@/api'
 import VarSection from '@/components/groupVars/VarSection.vue'
 import EnvSection from '@/components/groupVars/EnvSection.vue'
@@ -277,17 +278,6 @@ const secretEnvRows = ref([])
 
 const deleteModalGroup = ref(null)
 const deletingId = ref(null)
-
-function formatCreatedAt(iso) {
-  if (!iso) return '—'
-  try {
-    const d = new Date(iso)
-    if (Number.isNaN(d.getTime())) return '—'
-    return d.toLocaleDateString(locale.value || 'en', { month: 'short', day: 'numeric', year: 'numeric' })
-  } catch {
-    return '—'
-  }
-}
 
 function valueToDisplay(v) {
   if (v === null || v === undefined) return ''
@@ -384,7 +374,10 @@ async function loadGroups(overrideOffset) {
   const off = overrideOffset !== undefined ? overrideOffset : offset.value
 
   try {
-    const res = await variableGroupsAPI.list(workspace.value.id, { limit: limit.value, offset: off })
+    const res = await variableGroupsAPI.list(
+      workspace.value.id,
+      { limit: limit.value, offset: off },
+    )
     groups.value = res.data?.groups ?? []
     _meta.value = res.data?._meta ?? null
     offset.value = off
@@ -433,10 +426,19 @@ async function handleSaveGroup() {
   let environmentVariables
   let secretExtraVariables
   let secretEnvironmentVariables
+
   try {
-    extraVariables = serializeExtraField(plainExtraViewMode.value, plainExtraRows.value, plainExtraJson.value)
+    extraVariables = serializeExtraField(
+      plainExtraViewMode.value,
+      plainExtraRows.value,
+      plainExtraJson.value
+    )
     environmentVariables = JSON.stringify(rowsToObject(plainEnvRows.value))
-    secretExtraVariables = serializeExtraField(secretExtraViewMode.value, secretExtraRows.value, secretExtraJson.value)
+    secretExtraVariables = serializeExtraField(
+      secretExtraViewMode.value,
+      secretExtraRows.value,
+      secretExtraJson.value,
+    )
     secretEnvironmentVariables = JSON.stringify(rowsToObject(secretEnvRows.value))
   } catch (e) {
     modalError.value = e.message || t('groupVarsPage.modalError')

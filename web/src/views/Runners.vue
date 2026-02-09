@@ -71,8 +71,17 @@
               <td class="px-6 py-4 whitespace-nowrap">
                 <code class="text-xs text-theme-textLight font-mono">{{ maskToken(runner.token) }}</code>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-theme-textLight">
-                {{ runner.tags || '—' }}
+              <td class="px-6 py-4 text-sm text-theme-textLight">
+                <template v-if="!runner.tags || Object.keys(runner.tags).length === 0">—</template>
+                <div v-else class="flex flex-wrap gap-1 max-w-md">
+                  <span
+                    v-for="(v, k) in runner.tags"
+                    :key="k"
+                    class="inline-flex items-center rounded-md bg-theme-hover px-2 py-0.5 text-xs font-mono text-theme-text"
+                  >
+                    {{ k }}={{ v }}
+                  </span>
+                </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span class="px-2 py-1 text-xs font-medium rounded-full"
@@ -171,22 +180,49 @@
                   </svg>
                 </button>
               </div>
+              <div v-if="createModalError" class="mb-4 rounded-md border border-red-200 bg-red-50 p-3" role="alert">
+                <p class="text-sm text-red-800">{{ createModalError }}</p>
+              </div>
               <div class="space-y-4">
                 <div>
                   <label for="create-name" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.name') }}</label>
-                  <input id="create-name" v-model="createForm.name" type="text" class="input-field" :placeholder="$t('runnersPage.namePlaceholder')" />
+                  <input id="create-name" v-model="createForm.name" type="text" required class="input-field" :placeholder="$t('runnersPage.namePlaceholder')" />
                 </div>
                 <div>
-                  <label for="create-tags" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.tags') }}</label>
-                  <input id="create-tags" v-model="createForm.tags" type="text" class="input-field" :placeholder="$t('runnersPage.tagsPlaceholder')" />
+                  <span class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.tags') }}</span>
+                  <p class="text-xs text-theme-textLight mb-2">{{ $t('runnersPage.tagsHint') }}</p>
+                  <div class="space-y-2">
+                    <div class="flex gap-2 text-xs font-medium text-theme-textLight">
+                      <span class="flex-1">{{ $t('runnersPage.tagKey') }}</span>
+                      <span class="flex-1">{{ $t('runnersPage.tagValue') }}</span>
+                      <span class="w-8 shrink-0" aria-hidden="true" />
+                    </div>
+                    <div v-for="(row, idx) in createTagEntries" :key="'ct-' + idx" class="flex gap-2 items-center">
+                      <input v-model="row.key" type="text" class="input-field flex-1 text-sm" :placeholder="$t('runnersPage.tagKeyPlaceholder')" />
+                      <input v-model="row.value" type="text" class="input-field flex-1 text-sm" :placeholder="$t('runnersPage.tagValuePlaceholder')" />
+                      <button
+                        type="button"
+                        class="shrink-0 p-1 text-red-600 hover:text-red-800 disabled:opacity-30 disabled:cursor-not-allowed"
+                        :disabled="createTagEntries.length <= 1"
+                        :title="$t('runnersPage.removeTag')"
+                        @click="removeCreateTagRow(idx)"
+                      >
+                        <span class="sr-only">{{ $t('runnersPage.removeTag') }}</span>
+                        x
+                      </button>
+                    </div>
+                    <button type="button" class="text-sm text-blue-600 hover:text-blue-800" @click="addCreateTagRow">
+                      + {{ $t('runnersPage.addTag') }}
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label for="create-maxParallel" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.maxParallelTasks') }}</label>
-                  <input id="create-maxParallel" v-model.number="createForm.maxParallelTasks" type="number" min="1" class="input-field" />
+                  <input id="create-maxParallel" v-model.number="createForm.maxParallelTasks" type="number" min="1" required class="input-field" />
                 </div>
                 <div>
                   <label for="create-status" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.status') }}</label>
-                  <select id="create-status" v-model="createForm.status" class="input-field">
+                  <select id="create-status" v-model="createForm.status" required class="input-field">
                     <option value="active">{{ $t('runnersPage.statusActive') }}</option>
                     <option value="maintenance">{{ $t('runnersPage.statusMaintenance') }}</option>
                     <option value="inactive">{{ $t('runnersPage.statusInactive') }}</option>
@@ -194,11 +230,11 @@
                 </div>
                 <div>
                   <label for="create-url" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.url') }}</label>
-                  <input id="create-url" v-model="createForm.url" type="url" class="input-field" :placeholder="$t('runnersPage.urlPlaceholder')" />
+                  <input id="create-url" v-model="createForm.url" type="url" required class="input-field" :placeholder="$t('runnersPage.urlPlaceholder')" />
                 </div>
                 <div>
                   <label for="create-token" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.token') }}</label>
-                  <input id="create-token" v-model="createForm.token" type="text" class="input-field font-mono text-sm" :placeholder="$t('runnersPage.tokenPlaceholder')" />
+                  <input id="create-token" v-model="createForm.token" type="text" required class="input-field font-mono text-sm" :placeholder="$t('runnersPage.tokenPlaceholder')" />
                 </div>
               </div>
             </div>
@@ -235,22 +271,49 @@
                   </svg>
                 </button>
               </div>
+              <div v-if="editModalError" class="mb-4 rounded-md border border-red-200 bg-red-50 p-3" role="alert">
+                <p class="text-sm text-red-800">{{ editModalError }}</p>
+              </div>
               <div class="space-y-4">
                 <div>
                   <label for="edit-name" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.name') }}</label>
-                  <input id="edit-name" v-model="editForm.name" type="text" class="input-field" :placeholder="$t('runnersPage.namePlaceholder')" />
+                  <input id="edit-name" v-model="editForm.name" type="text" required class="input-field" :placeholder="$t('runnersPage.namePlaceholder')" />
                 </div>
                 <div>
-                  <label for="edit-tags" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.tags') }}</label>
-                  <input id="edit-tags" v-model="editForm.tags" type="text" class="input-field" :placeholder="$t('runnersPage.tagsPlaceholder')" />
+                  <span class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.tags') }}</span>
+                  <p class="text-xs text-theme-textLight mb-2">{{ $t('runnersPage.tagsHint') }}</p>
+                  <div class="space-y-2">
+                    <div class="flex gap-2 text-xs font-medium text-theme-textLight">
+                      <span class="flex-1">{{ $t('runnersPage.tagKey') }}</span>
+                      <span class="flex-1">{{ $t('runnersPage.tagValue') }}</span>
+                      <span class="w-8 shrink-0" aria-hidden="true" />
+                    </div>
+                    <div v-for="(row, idx) in editTagEntries" :key="'et-' + idx" class="flex gap-2 items-center">
+                      <input v-model="row.key" type="text" class="input-field flex-1 text-sm" :placeholder="$t('runnersPage.tagKeyPlaceholder')" />
+                      <input v-model="row.value" type="text" class="input-field flex-1 text-sm" :placeholder="$t('runnersPage.tagValuePlaceholder')" />
+                      <button
+                        type="button"
+                        class="shrink-0 p-1 text-red-600 hover:text-red-800 disabled:opacity-30 disabled:cursor-not-allowed"
+                        :disabled="editTagEntries.length <= 1"
+                        :title="$t('runnersPage.removeTag')"
+                        @click="removeEditTagRow(idx)"
+                      >
+                        <span class="sr-only">{{ $t('runnersPage.removeTag') }}</span>
+                        ×
+                      </button>
+                    </div>
+                    <button type="button" class="text-sm text-blue-600 hover:text-blue-800" @click="addEditTagRow">
+                      + {{ $t('runnersPage.addTag') }}
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label for="edit-maxParallel" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.maxParallelTasks') }}</label>
-                  <input id="edit-maxParallel" v-model.number="editForm.maxParallelTasks" type="number" min="1" class="input-field" />
+                  <input id="edit-maxParallel" v-model.number="editForm.maxParallelTasks" type="number" min="1" required class="input-field" />
                 </div>
                 <div>
                   <label for="edit-status" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.status') }}</label>
-                  <select id="edit-status" v-model="editForm.status" class="input-field">
+                  <select id="edit-status" v-model="editForm.status" required class="input-field">
                     <option value="active">{{ $t('runnersPage.statusActive') }}</option>
                     <option value="inactive">{{ $t('runnersPage.statusInactive') }}</option>
                     <option value="maintenance">{{ $t('runnersPage.statusMaintenance') }}</option>
@@ -258,11 +321,11 @@
                 </div>
                 <div>
                   <label for="edit-url" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.url') }}</label>
-                  <input id="edit-url" v-model="editForm.url" type="url" class="input-field" :placeholder="$t('runnersPage.urlPlaceholder')" />
+                  <input id="edit-url" v-model="editForm.url" type="url" required class="input-field" :placeholder="$t('runnersPage.urlPlaceholder')" />
                 </div>
                 <div>
                   <label for="edit-token" class="block text-sm font-medium text-theme-text mb-2">{{ $t('runnersPage.token') }}</label>
-                  <input id="edit-token" v-model="editForm.token" type="text" class="input-field font-mono text-sm" :placeholder="$t('runnersPage.tokenPlaceholder')" />
+                  <input id="edit-token" v-model="editForm.token" type="text" required class="input-field font-mono text-sm" :placeholder="$t('runnersPage.tokenPlaceholder')" />
                 </div>
               </div>
             </div>
@@ -297,6 +360,9 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
+            </div>
+            <div v-if="deleteModalError" class="mb-4 rounded-md border border-red-200 bg-red-50 p-3" role="alert">
+              <p class="text-sm text-red-800">{{ deleteModalError }}</p>
             </div>
             <p class="text-sm text-theme-textLight">
               {{ $t('runnersPage.deleteConfirm', { name: runnerToDelete?.name }) }}
@@ -355,7 +421,6 @@ const runnerToEdit = ref(null)
 const createForm = reactive({
   token: '',
   name: '',
-  tags: '',
   maxParallelTasks: 10,
   status: 'active',
   url: ''
@@ -364,14 +429,63 @@ const createForm = reactive({
 const editForm = reactive({
   token: '',
   name: '',
-  tags: '',
   maxParallelTasks: 10,
   status: 'active',
   url: ''
 })
 
+const createTagEntries = ref([{ key: '', value: '' }])
+const editTagEntries = ref([{ key: '', value: '' }])
+
+const createModalError = ref(null)
+const editModalError = ref(null)
+const deleteModalError = ref(null)
+
 const showingFrom = computed(() => (total.value === 0 ? 0 : offset.value + 1))
 const showingTo = computed(() => Math.min(offset.value + runners.value.length, total.value))
+
+function tagsObjectFromEntries(entries) {
+  const o = {}
+  for (const { key, value } of entries) {
+    const k = (key || '').trim()
+    if (!k) continue
+    o[k] = (value ?? '').trim()
+  }
+  return o
+}
+
+function entriesFromTags(tags) {
+  if (!tags || typeof tags !== 'object') {
+    return [{ key: '', value: '' }]
+  }
+  const pairs = Object.entries(tags).map(([key, value]) => ({
+    key,
+    value: String(value ?? '')
+  }))
+  return pairs.length ? pairs : [{ key: '', value: '' }]
+}
+
+function addCreateTagRow() {
+  createTagEntries.value.push({ key: '', value: '' })
+}
+
+function removeCreateTagRow(idx) {
+  createTagEntries.value.splice(idx, 1)
+  if (createTagEntries.value.length === 0) {
+    createTagEntries.value.push({ key: '', value: '' })
+  }
+}
+
+function addEditTagRow() {
+  editTagEntries.value.push({ key: '', value: '' })
+}
+
+function removeEditTagRow(idx) {
+  editTagEntries.value.splice(idx, 1)
+  if (editTagEntries.value.length === 0) {
+    editTagEntries.value.push({ key: '', value: '' })
+  }
+}
 
 function canPingRunner(runner) {
   return runner?.url && runner?.token
@@ -450,53 +564,60 @@ function goToPage(newOffset) {
 function openCreateModal() {
   createForm.token = ''
   createForm.name = ''
-  createForm.tags = ''
   createForm.maxParallelTasks = 10
   createForm.status = 'active'
   createForm.url = ''
+  createTagEntries.value = [{ key: '', value: '' }]
+  createModalError.value = null
   showCreateModal.value = true
 }
 
 function closeCreateModal() {
   showCreateModal.value = false
+  createModalError.value = null
 }
 
 function openEditModal(runner) {
   runnerToEdit.value = runner
   editForm.token = runner.token
   editForm.name = runner.name
-  editForm.tags = runner.tags
   editForm.maxParallelTasks = runner.maxParallelTasks ?? 10
   editForm.status = runner.status
   editForm.url = runner.url
+  editTagEntries.value = entriesFromTags(runner.tags)
+  editModalError.value = null
   showEditModal.value = true
 }
 
 function closeEditModal() {
   showEditModal.value = false
   runnerToEdit.value = null
+  editModalError.value = null
 }
 
 function openDeleteModal(runner) {
   runnerToDelete.value = runner
+  deleteModalError.value = null
   showDeleteModal.value = true
 }
 
 function closeDeleteModal() {
   showDeleteModal.value = false
   runnerToDelete.value = null
+  deleteModalError.value = null
 }
 
 async function handleCreate() {
   createLoading.value = true
   errorMessage.value = null
   successMessage.value = null
+  createModalError.value = null
 
   try {
     await runnersAPI.create({
       token: createForm.token.trim(),
       name: createForm.name,
-      tags: createForm.tags,
+      tags: tagsObjectFromEntries(createTagEntries.value),
       maxParallelTasks: createForm.maxParallelTasks,
       status: createForm.status,
       url: createForm.url
@@ -507,7 +628,7 @@ async function handleCreate() {
     setTimeout(() => { successMessage.value = null }, 5000)
   } catch (err) {
     console.error('Failed to create runner:', err)
-    errorMessage.value = err.response?.data?.errorMessage || t('runnersPage.failedCreate')
+    createModalError.value = err.response?.data?.errorMessage || t('runnersPage.failedCreate')
   } finally {
     createLoading.value = false
   }
@@ -517,12 +638,13 @@ async function handleUpdate() {
   if (!runnerToEdit.value?.id) return
   updateLoading.value = true
   errorMessage.value = null
+  editModalError.value = null
 
   try {
     await runnersAPI.update(runnerToEdit.value.id, {
       token: editForm.token.trim(),
       name: editForm.name,
-      tags: editForm.tags,
+      tags: tagsObjectFromEntries(editTagEntries.value),
       maxParallelTasks: editForm.maxParallelTasks,
       status: editForm.status,
       url: editForm.url
@@ -533,7 +655,7 @@ async function handleUpdate() {
     setTimeout(() => { successMessage.value = null }, 3000)
   } catch (err) {
     console.error('Failed to update runner:', err)
-    errorMessage.value = err.response?.data?.errorMessage || t('runnersPage.failedUpdate')
+    editModalError.value = err.response?.data?.errorMessage || t('runnersPage.failedUpdate')
   } finally {
     updateLoading.value = false
   }
@@ -543,6 +665,7 @@ async function handleDelete() {
   if (!runnerToDelete.value?.id) return
   deleteLoading.value = true
   errorMessage.value = null
+  deleteModalError.value = null
 
   try {
     await runnersAPI.delete(runnerToDelete.value.id)
@@ -552,7 +675,7 @@ async function handleDelete() {
     setTimeout(() => { successMessage.value = null }, 3000)
   } catch (err) {
     console.error('Failed to delete runner:', err)
-    errorMessage.value = err.response?.data?.errorMessage || t('runnersPage.failedDelete')
+    deleteModalError.value = err.response?.data?.errorMessage || t('runnersPage.failedDelete')
   } finally {
     deleteLoading.value = false
   }

@@ -1,0 +1,45 @@
+---
+description: Format Go SQL queries as multiline raw strings
+globs: "**/*.go"
+alwaysApply: false
+---
+
+# Go SQL Query Formatting
+
+When writing SQL in Go (for `db.Query`, `db.QueryRow`, `db.Exec`, and similar), format SQL for balanced readability: avoid very long lines and avoid unnecessary vertical expansion for tiny queries.
+
+## Rules
+
+- Use raw string literals (backticks) for SQL queries.
+- Keep SQL line length around 100 chars (hard limit 120). If a line exceeds this, split it.
+- Short/simple queries may stay compact (for example single-clause `DELETE ... WHERE id = ?`).
+- Split major clauses onto separate lines when queries are medium/long (`SELECT`, `FROM`, `WHERE`, `ORDER BY`, `LIMIT`, `OFFSET`, `INSERT`, `VALUES`, `UPDATE`, `SET`, `DELETE`).
+- For long `SELECT` lists (or when the `SELECT` line is too long), put one column per line.
+- For long `INSERT` column lists, put one column per line inside parentheses.
+- For long `UPDATE ... SET` statements, put one assignment per line.
+- Prefer this balance:
+  - tiny query: compact is fine
+  - medium query: clause-per-line
+  - long query: clause-per-line + one item per line in long lists
+
+## Examples
+
+```go
+// Bad
+db.QueryRow(`SELECT id, name, created_at FROM users WHERE id = ?`, id)
+
+// Good (long query -> expanded)
+db.QueryRow(
+	`SELECT
+		id,
+		name,
+		created_at
+	FROM users
+	WHERE id = ?`,
+	id,
+)
+
+// Good (short query -> compact)
+db.Exec(`DELETE FROM users WHERE id = ?`, id)
+```
+

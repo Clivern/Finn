@@ -74,9 +74,13 @@ type apiKeyRepoSQLite struct {
 // Create inserts a row and fills ID and timestamps on apiKey.
 func (r *apiKeyRepoSQLite) Create(apiKey *APIKey) error {
 	result, err := r.db.Exec(
-		`INSERT INTO user_api_keys (user_id, name, key, expires_at)
+		`INSERT INTO user_api_keys
+		(user_id, name, key, expires_at)
 		VALUES (?, ?, ?, ?)`,
-		apiKey.UserID.String(), apiKey.Name, apiKey.Key, apiKey.ExpiresAt,
+		apiKey.UserID.String(),
+		apiKey.Name,
+		apiKey.Key,
+		apiKey.ExpiresAt,
 	)
 	if err != nil {
 		return err
@@ -87,20 +91,37 @@ func (r *apiKeyRepoSQLite) Create(apiKey *APIKey) error {
 	}
 	apiKey.ID = ID(strconv.FormatInt(lid, 10))
 	row := r.db.QueryRow(
-		`SELECT created_at, updated_at FROM user_api_keys WHERE id = ?`,
+		`SELECT
+			created_at,
+			updated_at
+		FROM user_api_keys
+		WHERE id = ?`,
 		apiKey.ID.String(),
 	)
-	return row.Scan(&apiKey.CreatedAt, &apiKey.UpdatedAt)
+	return row.Scan(
+		&apiKey.CreatedAt,
+		&apiKey.UpdatedAt,
+	)
 }
 
 // GetByID returns a API key by ID
 func (r *apiKeyRepoSQLite) GetByID(id ID) (*APIKey, error) {
 	k := &APIKey{}
 	err := r.db.QueryRow(
-		`SELECT id, user_id, name, key, expires_at, created_at, updated_at
-		FROM user_api_keys WHERE id = ?`,
+		`SELECT
+			id, user_id, name, key, expires_at, created_at, updated_at
+		FROM user_api_keys
+		WHERE id = ?`,
 		id.String(),
-	).Scan(&k.ID, &k.UserID, &k.Name, &k.Key, &k.ExpiresAt, &k.CreatedAt, &k.UpdatedAt)
+	).Scan(
+		&k.ID,
+		&k.UserID,
+		&k.Name,
+		&k.Key,
+		&k.ExpiresAt,
+		&k.CreatedAt,
+		&k.UpdatedAt,
+	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -117,10 +138,20 @@ func (r *apiKeyRepoSQLite) GetByKey(key string) (*APIKey, error) {
 	}
 	k := &APIKey{}
 	err := r.db.QueryRow(
-		`SELECT id, user_id, name, key, expires_at, created_at, updated_at
-		FROM user_api_keys WHERE key = ? AND (expires_at IS NULL OR expires_at > ?)`,
+		`SELECT
+			id, user_id, name, key, expires_at, created_at, updated_at
+		FROM user_api_keys
+		WHERE key = ? AND (expires_at IS NULL OR expires_at > ?)`,
 		key, time.Now().UTC(),
-	).Scan(&k.ID, &k.UserID, &k.Name, &k.Key, &k.ExpiresAt, &k.CreatedAt, &k.UpdatedAt)
+	).Scan(
+		&k.ID,
+		&k.UserID,
+		&k.Name,
+		&k.Key,
+		&k.ExpiresAt,
+		&k.CreatedAt,
+		&k.UpdatedAt,
+	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -133,8 +164,11 @@ func (r *apiKeyRepoSQLite) GetByKey(key string) (*APIKey, error) {
 // GetByUserID returns a list of API keys by user ID
 func (r *apiKeyRepoSQLite) GetByUserID(userID ID) ([]*APIKey, error) {
 	rows, err := r.db.Query(
-		`SELECT id, user_id, name, key, expires_at, created_at, updated_at
-		FROM user_api_keys WHERE user_id = ? ORDER BY created_at DESC`,
+		`SELECT
+			id, user_id, name, key, expires_at, created_at, updated_at
+		FROM user_api_keys
+		WHERE user_id = ?
+		ORDER BY created_at DESC`,
 		userID.String(),
 	)
 	if err != nil {
@@ -179,7 +213,8 @@ func (r *apiKeyRepoSQLite) DeleteExpired() (int64, error) {
 func (r *apiKeyRepoSQLite) Count() (int64, error) {
 	var count int64
 	err := r.db.QueryRow(
-		`SELECT COUNT(*) FROM user_api_keys
+		`SELECT COUNT(*)
+		FROM user_api_keys
 		WHERE (expires_at IS NULL OR expires_at > ?)`,
 		time.Now().UTC(),
 	).Scan(&count)
@@ -190,7 +225,8 @@ func (r *apiKeyRepoSQLite) Count() (int64, error) {
 func (r *apiKeyRepoSQLite) CountByUserID(userID ID) (int64, error) {
 	var count int64
 	err := r.db.QueryRow(
-		`SELECT COUNT(*) FROM user_api_keys
+		`SELECT COUNT(*)
+		FROM user_api_keys
 		WHERE user_id = ? AND (expires_at IS NULL OR expires_at > ?)`,
 		userID.String(), time.Now().UTC(),
 	).Scan(&count)
@@ -207,10 +243,19 @@ type apiKeyRepoPostgres struct {
 // Create inserts a row
 func (r *apiKeyRepoPostgres) Create(apiKey *APIKey) error {
 	err := r.db.QueryRow(
-		`INSERT INTO user_api_keys (user_id, name, key, expires_at)
-		VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at`,
-		apiKey.UserID.String(), apiKey.Name, apiKey.Key, apiKey.ExpiresAt,
-	).Scan(&apiKey.ID, &apiKey.CreatedAt, &apiKey.UpdatedAt)
+		`INSERT INTO user_api_keys
+		(user_id, name, key, expires_at)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, created_at, updated_at`,
+		apiKey.UserID.String(),
+		apiKey.Name,
+		apiKey.Key,
+		apiKey.ExpiresAt,
+	).Scan(
+		&apiKey.ID,
+		&apiKey.CreatedAt,
+		&apiKey.UpdatedAt,
+	)
 	return err
 }
 
@@ -218,10 +263,20 @@ func (r *apiKeyRepoPostgres) Create(apiKey *APIKey) error {
 func (r *apiKeyRepoPostgres) GetByID(id ID) (*APIKey, error) {
 	k := &APIKey{}
 	err := r.db.QueryRow(
-		`SELECT id, user_id, name, key, expires_at, created_at, updated_at
-		FROM user_api_keys WHERE id = $1`,
+		`SELECT
+			id, user_id, name, key, expires_at, created_at, updated_at
+		FROM user_api_keys
+		WHERE id = $1`,
 		id.String(),
-	).Scan(&k.ID, &k.UserID, &k.Name, &k.Key, &k.ExpiresAt, &k.CreatedAt, &k.UpdatedAt)
+	).Scan(
+		&k.ID,
+		&k.UserID,
+		&k.Name,
+		&k.Key,
+		&k.ExpiresAt,
+		&k.CreatedAt,
+		&k.UpdatedAt,
+	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -238,10 +293,20 @@ func (r *apiKeyRepoPostgres) GetByKey(key string) (*APIKey, error) {
 	}
 	k := &APIKey{}
 	err := r.db.QueryRow(
-		`SELECT id, user_id, name, key, expires_at, created_at, updated_at
-		FROM user_api_keys WHERE key = $1 AND (expires_at IS NULL OR expires_at > $2)`,
+		`SELECT
+			id, user_id, name, key, expires_at, created_at, updated_at
+		FROM user_api_keys
+		WHERE key = $1 AND (expires_at IS NULL OR expires_at > $2)`,
 		key, time.Now().UTC(),
-	).Scan(&k.ID, &k.UserID, &k.Name, &k.Key, &k.ExpiresAt, &k.CreatedAt, &k.UpdatedAt)
+	).Scan(
+		&k.ID,
+		&k.UserID,
+		&k.Name,
+		&k.Key,
+		&k.ExpiresAt,
+		&k.CreatedAt,
+		&k.UpdatedAt,
+	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -254,8 +319,11 @@ func (r *apiKeyRepoPostgres) GetByKey(key string) (*APIKey, error) {
 // GetByUserID returns a list of API keys by user ID
 func (r *apiKeyRepoPostgres) GetByUserID(userID ID) ([]*APIKey, error) {
 	rows, err := r.db.Query(
-		`SELECT id, user_id, name, key, expires_at, created_at, updated_at
-		FROM user_api_keys WHERE user_id = $1 ORDER BY created_at DESC`,
+		`SELECT
+			id, user_id, name, key, expires_at, created_at, updated_at
+		FROM user_api_keys
+		WHERE user_id = $1
+		ORDER BY created_at DESC`,
 		userID.String(),
 	)
 	if err != nil {
@@ -300,7 +368,8 @@ func (r *apiKeyRepoPostgres) DeleteExpired() (int64, error) {
 func (r *apiKeyRepoPostgres) Count() (int64, error) {
 	var count int64
 	err := r.db.QueryRow(
-		`SELECT COUNT(*) FROM user_api_keys
+		`SELECT COUNT(*)
+		FROM user_api_keys
 		WHERE (expires_at IS NULL OR expires_at > $1)`,
 		time.Now().UTC(),
 	).Scan(&count)
@@ -311,7 +380,8 @@ func (r *apiKeyRepoPostgres) Count() (int64, error) {
 func (r *apiKeyRepoPostgres) CountByUserID(userID ID) (int64, error) {
 	var count int64
 	err := r.db.QueryRow(
-		`SELECT COUNT(*) FROM user_api_keys
+		`SELECT COUNT(*)
+		FROM user_api_keys
 		WHERE user_id = $1 AND (expires_at IS NULL OR expires_at > $2)`,
 		userID.String(), time.Now().UTC(),
 	).Scan(&count)

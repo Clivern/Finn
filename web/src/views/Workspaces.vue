@@ -155,7 +155,7 @@
           role="dialog"
           aria-modal="true"
           aria-labelledby="edit-workspace-title"
-          @click.self="editModalWorkspace = null"
+          @click.self="closeEditModal"
         >
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-sm p-6">
             <h2 id="edit-workspace-title" class="text-lg font-semibold text-theme-text">
@@ -164,6 +164,9 @@
             <p class="mt-1 text-sm text-theme-textLight">
               {{ $t('workspacesPage.editDesc') }}
             </p>
+            <div v-if="editModalError" class="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="alert">
+              {{ editModalError }}
+            </div>
             <form @submit.prevent="handleUpdate" class="mt-4 space-y-4">
               <div>
                 <label for="edit-workspace-name" class="form-label">{{ $t('workspacesPage.name') }}</label>
@@ -180,7 +183,7 @@
               <div class="flex gap-3 justify-end">
                 <button
                   type="button"
-                  @click="editModalWorkspace = null"
+                  @click="closeEditModal"
                   class="btn-secondary"
                   :disabled="updateLoadingId"
                 >
@@ -214,6 +217,9 @@
             <h2 id="delete-workspace-title" class="text-lg font-semibold text-theme-text">
               {{ $t('workspacesPage.deleteTitle') }}
             </h2>
+            <div v-if="deleteModalError" class="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="alert">
+              {{ deleteModalError }}
+            </div>
             <p class="mt-2 text-sm text-theme-textLight">
               {{ $t('workspacesPage.deleteConfirm', { name: deleteModalWorkspace?.name }) }}
             </p>
@@ -283,6 +289,9 @@ const deleting = ref(false)
 const deletingId = ref(null)
 const switchLoadingId = ref(null)
 
+const editModalError = ref(null)
+const deleteModalError = ref(null)
+
 async function switchToWorkspace(workspace) {
   if (!workspace?.id) return
   switchLoadingId.value = workspace.id
@@ -302,6 +311,14 @@ async function switchToWorkspace(workspace) {
 function openEditModal(workspace) {
   editModalWorkspace.value = workspace
   editWorkspaceName.value = workspace.name
+  editModalError.value = null
+}
+
+function closeEditModal() {
+  if (updateLoadingId.value) return
+  editModalWorkspace.value = null
+  editWorkspaceName.value = ''
+  editModalError.value = null
 }
 
 async function handleUpdate() {
@@ -311,6 +328,7 @@ async function handleUpdate() {
   if (!workspace || !name) return
   updateLoadingId.value = workspace.id
   errorMessage.value = null
+  editModalError.value = null
 
   try {
     const res = await workspaceAPI.update(workspace.id, { name })
@@ -319,17 +337,18 @@ async function handleUpdate() {
     }
     editModalWorkspace.value = null
     editWorkspaceName.value = ''
+    editModalError.value = null
     await loadPage()
     successMessage.value = t('workspacesPage.workspaceUpdated')
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || t('workspacesPage.failedUpdate')
+    editModalError.value = err.response?.data?.errorMessage || t('workspacesPage.failedUpdate')
   } finally {
     updateLoadingId.value = null
   }
 }
 
 const canConfirmDelete = computed(() => {
-  const name = deleteModalWorkspace.value.name
+  const name = deleteModalWorkspace.value?.name
   return name && deleteConfirmName.value.trim() === name
 })
 
@@ -377,12 +396,14 @@ function goToPage(newOffset) {
 function openDeleteModal(workspace) {
   deleteModalWorkspace.value = workspace
   deleteConfirmName.value = ''
+  deleteModalError.value = null
 }
 
 function closeDeleteModal() {
   if (!deleting.value) {
     deleteModalWorkspace.value = null
     deleteConfirmName.value = ''
+    deleteModalError.value = null
   }
 }
 
@@ -393,6 +414,7 @@ async function confirmDelete() {
   deletingId.value = workspace.id
   errorMessage.value = null
   successMessage.value = null
+  deleteModalError.value = null
 
   try {
     await workspaceAPI.delete(workspace.id)
@@ -401,10 +423,11 @@ async function confirmDelete() {
     }
     deleteModalWorkspace.value = null
     deleteConfirmName.value = ''
+    deleteModalError.value = null
     await loadPage()
     successMessage.value = t('workspacesPage.workspaceDeleted')
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || t('workspacesPage.failedDelete')
+    deleteModalError.value = err.response?.data?.errorMessage || t('workspacesPage.failedDelete')
   } finally {
     deleting.value = false
     deletingId.value = null

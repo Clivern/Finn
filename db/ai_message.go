@@ -64,7 +64,8 @@ type aiMessageRepoSQLite struct {
 
 func (r *aiMessageRepoSQLite) Create(msg *AIMessage) error {
 	result, err := r.db.Exec(
-		`INSERT INTO user_ai_messages (user_id, role, content) VALUES (?, ?, ?)`,
+		`INSERT INTO user_ai_messages (user_id, role, content)
+		VALUES (?, ?, ?)`,
 		msg.UserID.String(),
 		msg.Role,
 		msg.Content,
@@ -78,7 +79,9 @@ func (r *aiMessageRepoSQLite) Create(msg *AIMessage) error {
 	}
 	msg.ID = ID(strconv.FormatInt(lid, 10))
 	row := r.db.QueryRow(
-		`SELECT created_at FROM user_ai_messages WHERE id = ?`,
+		`SELECT created_at
+		FROM user_ai_messages
+		WHERE id = ?`,
 		msg.ID.String(),
 	)
 	return row.Scan(&msg.CreatedAt)
@@ -87,8 +90,10 @@ func (r *aiMessageRepoSQLite) Create(msg *AIMessage) error {
 func (r *aiMessageRepoSQLite) GetByID(id ID) (*AIMessage, error) {
 	m := &AIMessage{}
 	err := r.db.QueryRow(
-		`SELECT id, user_id, role, content, created_at
-		FROM user_ai_messages WHERE id = ?`,
+		`SELECT
+			id, user_id, role, content, created_at
+		FROM user_ai_messages
+		WHERE id = ?`,
 		id.String(),
 	).Scan(
 		&m.ID,
@@ -111,8 +116,12 @@ func (r *aiMessageRepoSQLite) GetByUserID(userID ID, limit, offset int) ([]*AIMe
 		limit = 100
 	}
 	rows, err := r.db.Query(
-		`SELECT id, user_id, role, content, created_at
-		FROM user_ai_messages WHERE user_id = ? ORDER BY created_at ASC LIMIT ? OFFSET ?`,
+		`SELECT
+			id, user_id, role, content, created_at
+		FROM user_ai_messages
+		WHERE user_id = ?
+		ORDER BY created_at ASC
+		LIMIT ? OFFSET ?`,
 		userID.String(),
 		limit,
 		offset,
@@ -143,7 +152,9 @@ func (r *aiMessageRepoSQLite) DeleteByUserID(userID ID) error {
 func (r *aiMessageRepoSQLite) CountByUserID(userID ID) (int64, error) {
 	var count int64
 	err := r.db.QueryRow(
-		`SELECT COUNT(*) FROM user_ai_messages WHERE user_id = ?`,
+		`SELECT COUNT(*)
+		FROM user_ai_messages
+		WHERE user_id = ?`,
 		userID.String(),
 	).Scan(&count)
 	return count, err
@@ -157,7 +168,9 @@ type aiMessageRepoPostgres struct {
 
 func (r *aiMessageRepoPostgres) Create(msg *AIMessage) error {
 	return r.db.QueryRow(
-		`INSERT INTO user_ai_messages (user_id, role, content) VALUES ($1, $2, $3) RETURNING id, created_at`,
+		`INSERT INTO user_ai_messages (user_id, role, content)
+		VALUES ($1, $2, $3)
+		RETURNING id, created_at`,
 		msg.UserID.String(),
 		msg.Role,
 		msg.Content,
@@ -170,8 +183,10 @@ func (r *aiMessageRepoPostgres) Create(msg *AIMessage) error {
 func (r *aiMessageRepoPostgres) GetByID(id ID) (*AIMessage, error) {
 	m := &AIMessage{}
 	err := r.db.QueryRow(
-		`SELECT id, user_id, role, content, created_at
-		FROM user_ai_messages WHERE id = $1`,
+		`SELECT
+			id, user_id, role, content, created_at
+		FROM user_ai_messages
+		WHERE id = $1`,
 		id.String(),
 	).Scan(
 		&m.ID,
@@ -191,8 +206,12 @@ func (r *aiMessageRepoPostgres) GetByID(id ID) (*AIMessage, error) {
 
 func (r *aiMessageRepoPostgres) GetByUserID(userID ID, limit, offset int) ([]*AIMessage, error) {
 	rows, err := r.db.Query(
-		`SELECT id, user_id, role, content, created_at
-		FROM user_ai_messages WHERE user_id = $1 ORDER BY created_at ASC LIMIT $2 OFFSET $3`,
+		`SELECT
+			id, user_id, role, content, created_at
+		FROM user_ai_messages
+		WHERE user_id = $1
+		ORDER BY created_at ASC
+		LIMIT $2 OFFSET $3`,
 		userID.String(),
 		limit,
 		offset,
@@ -223,7 +242,9 @@ func (r *aiMessageRepoPostgres) DeleteByUserID(userID ID) error {
 func (r *aiMessageRepoPostgres) CountByUserID(userID ID) (int64, error) {
 	var count int64
 	err := r.db.QueryRow(
-		`SELECT COUNT(*) FROM user_ai_messages WHERE user_id = $1`,
+		`SELECT COUNT(*)
+		FROM user_ai_messages
+		WHERE user_id = $1`,
 		userID.String(),
 	).Scan(&count)
 	return count, err

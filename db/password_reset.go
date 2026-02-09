@@ -46,7 +46,8 @@ type passwordResetTokenRepoSQLite struct {
 // Create inserts a password reset token row.
 func (r *passwordResetTokenRepoSQLite) Create(t *PasswordResetToken) error {
 	result, err := r.db.Exec(
-		`INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?)`,
+		`INSERT INTO password_reset_tokens (user_id, token, expires_at)
+		VALUES (?, ?, ?)`,
 		t.UserID.String(),
 		t.Token,
 		t.ExpiresAt,
@@ -66,7 +67,14 @@ func (r *passwordResetTokenRepoSQLite) Create(t *PasswordResetToken) error {
 func (r *passwordResetTokenRepoSQLite) GetByToken(token string) (*PasswordResetToken, error) {
 	tok := &PasswordResetToken{}
 	err := r.db.QueryRow(
-		`SELECT id, user_id, token, expires_at, created_at FROM password_reset_tokens WHERE token = ?`,
+		`SELECT
+			id,
+			user_id,
+			token,
+			expires_at,
+			created_at
+		FROM password_reset_tokens
+		WHERE token = ?`,
 		token,
 	).Scan(
 		&tok.ID,
@@ -105,7 +113,8 @@ func (r *passwordResetTokenRepoSQLite) DeleteByToken(token string) error {
 // DeleteExpired removes expired tokens and returns the count deleted.
 func (r *passwordResetTokenRepoSQLite) DeleteExpired() (int64, error) {
 	result, err := r.db.Exec(
-		`DELETE FROM password_reset_tokens WHERE expires_at < ?`,
+		`DELETE FROM password_reset_tokens
+		WHERE expires_at < ?`,
 		time.Now().UTC(),
 	)
 	if err != nil {
@@ -123,7 +132,9 @@ type passwordResetTokenRepoPostgres struct {
 // Create inserts a password reset token row.
 func (r *passwordResetTokenRepoPostgres) Create(t *PasswordResetToken) error {
 	return r.db.QueryRow(
-		`INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES ($1, $2, $3) RETURNING id`,
+		`INSERT INTO password_reset_tokens (user_id, token, expires_at)
+		VALUES ($1, $2, $3)
+		RETURNING id`,
 		t.UserID.String(),
 		t.Token,
 		t.ExpiresAt,
@@ -134,7 +145,14 @@ func (r *passwordResetTokenRepoPostgres) Create(t *PasswordResetToken) error {
 func (r *passwordResetTokenRepoPostgres) GetByToken(token string) (*PasswordResetToken, error) {
 	tok := &PasswordResetToken{}
 	err := r.db.QueryRow(
-		`SELECT id, user_id, token, expires_at, created_at FROM password_reset_tokens WHERE token = $1`,
+		`SELECT
+			id,
+			user_id,
+			token,
+			expires_at,
+			created_at
+		FROM password_reset_tokens
+		WHERE token = $1`,
 		token,
 	).Scan(
 		&tok.ID,
@@ -173,7 +191,8 @@ func (r *passwordResetTokenRepoPostgres) DeleteByToken(token string) error {
 // DeleteExpired removes expired tokens and returns the count deleted.
 func (r *passwordResetTokenRepoPostgres) DeleteExpired() (int64, error) {
 	result, err := r.db.Exec(
-		`DELETE FROM password_reset_tokens WHERE expires_at < $1`,
+		`DELETE FROM password_reset_tokens
+		WHERE expires_at < $1`,
 		time.Now().UTC(),
 	)
 	if err != nil {

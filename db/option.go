@@ -59,7 +59,8 @@ type optionRepoSQLite struct {
 // Create inserts a row
 func (r *optionRepoSQLite) Create(key, value string) error {
 	_, err := r.db.Exec(
-		`INSERT INTO options (key, value) VALUES (?, ?)`,
+		`INSERT INTO options (key, value)
+		VALUES (?, ?)`,
 		key, value,
 	)
 	return err
@@ -70,7 +71,8 @@ func (r *optionRepoSQLite) Get(key string) (*Option, error) {
 	o := &Option{}
 	err := r.db.QueryRow(
 		`SELECT id, key, value, created_at, updated_at
-		FROM options WHERE key = ?`,
+		FROM options
+		WHERE key = ?`,
 		key,
 	).Scan(&o.ID, &o.Key, &o.Value, &o.CreatedAt, &o.UpdatedAt)
 	if err == sql.ErrNoRows {
@@ -85,7 +87,11 @@ func (r *optionRepoSQLite) Get(key string) (*Option, error) {
 // Update updates an option
 func (r *optionRepoSQLite) Update(key, value string) error {
 	_, err := r.db.Exec(
-		`UPDATE options SET value = ?, updated_at = ? WHERE key = ?`,
+		`UPDATE options
+		SET
+			value = ?,
+			updated_at = ?
+		WHERE key = ?`,
 		value, time.Now().UTC(), key,
 	)
 	return err
@@ -104,7 +110,8 @@ func (r *optionRepoSQLite) Delete(key string) error {
 func (r *optionRepoSQLite) List() ([]*Option, error) {
 	rows, err := r.db.Query(
 		`SELECT id, key, value, created_at, updated_at
-		FROM options ORDER BY key`,
+		FROM options
+		ORDER BY key`,
 	)
 	if err != nil {
 		return nil, err
@@ -123,7 +130,8 @@ type optionRepoPostgres struct {
 // Create inserts a row
 func (r *optionRepoPostgres) Create(key, value string) error {
 	_, err := r.db.Exec(
-		`INSERT INTO options (key, value) VALUES ($1, $2)`,
+		`INSERT INTO options (key, value)
+		VALUES ($1, $2)`,
 		key, value,
 	)
 	return err
@@ -134,7 +142,8 @@ func (r *optionRepoPostgres) Get(key string) (*Option, error) {
 	o := &Option{}
 	err := r.db.QueryRow(
 		`SELECT id, key, value, created_at, updated_at
-		FROM options WHERE key = $1`,
+		FROM options
+		WHERE key = $1`,
 		key,
 	).Scan(&o.ID, &o.Key, &o.Value, &o.CreatedAt, &o.UpdatedAt)
 	if err == sql.ErrNoRows {
@@ -149,7 +158,11 @@ func (r *optionRepoPostgres) Get(key string) (*Option, error) {
 // Update updates an option
 func (r *optionRepoPostgres) Update(key, value string) error {
 	_, err := r.db.Exec(
-		`UPDATE options SET value = $1, updated_at = $2 WHERE key = $3`,
+		`UPDATE options
+		SET
+			value = $1,
+			updated_at = $2
+		WHERE key = $3`,
 		value, time.Now().UTC(), key,
 	)
 	return err
@@ -168,7 +181,8 @@ func (r *optionRepoPostgres) Delete(key string) error {
 func (r *optionRepoPostgres) List() ([]*Option, error) {
 	rows, err := r.db.Query(
 		`SELECT id, key, value, created_at, updated_at
-		FROM options ORDER BY key`,
+		FROM options
+		ORDER BY key`,
 	)
 	if err != nil {
 		return nil, err

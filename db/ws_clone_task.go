@@ -86,7 +86,8 @@ type workspaceRepositoryCloneTaskRepoSQLite struct {
 
 func (r *workspaceRepositoryCloneTaskRepoSQLite) Create(t *WorkspaceRepositoryCloneTask) error {
 	result, err := r.db.Exec(
-		`INSERT INTO workspace_repository_clone_tasks (repository_id, runner_id, status, runner_task_id, result)
+		`INSERT INTO workspace_repository_clone_tasks
+		(repository_id, runner_id, status, runner_task_id, result)
 		VALUES (?, ?, ?, ?, ?)`,
 		t.RepositoryID.String(),
 		t.RunnerID.ValueOrNilPtr(),
@@ -103,7 +104,11 @@ func (r *workspaceRepositoryCloneTaskRepoSQLite) Create(t *WorkspaceRepositoryCl
 	}
 	t.ID = ID(strconv.FormatInt(lid, 10))
 	row := r.db.QueryRow(
-		`SELECT created_at, updated_at FROM workspace_repository_clone_tasks WHERE id = ?`,
+		`SELECT
+			created_at,
+			updated_at
+		FROM workspace_repository_clone_tasks
+		WHERE id = ?`,
 		t.ID.String(),
 	)
 	return row.Scan(&t.CreatedAt, &t.UpdatedAt)
@@ -111,8 +116,11 @@ func (r *workspaceRepositoryCloneTaskRepoSQLite) Create(t *WorkspaceRepositoryCl
 
 func (r *workspaceRepositoryCloneTaskRepoSQLite) GetByID(id ID) (*WorkspaceRepositoryCloneTask, error) {
 	row := r.db.QueryRow(
-		`SELECT id, repository_id, runner_id, status, runner_task_id, result, created_at, updated_at
-		FROM workspace_repository_clone_tasks WHERE id = ?`,
+		`SELECT
+			id, repository_id, runner_id, status, runner_task_id,
+			result, created_at, updated_at
+		FROM workspace_repository_clone_tasks
+		WHERE id = ?`,
 		id.String(),
 	)
 	t := &WorkspaceRepositoryCloneTask{}
@@ -151,7 +159,13 @@ func (r *workspaceRepositoryCloneTaskRepoSQLite) GetByID(id ID) (*WorkspaceRepos
 
 func (r *workspaceRepositoryCloneTaskRepoSQLite) Update(t *WorkspaceRepositoryCloneTask) error {
 	_, err := r.db.Exec(
-		`UPDATE workspace_repository_clone_tasks SET runner_id = ?, status = ?, runner_task_id = ?, result = ?, updated_at = ?
+		`UPDATE workspace_repository_clone_tasks
+		SET
+			runner_id = ?,
+			status = ?,
+			runner_task_id = ?,
+			result = ?,
+			updated_at = ?
 		WHERE id = ?`,
 		t.RunnerID.ValueOrNilPtr(),
 		t.Status,
@@ -165,7 +179,12 @@ func (r *workspaceRepositoryCloneTaskRepoSQLite) Update(t *WorkspaceRepositoryCl
 
 func (r *workspaceRepositoryCloneTaskRepoSQLite) UpdateStatus(id ID, status string, result *string) error {
 	_, err := r.db.Exec(
-		`UPDATE workspace_repository_clone_tasks SET status = ?, result = ?, updated_at = ? WHERE id = ?`,
+		`UPDATE workspace_repository_clone_tasks
+		SET
+			status = ?,
+			result = ?,
+			updated_at = ?
+		WHERE id = ?`,
 		status,
 		nullStrPtr(result),
 		time.Now().UTC(),
@@ -184,8 +203,13 @@ func (r *workspaceRepositoryCloneTaskRepoSQLite) ListByRepositoryID(repositoryID
 		limit = 50
 	}
 	rows, err := r.db.Query(
-		`SELECT id, repository_id, runner_id, status, runner_task_id, result, created_at, updated_at
-		FROM workspace_repository_clone_tasks WHERE repository_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+		`SELECT
+			id, repository_id, runner_id, status, runner_task_id,
+			result, created_at, updated_at
+		FROM workspace_repository_clone_tasks
+		WHERE repository_id = ?
+		ORDER BY created_at DESC
+		LIMIT ? OFFSET ?`,
 		repositoryID.String(), limit, offset,
 	)
 	if err != nil {
@@ -198,7 +222,9 @@ func (r *workspaceRepositoryCloneTaskRepoSQLite) ListByRepositoryID(repositoryID
 func (r *workspaceRepositoryCloneTaskRepoSQLite) CountByRepositoryID(repositoryID ID) (int64, error) {
 	var count int64
 	err := r.db.QueryRow(
-		`SELECT COUNT(*) FROM workspace_repository_clone_tasks WHERE repository_id = ?`,
+		`SELECT COUNT(*)
+		FROM workspace_repository_clone_tasks
+		WHERE repository_id = ?`,
 		repositoryID.String(),
 	).Scan(&count)
 	return count, err
@@ -207,7 +233,11 @@ func (r *workspaceRepositoryCloneTaskRepoSQLite) CountByRepositoryID(repositoryI
 func (r *workspaceRepositoryCloneTaskRepoSQLite) LatestStatusByRepositoryID(repositoryID ID) (string, error) {
 	var status string
 	err := r.db.QueryRow(
-		`SELECT status FROM workspace_repository_clone_tasks WHERE repository_id = ? ORDER BY created_at DESC LIMIT 1`,
+		`SELECT status
+		FROM workspace_repository_clone_tasks
+		WHERE repository_id = ?
+		ORDER BY created_at DESC
+		LIMIT 1`,
 		repositoryID.String(),
 	).Scan(&status)
 	if err == sql.ErrNoRows {
@@ -225,8 +255,10 @@ type workspaceRepositoryCloneTaskRepoPostgres struct {
 
 func (r *workspaceRepositoryCloneTaskRepoPostgres) Create(t *WorkspaceRepositoryCloneTask) error {
 	return r.db.QueryRow(
-		`INSERT INTO workspace_repository_clone_tasks (repository_id, runner_id, status, runner_task_id, result)
-		VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at, updated_at`,
+		`INSERT INTO workspace_repository_clone_tasks
+		(repository_id, runner_id, status, runner_task_id, result)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id, created_at, updated_at`,
 		t.RepositoryID.String(),
 		t.RunnerID.ValueOrNilPtr(),
 		t.Status,
@@ -237,8 +269,11 @@ func (r *workspaceRepositoryCloneTaskRepoPostgres) Create(t *WorkspaceRepository
 
 func (r *workspaceRepositoryCloneTaskRepoPostgres) GetByID(id ID) (*WorkspaceRepositoryCloneTask, error) {
 	row := r.db.QueryRow(
-		`SELECT id, repository_id, runner_id, status, runner_task_id, result, created_at, updated_at
-		FROM workspace_repository_clone_tasks WHERE id = $1`,
+		`SELECT
+			id, repository_id, runner_id, status, runner_task_id,
+			result, created_at, updated_at
+		FROM workspace_repository_clone_tasks
+		WHERE id = $1`,
 		id.String(),
 	)
 	t := &WorkspaceRepositoryCloneTask{}
@@ -277,7 +312,14 @@ func (r *workspaceRepositoryCloneTaskRepoPostgres) GetByID(id ID) (*WorkspaceRep
 
 func (r *workspaceRepositoryCloneTaskRepoPostgres) Update(t *WorkspaceRepositoryCloneTask) error {
 	_, err := r.db.Exec(
-		`UPDATE workspace_repository_clone_tasks SET runner_id = $1, status = $2, runner_task_id = $3, result = $4, updated_at = $5 WHERE id = $6`,
+		`UPDATE workspace_repository_clone_tasks
+		SET
+			runner_id = $1,
+			status = $2,
+			runner_task_id = $3,
+			result = $4,
+			updated_at = $5
+		WHERE id = $6`,
 		t.RunnerID.ValueOrNilPtr(),
 		t.Status,
 		nullStr(t.RunnerTaskID),
@@ -290,7 +332,12 @@ func (r *workspaceRepositoryCloneTaskRepoPostgres) Update(t *WorkspaceRepository
 
 func (r *workspaceRepositoryCloneTaskRepoPostgres) UpdateStatus(id ID, status string, result *string) error {
 	_, err := r.db.Exec(
-		`UPDATE workspace_repository_clone_tasks SET status = $1, result = $2, updated_at = $3 WHERE id = $4`,
+		`UPDATE workspace_repository_clone_tasks
+		SET
+			status = $1,
+			result = $2,
+			updated_at = $3
+		WHERE id = $4`,
 		status,
 		nullStrPtr(result),
 		time.Now().UTC(),
@@ -309,8 +356,13 @@ func (r *workspaceRepositoryCloneTaskRepoPostgres) ListByRepositoryID(repository
 		limit = 50
 	}
 	rows, err := r.db.Query(
-		`SELECT id, repository_id, runner_id, status, runner_task_id, result, created_at, updated_at
-		FROM workspace_repository_clone_tasks WHERE repository_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
+		`SELECT
+			id, repository_id, runner_id, status, runner_task_id,
+			result, created_at, updated_at
+		FROM workspace_repository_clone_tasks
+		WHERE repository_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2 OFFSET $3`,
 		repositoryID.String(), limit, offset,
 	)
 	if err != nil {
@@ -323,7 +375,9 @@ func (r *workspaceRepositoryCloneTaskRepoPostgres) ListByRepositoryID(repository
 func (r *workspaceRepositoryCloneTaskRepoPostgres) CountByRepositoryID(repositoryID ID) (int64, error) {
 	var count int64
 	err := r.db.QueryRow(
-		`SELECT COUNT(*) FROM workspace_repository_clone_tasks WHERE repository_id = $1`,
+		`SELECT COUNT(*)
+		FROM workspace_repository_clone_tasks
+		WHERE repository_id = $1`,
 		repositoryID.String(),
 	).Scan(&count)
 	return count, err
@@ -332,7 +386,11 @@ func (r *workspaceRepositoryCloneTaskRepoPostgres) CountByRepositoryID(repositor
 func (r *workspaceRepositoryCloneTaskRepoPostgres) LatestStatusByRepositoryID(repositoryID ID) (string, error) {
 	var status string
 	err := r.db.QueryRow(
-		`SELECT status FROM workspace_repository_clone_tasks WHERE repository_id = $1 ORDER BY created_at DESC LIMIT 1`,
+		`SELECT status
+		FROM workspace_repository_clone_tasks
+		WHERE repository_id = $1
+		ORDER BY created_at DESC
+		LIMIT 1`,
 		repositoryID.String(),
 	).Scan(&status)
 	if err == sql.ErrNoRows {

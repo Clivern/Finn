@@ -79,7 +79,8 @@ type workspaceEventDeliverableRepoSQLite struct {
 
 func (r *workspaceEventDeliverableRepoSQLite) Create(eventID, integrationID ID) error {
 	_, err := r.db.Exec(
-		`INSERT INTO workspace_events_deliverables (event_id, integration_id, status) VALUES (?, ?, 'pending')`,
+		`INSERT INTO workspace_events_deliverables (event_id, integration_id, status)
+		VALUES (?, ?, 'pending')`,
 		eventID.String(),
 		integrationID.String(),
 	)
@@ -91,8 +92,11 @@ func (r *workspaceEventDeliverableRepoSQLite) GetByID(id ID) (*WorkspaceEventDel
 	var deliveredAt sql.NullTime
 	var errorMessage sql.NullString
 	err := r.db.QueryRow(
-		`SELECT id, event_id, integration_id, status, delivered_at, error_message, retry_count, created_at, updated_at
-		 FROM workspace_events_deliverables WHERE id = ?`,
+		`SELECT
+			id, event_id, integration_id, status, delivered_at,
+			error_message, retry_count, created_at, updated_at
+		FROM workspace_events_deliverables
+		WHERE id = ?`,
 		id.String(),
 	).Scan(
 		&d.ID,
@@ -125,8 +129,13 @@ func (r *workspaceEventDeliverableRepoSQLite) ListPending(limit int) ([]*Workspa
 		limit = 100
 	}
 	rows, err := r.db.Query(
-		`SELECT id, event_id, integration_id, status, delivered_at, error_message, retry_count, created_at, updated_at
-		 FROM workspace_events_deliverables WHERE status = 'pending' ORDER BY created_at ASC LIMIT ?`,
+		`SELECT
+			id, event_id, integration_id, status, delivered_at,
+			error_message, retry_count, created_at, updated_at
+		FROM workspace_events_deliverables
+		WHERE status = 'pending'
+		ORDER BY created_at ASC
+		LIMIT ?`,
 		limit,
 	)
 	if err != nil {
@@ -141,8 +150,13 @@ func (r *workspaceEventDeliverableRepoSQLite) ListByEventID(eventID ID, limit, o
 		limit = 50
 	}
 	rows, err := r.db.Query(
-		`SELECT id, event_id, integration_id, status, delivered_at, error_message, retry_count, created_at, updated_at
-		 FROM workspace_events_deliverables WHERE event_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+		`SELECT
+			id, event_id, integration_id, status, delivered_at,
+			error_message, retry_count, created_at, updated_at
+		FROM workspace_events_deliverables
+		WHERE event_id = ?
+		ORDER BY created_at DESC
+		LIMIT ? OFFSET ?`,
 		eventID.String(),
 		limit,
 		offset,
@@ -159,8 +173,13 @@ func (r *workspaceEventDeliverableRepoSQLite) ListByIntegrationID(integrationID 
 		limit = 50
 	}
 	rows, err := r.db.Query(
-		`SELECT id, event_id, integration_id, status, delivered_at, error_message, retry_count, created_at, updated_at
-		 FROM workspace_events_deliverables WHERE integration_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+		`SELECT
+			id, event_id, integration_id, status, delivered_at,
+			error_message, retry_count, created_at, updated_at
+		FROM workspace_events_deliverables
+		WHERE integration_id = ?
+		ORDER BY created_at DESC
+		LIMIT ? OFFSET ?`,
 		integrationID.String(),
 		limit,
 		offset,
@@ -175,7 +194,14 @@ func (r *workspaceEventDeliverableRepoSQLite) ListByIntegrationID(integrationID 
 func (r *workspaceEventDeliverableRepoSQLite) UpdateStatus(id ID, status string, deliveredAt *time.Time, errorMessage *string, retryCount int) error {
 	now := time.Now().UTC()
 	_, err := r.db.Exec(
-		`UPDATE workspace_events_deliverables SET status = ?, delivered_at = ?, error_message = ?, retry_count = ?, updated_at = ? WHERE id = ?`,
+		`UPDATE workspace_events_deliverables
+		SET
+			status = ?,
+			delivered_at = ?,
+			error_message = ?,
+			retry_count = ?,
+			updated_at = ?
+		WHERE id = ?`,
 		status,
 		deliveredAt,
 		nullStrPtr(errorMessage),
@@ -194,7 +220,8 @@ type workspaceEventDeliverableRepoPostgres struct {
 
 func (r *workspaceEventDeliverableRepoPostgres) Create(eventID, integrationID ID) error {
 	_, err := r.db.Exec(
-		`INSERT INTO workspace_events_deliverables (event_id, integration_id, status) VALUES ($1, $2, 'pending')`,
+		`INSERT INTO workspace_events_deliverables (event_id, integration_id, status)
+		VALUES ($1, $2, 'pending')`,
 		eventID.String(),
 		integrationID.String(),
 	)
@@ -206,8 +233,11 @@ func (r *workspaceEventDeliverableRepoPostgres) GetByID(id ID) (*WorkspaceEventD
 	var deliveredAt sql.NullTime
 	var errorMessage sql.NullString
 	err := r.db.QueryRow(
-		`SELECT id, event_id, integration_id, status, delivered_at, error_message, retry_count, created_at, updated_at
-		 FROM workspace_events_deliverables WHERE id = $1`,
+		`SELECT
+			id, event_id, integration_id, status, delivered_at,
+			error_message, retry_count, created_at, updated_at
+		FROM workspace_events_deliverables
+		WHERE id = $1`,
 		id.String(),
 	).Scan(
 		&d.ID,
@@ -240,8 +270,13 @@ func (r *workspaceEventDeliverableRepoPostgres) ListPending(limit int) ([]*Works
 		limit = 100
 	}
 	rows, err := r.db.Query(
-		`SELECT id, event_id, integration_id, status, delivered_at, error_message, retry_count, created_at, updated_at
-		 FROM workspace_events_deliverables WHERE status = 'pending' ORDER BY created_at ASC LIMIT $1`,
+		`SELECT
+			id, event_id, integration_id, status, delivered_at,
+			error_message, retry_count, created_at, updated_at
+		FROM workspace_events_deliverables
+		WHERE status = 'pending'
+		ORDER BY created_at ASC
+		LIMIT $1`,
 		limit,
 	)
 	if err != nil {
@@ -256,8 +291,13 @@ func (r *workspaceEventDeliverableRepoPostgres) ListByEventID(eventID ID, limit,
 		limit = 50
 	}
 	rows, err := r.db.Query(
-		`SELECT id, event_id, integration_id, status, delivered_at, error_message, retry_count, created_at, updated_at
-		 FROM workspace_events_deliverables WHERE event_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
+		`SELECT
+			id, event_id, integration_id, status, delivered_at,
+			error_message, retry_count, created_at, updated_at
+		FROM workspace_events_deliverables
+		WHERE event_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2 OFFSET $3`,
 		eventID.String(),
 		limit,
 		offset,
@@ -274,8 +314,13 @@ func (r *workspaceEventDeliverableRepoPostgres) ListByIntegrationID(integrationI
 		limit = 50
 	}
 	rows, err := r.db.Query(
-		`SELECT id, event_id, integration_id, status, delivered_at, error_message, retry_count, created_at, updated_at
-		 FROM workspace_events_deliverables WHERE integration_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
+		`SELECT
+			id, event_id, integration_id, status, delivered_at,
+			error_message, retry_count, created_at, updated_at
+		FROM workspace_events_deliverables
+		WHERE integration_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2 OFFSET $3`,
 		integrationID.String(),
 		limit,
 		offset,
@@ -290,7 +335,14 @@ func (r *workspaceEventDeliverableRepoPostgres) ListByIntegrationID(integrationI
 func (r *workspaceEventDeliverableRepoPostgres) UpdateStatus(id ID, status string, deliveredAt *time.Time, errorMessage *string, retryCount int) error {
 	now := time.Now().UTC()
 	_, err := r.db.Exec(
-		`UPDATE workspace_events_deliverables SET status = $1, delivered_at = $2, error_message = $3, retry_count = $4, updated_at = $5 WHERE id = $6`,
+		`UPDATE workspace_events_deliverables
+		SET
+			status = $1,
+			delivered_at = $2,
+			error_message = $3,
+			retry_count = $4,
+			updated_at = $5
+		WHERE id = $6`,
 		status,
 		deliveredAt,
 		nullStrPtr(errorMessage),

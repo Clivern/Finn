@@ -6,7 +6,7 @@ export const defaultLocale = 'en'
 
 function getInitialLocale() {
   try {
-    const stored = localStorage.getItem('finn-locale')
+    const stored = localStorage.getItem('_flocale')
     if (stored === 'en' || stored === 'fr') return stored
   } catch (_) {}
   return defaultLocale

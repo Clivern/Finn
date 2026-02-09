@@ -176,6 +176,9 @@
                   </svg>
                 </button>
               </div>
+              <div v-if="createModalError" class="mb-4 rounded-md border border-red-200 bg-red-50 p-3" role="alert">
+                <p class="text-sm text-red-800">{{ createModalError }}</p>
+              </div>
               <div class="space-y-4">
                 <div>
                   <label for="create-email" class="block text-sm font-medium text-theme-text mb-2">
@@ -252,6 +255,9 @@
                 </svg>
               </button>
             </div>
+            <div v-if="deleteModalError" class="mb-4 rounded-md border border-red-200 bg-red-50 p-3" role="alert">
+              <p class="text-sm text-red-800">{{ deleteModalError }}</p>
+            </div>
             <p class="text-sm text-theme-textLight">
               {{ $t('invitesPage.deleteConfirm', { email: inviteToDelete?.email }) }}
             </p>
@@ -308,6 +314,9 @@ const deleteLoading = ref(false)
 const inviteToDelete = ref(null)
 const createdInviteLink = ref(null)
 
+const createModalError = ref(null)
+const deleteModalError = ref(null)
+
 const createForm = reactive({
   email: '',
   role: 'regular'
@@ -361,11 +370,13 @@ const openCreateModal = () => {
   createdInviteLink.value = null
   createForm.email = ''
   createForm.role = 'regular'
+  createModalError.value = null
   showCreateModal.value = true
 }
 
 const closeCreateModal = () => {
   showCreateModal.value = false
+  createModalError.value = null
 }
 
 const copyCreatedInviteLink = async () => {
@@ -390,6 +401,7 @@ const handleCreate = async () => {
   errorMessage.value = null
   successMessage.value = null
   createdInviteLink.value = null
+  createModalError.value = null
 
   try {
     const res = await invitesAPI.create({
@@ -404,7 +416,7 @@ const handleCreate = async () => {
     setTimeout(() => { successMessage.value = null }, 5000)
   } catch (err) {
     console.error('Failed to create invite:', err)
-    errorMessage.value = err.response?.data?.errorMessage || t('invitesPage.failedCreate')
+    createModalError.value = err.response?.data?.errorMessage || t('invitesPage.failedCreate')
   } finally {
     createLoading.value = false
   }
@@ -412,11 +424,13 @@ const handleCreate = async () => {
 
 const openDeleteModal = (invite) => {
   inviteToDelete.value = invite
+  deleteModalError.value = null
   showDeleteModal.value = true
 }
 
 const closeDeleteModal = () => {
   showDeleteModal.value = false
+  deleteModalError.value = null
   inviteToDelete.value = null
 }
 
@@ -424,6 +438,7 @@ const handleDelete = async () => {
   if (!inviteToDelete.value?.id) return
   deleteLoading.value = true
   errorMessage.value = null
+  deleteModalError.value = null
 
   try {
     await invitesAPI.delete(inviteToDelete.value.id)
@@ -433,7 +448,7 @@ const handleDelete = async () => {
     setTimeout(() => { successMessage.value = null }, 3000)
   } catch (err) {
     console.error('Failed to delete invite:', err)
-    errorMessage.value = err.response?.data?.errorMessage || t('invitesPage.failedDelete')
+    deleteModalError.value = err.response?.data?.errorMessage || t('invitesPage.failedDelete')
   } finally {
     deleteLoading.value = false
   }

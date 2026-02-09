@@ -22,6 +22,7 @@ import (
 	"github.com/clivern/finn/db"
 	"github.com/clivern/finn/middleware"
 	"github.com/clivern/finn/pkg/mgmt"
+	"github.com/clivern/finn/pkg/otel"
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
@@ -182,6 +183,14 @@ func SetupServer(Static embed.FS) http.Handler {
 		r.Put("/api/v1/workspaces/{workspaceID}/gvars/{id}", apiw.UpdateWorkspaceVariableGroupAction)
 		r.Delete("/api/v1/workspaces/{workspaceID}/gvars/{id}", apiw.DeleteWorkspaceVariableGroupAction)
 	})
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.RequireRole(db.UserRoleAdmin, db.UserRoleRegular))
+		r.Post("/api/v1/workspaces/{workspaceID}/templates", apiw.CreateWorkspaceTemplateAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/templates", apiw.ListWorkspaceTemplatesAction)
+		r.Get("/api/v1/workspaces/{workspaceID}/templates/{id}", apiw.GetWorkspaceTemplateAction)
+		r.Put("/api/v1/workspaces/{workspaceID}/templates/{id}", apiw.UpdateWorkspaceTemplateAction)
+		r.Delete("/api/v1/workspaces/{workspaceID}/templates/{id}", apiw.DeleteWorkspaceTemplateAction)
+	})
 
 	r.With(middleware.BasicAuth(
 		viper.GetString("app.metrics.username"),
@@ -238,7 +247,20 @@ func InitDatabase() error {
 
 // Run starts the HTTP server with graceful shutdown support
 func RunServer(handler http.Handler) error {
+	traceShutdown, err := otel.InitTracing(context.Background())
+
+	if err != nil {
+		return fmt.Errorf("tracing: %w", err)
+	}
+
 	if err := InitDatabase(); err != nil {
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if shutdownErr := traceShutdown(shutdownCtx); shutdownErr != nil {
+			log.Error().
+				Err(shutdownErr).
+				Msg("OpenTelemetry shutdown failed")
+		}
 		return fmt.Errorf("failed to initialize database: %w", err)
 	}
 
@@ -247,6 +269,16 @@ func RunServer(handler http.Handler) error {
 			log.Error().
 				Err(err).
 				Msg("Error closing database connection")
+		}
+	}()
+
+	defer func() {
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := traceShutdown(shutdownCtx); err != nil {
+			log.Error().
+				Err(err).
+				Msg("OpenTelemetry shutdown failed")
 		}
 	}()
 
@@ -261,7 +293,7 @@ func RunServer(handler http.Handler) error {
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", strconv.Itoa(viper.GetInt("app.port"))),
-		Handler: handler,
+		Handler: otel.WrapHTTPHandler(handler),
 	}
 
 	serverErrors := make(chan error, 1)

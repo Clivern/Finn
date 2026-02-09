@@ -86,7 +86,8 @@ func (r *workspaceEventRepoSQLite) Create(workspaceID ID, eventType string, data
 		}
 	}
 	_, err := r.db.Exec(
-		`INSERT INTO workspace_events (workspace_id, type, data) VALUES (?, ?, ?)`,
+		`INSERT INTO workspace_events (workspace_id, type, data)
+		VALUES (?, ?, ?)`,
 		workspaceID.String(), eventType, dataJSON,
 	)
 	return err
@@ -96,7 +97,14 @@ func (r *workspaceEventRepoSQLite) GetByID(id ID) (*WorkspaceEvent, error) {
 	e := &WorkspaceEvent{}
 	var data []byte
 	err := r.db.QueryRow(
-		`SELECT id, workspace_id, type, data, created_at FROM workspace_events WHERE id = ?`,
+		`SELECT
+			id,
+			workspace_id,
+			type,
+			data,
+			created_at
+		FROM workspace_events
+		WHERE id = ?`,
 		id.String(),
 	).Scan(&e.ID, &e.WorkspaceID, &e.Type, &data, &e.CreatedAt)
 	if err == sql.ErrNoRows {
@@ -116,7 +124,17 @@ func (r *workspaceEventRepoSQLite) ListByWorkspace(workspaceID ID, limit, offset
 		limit = 50
 	}
 	rows, err := r.db.Query(
-		`SELECT id, workspace_id, type, data, created_at FROM workspace_events WHERE workspace_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+		`SELECT
+			id,
+			workspace_id,
+			type,
+			data,
+			created_at
+		FROM workspace_events
+		WHERE workspace_id = ?
+		ORDER BY created_at DESC
+		LIMIT ?
+		OFFSET ?`,
 		workspaceID.String(), limit, offset,
 	)
 	if err != nil {
@@ -131,7 +149,17 @@ func (r *workspaceEventRepoSQLite) ListByWorkspaceAndType(workspaceID ID, eventT
 		limit = 50
 	}
 	rows, err := r.db.Query(
-		`SELECT id, workspace_id, type, data, created_at FROM workspace_events WHERE workspace_id = ? AND type = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+		`SELECT
+			id,
+			workspace_id,
+			type,
+			data,
+			created_at
+		FROM workspace_events
+		WHERE workspace_id = ? AND type = ?
+		ORDER BY created_at DESC
+		LIMIT ?
+		OFFSET ?`,
 		workspaceID.String(), eventType, limit, offset,
 	)
 	if err != nil {
@@ -143,13 +171,24 @@ func (r *workspaceEventRepoSQLite) ListByWorkspaceAndType(workspaceID ID, eventT
 
 func (r *workspaceEventRepoSQLite) CountByWorkspace(workspaceID ID) (int64, error) {
 	var count int64
-	err := r.db.QueryRow(`SELECT COUNT(*) FROM workspace_events WHERE workspace_id = ?`, workspaceID.String()).Scan(&count)
+	err := r.db.QueryRow(
+		`SELECT COUNT(*)
+		FROM workspace_events
+		WHERE workspace_id = ?`,
+		workspaceID.String(),
+	).Scan(&count)
 	return count, err
 }
 
 func (r *workspaceEventRepoSQLite) CountByWorkspaceAndType(workspaceID ID, eventType string) (int64, error) {
 	var count int64
-	err := r.db.QueryRow(`SELECT COUNT(*) FROM workspace_events WHERE workspace_id = ? AND type = ?`, workspaceID.String(), eventType).Scan(&count)
+	err := r.db.QueryRow(
+		`SELECT COUNT(*)
+		FROM workspace_events
+		WHERE workspace_id = ? AND type = ?`,
+		workspaceID.String(),
+		eventType,
+	).Scan(&count)
 	return count, err
 }
 
@@ -169,7 +208,8 @@ func (r *workspaceEventRepoPostgres) Create(workspaceID ID, eventType string, da
 		}
 	}
 	_, err := r.db.Exec(
-		`INSERT INTO workspace_events (workspace_id, type, data) VALUES ($1, $2, $3)`,
+		`INSERT INTO workspace_events (workspace_id, type, data)
+		VALUES ($1, $2, $3)`,
 		workspaceID.String(), eventType, dataJSON,
 	)
 	return err
@@ -179,7 +219,14 @@ func (r *workspaceEventRepoPostgres) GetByID(id ID) (*WorkspaceEvent, error) {
 	e := &WorkspaceEvent{}
 	var data []byte
 	err := r.db.QueryRow(
-		`SELECT id, workspace_id, type, data, created_at FROM workspace_events WHERE id = $1`,
+		`SELECT
+			id,
+			workspace_id,
+			type,
+			data,
+			created_at
+		FROM workspace_events
+		WHERE id = $1`,
 		id.String(),
 	).Scan(&e.ID, &e.WorkspaceID, &e.Type, &data, &e.CreatedAt)
 	if err == sql.ErrNoRows {
@@ -199,7 +246,17 @@ func (r *workspaceEventRepoPostgres) ListByWorkspace(workspaceID ID, limit, offs
 		limit = 50
 	}
 	rows, err := r.db.Query(
-		`SELECT id, workspace_id, type, data, created_at FROM workspace_events WHERE workspace_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
+		`SELECT
+			id,
+			workspace_id,
+			type,
+			data,
+			created_at
+		FROM workspace_events
+		WHERE workspace_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2
+		OFFSET $3`,
 		workspaceID.String(), limit, offset,
 	)
 	if err != nil {
@@ -214,7 +271,17 @@ func (r *workspaceEventRepoPostgres) ListByWorkspaceAndType(workspaceID ID, even
 		limit = 50
 	}
 	rows, err := r.db.Query(
-		`SELECT id, workspace_id, type, data, created_at FROM workspace_events WHERE workspace_id = $1 AND type = $2 ORDER BY created_at DESC LIMIT $3 OFFSET $4`,
+		`SELECT
+			id,
+			workspace_id,
+			type,
+			data,
+			created_at
+		FROM workspace_events
+		WHERE workspace_id = $1 AND type = $2
+		ORDER BY created_at DESC
+		LIMIT $3
+		OFFSET $4`,
 		workspaceID.String(), eventType, limit, offset,
 	)
 	if err != nil {
@@ -226,12 +293,23 @@ func (r *workspaceEventRepoPostgres) ListByWorkspaceAndType(workspaceID ID, even
 
 func (r *workspaceEventRepoPostgres) CountByWorkspace(workspaceID ID) (int64, error) {
 	var count int64
-	err := r.db.QueryRow(`SELECT COUNT(*) FROM workspace_events WHERE workspace_id = $1`, workspaceID.String()).Scan(&count)
+	err := r.db.QueryRow(
+		`SELECT COUNT(*)
+		FROM workspace_events
+		WHERE workspace_id = $1`,
+		workspaceID.String(),
+	).Scan(&count)
 	return count, err
 }
 
 func (r *workspaceEventRepoPostgres) CountByWorkspaceAndType(workspaceID ID, eventType string) (int64, error) {
 	var count int64
-	err := r.db.QueryRow(`SELECT COUNT(*) FROM workspace_events WHERE workspace_id = $1 AND type = $2`, workspaceID.String(), eventType).Scan(&count)
+	err := r.db.QueryRow(
+		`SELECT COUNT(*)
+		FROM workspace_events
+		WHERE workspace_id = $1 AND type = $2`,
+		workspaceID.String(),
+		eventType,
+	).Scan(&count)
 	return count, err
 }

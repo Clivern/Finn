@@ -59,7 +59,8 @@ type workspaceRepoSQLite struct {
 // Create inserts a row
 func (r *workspaceRepoSQLite) Create(workspace *Workspace) error {
 	result, err := r.db.Exec(
-		`INSERT INTO workspaces (name) VALUES (?)`,
+		`INSERT INTO workspaces (name)
+		VALUES (?)`,
 		workspace.Name,
 	)
 	if err != nil {
@@ -72,7 +73,8 @@ func (r *workspaceRepoSQLite) Create(workspace *Workspace) error {
 	workspace.ID = ID(strconv.FormatInt(lid, 10))
 	row := r.db.QueryRow(
 		`SELECT created_at, updated_at
-		FROM workspaces WHERE id = ?`,
+		FROM workspaces
+		WHERE id = ?`,
 		workspace.ID.String(),
 	)
 	if err := row.Scan(&workspace.CreatedAt, &workspace.UpdatedAt); err == nil {
@@ -85,8 +87,13 @@ func (r *workspaceRepoSQLite) Create(workspace *Workspace) error {
 func (r *workspaceRepoSQLite) GetByID(id ID) (*Workspace, error) {
 	w := &Workspace{}
 	err := r.db.QueryRow(
-		`SELECT id, name, created_at, updated_at
-		FROM workspaces WHERE id = ?`,
+		`SELECT
+			id,
+			name,
+			created_at,
+			updated_at
+		FROM workspaces
+		WHERE id = ?`,
 		id.String(),
 	).Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt)
 	if err == sql.ErrNoRows {
@@ -101,7 +108,11 @@ func (r *workspaceRepoSQLite) GetByID(id ID) (*Workspace, error) {
 // Update updates a workspace
 func (r *workspaceRepoSQLite) Update(workspace *Workspace) error {
 	_, err := r.db.Exec(
-		`UPDATE workspaces SET name = ?, updated_at = ? WHERE id = ?`,
+		`UPDATE workspaces
+		SET
+			name = ?,
+			updated_at = ?
+		WHERE id = ?`,
 		workspace.Name, time.Now().UTC(), workspace.ID.String(),
 	)
 	return err
@@ -120,7 +131,11 @@ func (r *workspaceRepoSQLite) Delete(id ID) error {
 func (r *workspaceRepoSQLite) List(limit, offset int, userID *ID) ([]*Workspace, error) {
 	if userID == nil || *userID == "" {
 		rows, err := r.db.Query(
-			`SELECT id, name, created_at, updated_at
+			`SELECT
+				id,
+				name,
+				created_at,
+				updated_at
 			FROM workspaces
 			ORDER BY created_at DESC
 			LIMIT ? OFFSET ?`,
@@ -133,7 +148,11 @@ func (r *workspaceRepoSQLite) List(limit, offset int, userID *ID) ([]*Workspace,
 		return scanWorkspaceRows(rows)
 	}
 	rows, err := r.db.Query(
-		`SELECT w.id, w.name, w.created_at, w.updated_at
+		`SELECT
+			w.id,
+			w.name,
+			w.created_at,
+			w.updated_at
 		FROM workspaces w
 		INNER JOIN workspace_users wu ON w.id = wu.workspace_id
 		WHERE wu.user_id = ?
@@ -153,7 +172,8 @@ func (r *workspaceRepoSQLite) Count(userID *ID) (int64, error) {
 	var count int64
 	if userID == nil || *userID == "" {
 		err := r.db.QueryRow(
-			`SELECT COUNT(*) FROM workspaces`,
+			`SELECT COUNT(*)
+			FROM workspaces`,
 		).Scan(&count)
 		return count, err
 	}
@@ -171,9 +191,16 @@ func (r *workspaceRepoSQLite) Count(userID *ID) (int64, error) {
 func (r *workspaceRepoSQLite) GetWorkspaceMembership(workspaceID, userID ID) (*WorkspaceUser, error) {
 	m := &WorkspaceUser{}
 	err := r.db.QueryRow(
-		`SELECT id, workspace_id, user_id, role, created_at, updated_at
+		`SELECT
+			id,
+			workspace_id,
+			user_id,
+			role,
+			created_at,
+			updated_at
 		FROM workspace_users
-		WHERE workspace_id = ? AND user_id = ?`,
+		WHERE workspace_id = ?
+			AND user_id = ?`,
 		workspaceID.String(), userID.String(),
 	).Scan(&m.ID, &m.WorkspaceID, &m.UserID, &m.Role, &m.CreatedAt, &m.UpdatedAt)
 	if err == sql.ErrNoRows {
@@ -193,7 +220,9 @@ type workspaceRepoPostgres struct {
 // Create inserts a row and fills ID and timestamps via RETURNING.
 func (r *workspaceRepoPostgres) Create(workspace *Workspace) error {
 	err := r.db.QueryRow(
-		`INSERT INTO workspaces (name) VALUES ($1) RETURNING id, created_at, updated_at`,
+		`INSERT INTO workspaces (name)
+		VALUES ($1)
+		RETURNING id, created_at, updated_at`,
 		workspace.Name,
 	).Scan(&workspace.ID, &workspace.CreatedAt, &workspace.UpdatedAt)
 	return err
@@ -203,8 +232,13 @@ func (r *workspaceRepoPostgres) Create(workspace *Workspace) error {
 func (r *workspaceRepoPostgres) GetByID(id ID) (*Workspace, error) {
 	w := &Workspace{}
 	err := r.db.QueryRow(
-		`SELECT id, name, created_at, updated_at
-		FROM workspaces WHERE id = $1`,
+		`SELECT
+			id,
+			name,
+			created_at,
+			updated_at
+		FROM workspaces
+		WHERE id = $1`,
 		id.String(),
 	).Scan(&w.ID, &w.Name, &w.CreatedAt, &w.UpdatedAt)
 	if err == sql.ErrNoRows {
@@ -219,7 +253,11 @@ func (r *workspaceRepoPostgres) GetByID(id ID) (*Workspace, error) {
 // Update updates a workspace.
 func (r *workspaceRepoPostgres) Update(workspace *Workspace) error {
 	_, err := r.db.Exec(
-		`UPDATE workspaces SET name = $1, updated_at = $2 WHERE id = $3`,
+		`UPDATE workspaces
+		SET
+			name = $1,
+			updated_at = $2
+		WHERE id = $3`,
 		workspace.Name, time.Now().UTC(), workspace.ID.String(),
 	)
 	return err
@@ -238,7 +276,11 @@ func (r *workspaceRepoPostgres) Delete(id ID) error {
 func (r *workspaceRepoPostgres) List(limit, offset int, userID *ID) ([]*Workspace, error) {
 	if userID == nil || *userID == "" {
 		rows, err := r.db.Query(
-			`SELECT id, name, created_at, updated_at
+			`SELECT
+				id,
+				name,
+				created_at,
+				updated_at
 			FROM workspaces
 			ORDER BY created_at DESC
 			LIMIT $1 OFFSET $2`,
@@ -251,7 +293,11 @@ func (r *workspaceRepoPostgres) List(limit, offset int, userID *ID) ([]*Workspac
 		return scanWorkspaceRows(rows)
 	}
 	rows, err := r.db.Query(
-		`SELECT w.id, w.name, w.created_at, w.updated_at
+		`SELECT
+			w.id,
+			w.name,
+			w.created_at,
+			w.updated_at
 		FROM workspaces w
 		INNER JOIN workspace_users wu ON w.id = wu.workspace_id
 		WHERE wu.user_id = $1
@@ -271,7 +317,8 @@ func (r *workspaceRepoPostgres) Count(userID *ID) (int64, error) {
 	var count int64
 	if userID == nil || *userID == "" {
 		err := r.db.QueryRow(
-			`SELECT COUNT(*) FROM workspaces`,
+			`SELECT COUNT(*)
+			FROM workspaces`,
 		).Scan(&count)
 		return count, err
 	}
@@ -289,9 +336,16 @@ func (r *workspaceRepoPostgres) Count(userID *ID) (int64, error) {
 func (r *workspaceRepoPostgres) GetWorkspaceMembership(workspaceID, userID ID) (*WorkspaceUser, error) {
 	m := &WorkspaceUser{}
 	err := r.db.QueryRow(
-		`SELECT id, workspace_id, user_id, role, created_at, updated_at
+		`SELECT
+			id,
+			workspace_id,
+			user_id,
+			role,
+			created_at,
+			updated_at
 		FROM workspace_users
-		WHERE workspace_id = $1 AND user_id = $2`,
+		WHERE workspace_id = $1
+			AND user_id = $2`,
 		workspaceID.String(), userID.String(),
 	).Scan(&m.ID, &m.WorkspaceID, &m.UserID, &m.Role, &m.CreatedAt, &m.UpdatedAt)
 	if err == sql.ErrNoRows {

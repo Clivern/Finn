@@ -127,7 +127,19 @@ func (x *workspaceInventoryRepoSQLite) Create(i *WorkspaceInventory) error {
 	}
 
 	result, err := x.db.Exec(
-		`INSERT INTO workspace_inventories (workspace_id, name, inventory, inventory_path, type, ssh_key_id, credential_id, become_key_id, become_credential_id, repository_id)
+		`INSERT INTO workspace_inventories
+		(
+			workspace_id,
+			name,
+			inventory,
+			inventory_path,
+			type,
+			ssh_key_id,
+			credential_id,
+			become_key_id,
+			become_credential_id,
+			repository_id
+		)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		i.WorkspaceID.String(),
 		i.Name,
@@ -151,7 +163,9 @@ func (x *workspaceInventoryRepoSQLite) Create(i *WorkspaceInventory) error {
 	i.ID = ID(strconv.FormatInt(lid, 10))
 
 	row := x.db.QueryRow(
-		`SELECT created_at, updated_at FROM workspace_inventories WHERE id = ?`,
+		`SELECT created_at, updated_at
+		FROM workspace_inventories
+		WHERE id = ?`,
 		i.ID.String(),
 	)
 	_ = row.Scan(&i.CreatedAt, &i.UpdatedAt)
@@ -164,8 +178,22 @@ func (x *workspaceInventoryRepoSQLite) GetByID(id ID) (*WorkspaceInventory, erro
 	var sshKeyID, credentialID, becomeKeyID, becomeCredentialID, repositoryID interface{}
 
 	err := x.db.QueryRow(
-		`SELECT id, workspace_id, name, inventory, inventory_path, type, ssh_key_id, credential_id, become_key_id, become_credential_id, repository_id, created_at, updated_at
-		FROM workspace_inventories WHERE id = ?`,
+		`SELECT
+			id,
+			workspace_id,
+			name,
+			inventory,
+			inventory_path,
+			type,
+			ssh_key_id,
+			credential_id,
+			become_key_id,
+			become_credential_id,
+			repository_id,
+			created_at,
+			updated_at
+		FROM workspace_inventories
+		WHERE id = ?`,
 		id.String(),
 	).Scan(
 		&i.ID,
@@ -245,7 +273,8 @@ func (x *workspaceInventoryRepoSQLite) Update(i *WorkspaceInventory) error {
 	}
 
 	_, err := x.db.Exec(
-		`UPDATE workspace_inventories SET
+		`UPDATE workspace_inventories
+		SET
 			name = ?,
 			inventory = ?,
 			inventory_path = ?,
@@ -282,9 +311,24 @@ func (x *workspaceInventoryRepoSQLite) Delete(id ID) error {
 
 func (x *workspaceInventoryRepoSQLite) ListByWorkspaceID(workspaceID ID, limit, offset int) ([]*WorkspaceInventory, error) {
 	rows, err := x.db.Query(
-		`SELECT id, workspace_id, name, inventory, inventory_path, type, ssh_key_id, credential_id, become_key_id, become_credential_id, repository_id, created_at, updated_at
-		FROM workspace_inventories WHERE workspace_id = ?
-		ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+		`SELECT
+			id,
+			workspace_id,
+			name,
+			inventory,
+			inventory_path,
+			type,
+			ssh_key_id,
+			credential_id,
+			become_key_id,
+			become_credential_id,
+			repository_id,
+			created_at,
+			updated_at
+		FROM workspace_inventories
+		WHERE workspace_id = ?
+		ORDER BY created_at DESC
+		LIMIT ? OFFSET ?`,
 		workspaceID.String(),
 		limit,
 		offset,
@@ -299,7 +343,9 @@ func (x *workspaceInventoryRepoSQLite) ListByWorkspaceID(workspaceID ID, limit, 
 func (x *workspaceInventoryRepoSQLite) CountByWorkspaceID(workspaceID ID) (int64, error) {
 	var count int64
 	err := x.db.QueryRow(
-		`SELECT COUNT(*) FROM workspace_inventories WHERE workspace_id = ?`,
+		`SELECT COUNT(*)
+		FROM workspace_inventories
+		WHERE workspace_id = ?`,
 		workspaceID.String(),
 	).Scan(&count)
 	return count, err
@@ -315,7 +361,19 @@ func (x *workspaceInventoryRepoPostgres) Create(i *WorkspaceInventory) error {
 	}
 
 	err := x.db.QueryRow(
-		`INSERT INTO workspace_inventories (workspace_id, name, inventory, inventory_path, type, ssh_key_id, credential_id, become_key_id, become_credential_id, repository_id)
+		`INSERT INTO workspace_inventories
+		(
+			workspace_id,
+			name,
+			inventory,
+			inventory_path,
+			type,
+			ssh_key_id,
+			credential_id,
+			become_key_id,
+			become_credential_id,
+			repository_id
+		)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		RETURNING id, created_at, updated_at`,
 		i.WorkspaceID.String(),
@@ -339,8 +397,22 @@ func (x *workspaceInventoryRepoPostgres) GetByID(id ID) (*WorkspaceInventory, er
 	var sshKeyID, credentialID, becomeKeyID, becomeCredentialID, repositoryID interface{}
 
 	err := x.db.QueryRow(
-		`SELECT id, workspace_id, name, inventory, inventory_path, type, ssh_key_id, credential_id, become_key_id, become_credential_id, repository_id, created_at, updated_at
-		FROM workspace_inventories WHERE id = $1`,
+		`SELECT
+			id,
+			workspace_id,
+			name,
+			inventory,
+			inventory_path,
+			type,
+			ssh_key_id,
+			credential_id,
+			become_key_id,
+			become_credential_id,
+			repository_id,
+			created_at,
+			updated_at
+		FROM workspace_inventories
+		WHERE id = $1`,
 		id.String(),
 	).Scan(
 		&i.ID,
@@ -420,7 +492,8 @@ func (x *workspaceInventoryRepoPostgres) Update(i *WorkspaceInventory) error {
 	}
 
 	_, err := x.db.Exec(
-		`UPDATE workspace_inventories SET
+		`UPDATE workspace_inventories
+		SET
 			name = $1,
 			inventory = $2,
 			inventory_path = $3,
@@ -457,9 +530,24 @@ func (x *workspaceInventoryRepoPostgres) Delete(id ID) error {
 
 func (x *workspaceInventoryRepoPostgres) ListByWorkspaceID(workspaceID ID, limit, offset int) ([]*WorkspaceInventory, error) {
 	rows, err := x.db.Query(
-		`SELECT id, workspace_id, name, inventory, inventory_path, type, ssh_key_id, credential_id, become_key_id, become_credential_id, repository_id, created_at, updated_at
-		FROM workspace_inventories WHERE workspace_id = $1
-		ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
+		`SELECT
+			id,
+			workspace_id,
+			name,
+			inventory,
+			inventory_path,
+			type,
+			ssh_key_id,
+			credential_id,
+			become_key_id,
+			become_credential_id,
+			repository_id,
+			created_at,
+			updated_at
+		FROM workspace_inventories
+		WHERE workspace_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2 OFFSET $3`,
 		workspaceID.String(),
 		limit,
 		offset,
@@ -474,7 +562,9 @@ func (x *workspaceInventoryRepoPostgres) ListByWorkspaceID(workspaceID ID, limit
 func (x *workspaceInventoryRepoPostgres) CountByWorkspaceID(workspaceID ID) (int64, error) {
 	var count int64
 	err := x.db.QueryRow(
-		`SELECT COUNT(*) FROM workspace_inventories WHERE workspace_id = $1`,
+		`SELECT COUNT(*)
+		FROM workspace_inventories
+		WHERE workspace_id = $1`,
 		workspaceID.String(),
 	).Scan(&count)
 	return count, err

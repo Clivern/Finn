@@ -35,6 +35,7 @@ type WorkspaceBackendLockRepository interface {
 	IsLocked(backendID ID) bool
 	Update(l *WorkspaceBackendLock) error
 	Delete(id ID) error
+	DeleteOlderThan(days int) (int64, error)
 	ListByBackendID(backendID ID, limit, offset int) ([]*WorkspaceBackendLock, error)
 	CountByBackendID(backendID ID) (int64, error)
 	SetInactive(id ID) error
@@ -105,7 +106,8 @@ func isActiveVal(isActive bool) int64 {
 
 func (r *workspaceBackendLockRepoSQLite) Create(l *WorkspaceBackendLock) error {
 	result, err := r.db.Exec(
-		`INSERT INTO workspace_backend_lock (backend_id, lock_id, operation, info, who, version, path, is_active)
+		`INSERT INTO workspace_backend_lock
+		(backend_id, lock_id, operation, info, who, version, path, is_active)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 		l.BackendID.String(),
 		l.LockID,
@@ -125,7 +127,11 @@ func (r *workspaceBackendLockRepoSQLite) Create(l *WorkspaceBackendLock) error {
 	}
 	l.ID = ID(strconv.FormatInt(lid, 10))
 	row := r.db.QueryRow(
-		`SELECT created_at, updated_at FROM workspace_backend_lock WHERE id = ?`,
+		`SELECT
+			created_at,
+			updated_at
+		FROM workspace_backend_lock
+		WHERE id = ?`,
 		l.ID.String(),
 	)
 	return row.Scan(
@@ -138,8 +144,11 @@ func (r *workspaceBackendLockRepoSQLite) GetByID(id ID) (*WorkspaceBackendLock, 
 	l := &WorkspaceBackendLock{}
 	var isActiveRaw interface{}
 	err := r.db.QueryRow(
-		`SELECT id, backend_id, lock_id, operation, info, who, version, path, is_active, created_at, updated_at
-		FROM workspace_backend_lock WHERE id = ?`,
+		`SELECT
+			id, backend_id, lock_id, operation, info, who,
+			version, path, is_active, created_at, updated_at
+		FROM workspace_backend_lock
+		WHERE id = ?`,
 		id.String(),
 	).Scan(
 		&l.ID,
@@ -168,8 +177,12 @@ func (r *workspaceBackendLockRepoSQLite) GetAnyActiveByBackendID(backendID ID) (
 	l := &WorkspaceBackendLock{}
 	var isActiveRaw interface{}
 	err := r.db.QueryRow(
-		`SELECT id, backend_id, lock_id, operation, info, who, version, path, is_active, created_at, updated_at
-		FROM workspace_backend_lock WHERE backend_id = ? AND is_active = 1 LIMIT 1`,
+		`SELECT
+			id, backend_id, lock_id, operation, info, who,
+			version, path, is_active, created_at, updated_at
+		FROM workspace_backend_lock
+		WHERE backend_id = ? AND is_active = 1
+		LIMIT 1`,
 		backendID.String(),
 	).Scan(
 		&l.ID,
@@ -197,7 +210,10 @@ func (r *workspaceBackendLockRepoSQLite) GetAnyActiveByBackendID(backendID ID) (
 func (r *workspaceBackendLockRepoSQLite) HasActiveByBackendID(backendID ID) (bool, error) {
 	var exists int
 	err := r.db.QueryRow(
-		`SELECT 1 FROM workspace_backend_lock WHERE backend_id = ? AND is_active = 1 LIMIT 1`,
+		`SELECT 1
+		FROM workspace_backend_lock
+		WHERE backend_id = ? AND is_active = 1
+		LIMIT 1`,
 		backendID.String(),
 	).Scan(&exists)
 	if err == sql.ErrNoRows {
@@ -218,8 +234,12 @@ func (r *workspaceBackendLockRepoSQLite) GetActiveByBackendID(backendID ID, lock
 	l := &WorkspaceBackendLock{}
 	var isActiveRaw interface{}
 	err := r.db.QueryRow(
-		`SELECT id, backend_id, lock_id, operation, info, who, version, path, is_active, created_at, updated_at
-		FROM workspace_backend_lock WHERE backend_id = ? AND lock_id = ? AND is_active = 1 LIMIT 1`,
+		`SELECT
+			id, backend_id, lock_id, operation, info, who,
+			version, path, is_active, created_at, updated_at
+		FROM workspace_backend_lock
+		WHERE backend_id = ? AND lock_id = ? AND is_active = 1
+		LIMIT 1`,
 		backendID.String(),
 		lockID,
 	).Scan(
@@ -247,7 +267,15 @@ func (r *workspaceBackendLockRepoSQLite) GetActiveByBackendID(backendID ID, lock
 
 func (r *workspaceBackendLockRepoSQLite) Update(l *WorkspaceBackendLock) error {
 	_, err := r.db.Exec(
-		`UPDATE workspace_backend_lock SET operation = ?, info = ?, who = ?, version = ?, path = ?, is_active = ?, updated_at = ?
+		`UPDATE workspace_backend_lock
+		SET
+			operation = ?,
+			info = ?,
+			who = ?,
+			version = ?,
+			path = ?,
+			is_active = ?,
+			updated_at = ?
 		WHERE id = ?`,
 		l.Operation,
 		l.Info,
@@ -269,9 +297,29 @@ func (r *workspaceBackendLockRepoSQLite) Delete(id ID) error {
 	return err
 }
 
+func (r *workspaceBackendLockRepoSQLite) DeleteOlderThan(days int) (int64, error) {
+	if days <= 0 {
+		return 0, nil
+	}
+	cutoff := time.Now().UTC().AddDate(0, 0, -days)
+	result, err := r.db.Exec(
+		`DELETE FROM workspace_backend_lock
+		WHERE is_active = 0 AND updated_at < ?`,
+		cutoff,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 func (r *workspaceBackendLockRepoSQLite) SetInactive(id ID) error {
 	_, err := r.db.Exec(
-		`UPDATE workspace_backend_lock SET is_active = 0, updated_at = ? WHERE id = ?`,
+		`UPDATE workspace_backend_lock
+		SET
+			is_active = 0,
+			updated_at = ?
+		WHERE id = ?`,
 		time.Now().UTC(),
 		id.String(),
 	)
@@ -283,8 +331,13 @@ func (r *workspaceBackendLockRepoSQLite) ListByBackendID(backendID ID, limit, of
 		limit = 50
 	}
 	rows, err := r.db.Query(
-		`SELECT id, backend_id, lock_id, operation, info, who, version, path, is_active, created_at, updated_at
-		FROM workspace_backend_lock WHERE backend_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+		`SELECT
+			id, backend_id, lock_id, operation, info, who,
+			version, path, is_active, created_at, updated_at
+		FROM workspace_backend_lock
+		WHERE backend_id = ?
+		ORDER BY created_at DESC
+		LIMIT ? OFFSET ?`,
 		backendID.String(),
 		limit,
 		offset,
@@ -299,7 +352,9 @@ func (r *workspaceBackendLockRepoSQLite) ListByBackendID(backendID ID, limit, of
 func (r *workspaceBackendLockRepoSQLite) CountByBackendID(backendID ID) (int64, error) {
 	var count int64
 	err := r.db.QueryRow(
-		`SELECT COUNT(*) FROM workspace_backend_lock WHERE backend_id = ?`,
+		`SELECT COUNT(*)
+		FROM workspace_backend_lock
+		WHERE backend_id = ?`,
 		backendID.String(),
 	).Scan(&count)
 	return count, err
@@ -311,8 +366,10 @@ type workspaceBackendLockRepoPostgres struct {
 
 func (r *workspaceBackendLockRepoPostgres) Create(l *WorkspaceBackendLock) error {
 	return r.db.QueryRow(
-		`INSERT INTO workspace_backend_lock (backend_id, lock_id, operation, info, who, version, path, is_active)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, created_at, updated_at`,
+		`INSERT INTO workspace_backend_lock
+		(backend_id, lock_id, operation, info, who, version, path, is_active)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		RETURNING id, created_at, updated_at`,
 		l.BackendID.String(),
 		l.LockID,
 		l.Operation,
@@ -332,8 +389,11 @@ func (r *workspaceBackendLockRepoPostgres) GetByID(id ID) (*WorkspaceBackendLock
 	l := &WorkspaceBackendLock{}
 	var isActiveRaw interface{}
 	err := r.db.QueryRow(
-		`SELECT id, backend_id, lock_id, operation, info, who, version, path, is_active, created_at, updated_at
-		FROM workspace_backend_lock WHERE id = $1`,
+		`SELECT
+			id, backend_id, lock_id, operation, info, who,
+			version, path, is_active, created_at, updated_at
+		FROM workspace_backend_lock
+		WHERE id = $1`,
 		id.String(),
 	).Scan(
 		&l.ID,
@@ -362,8 +422,12 @@ func (r *workspaceBackendLockRepoPostgres) GetAnyActiveByBackendID(backendID ID)
 	l := &WorkspaceBackendLock{}
 	var isActiveRaw interface{}
 	err := r.db.QueryRow(
-		`SELECT id, backend_id, lock_id, operation, info, who, version, path, is_active, created_at, updated_at
-		FROM workspace_backend_lock WHERE backend_id = $1 AND is_active = true LIMIT 1`,
+		`SELECT
+			id, backend_id, lock_id, operation, info, who,
+			version, path, is_active, created_at, updated_at
+		FROM workspace_backend_lock
+		WHERE backend_id = $1 AND is_active = true
+		LIMIT 1`,
 		backendID.String(),
 	).Scan(
 		&l.ID,
@@ -391,7 +455,11 @@ func (r *workspaceBackendLockRepoPostgres) GetAnyActiveByBackendID(backendID ID)
 func (r *workspaceBackendLockRepoPostgres) HasActiveByBackendID(backendID ID) (bool, error) {
 	var exists bool
 	err := r.db.QueryRow(
-		`SELECT EXISTS(SELECT 1 FROM workspace_backend_lock WHERE backend_id = $1 AND is_active = true)`,
+		`SELECT EXISTS(
+			SELECT 1
+			FROM workspace_backend_lock
+			WHERE backend_id = $1 AND is_active = true
+		)`,
 		backendID.String(),
 	).Scan(&exists)
 	if err != nil {
@@ -409,8 +477,12 @@ func (r *workspaceBackendLockRepoPostgres) GetActiveByBackendID(backendID ID, lo
 	l := &WorkspaceBackendLock{}
 	var isActiveRaw interface{}
 	err := r.db.QueryRow(
-		`SELECT id, backend_id, lock_id, operation, info, who, version, path, is_active, created_at, updated_at
-		FROM workspace_backend_lock WHERE backend_id = $1 AND lock_id = $2 AND is_active = true LIMIT 1`,
+		`SELECT
+			id, backend_id, lock_id, operation, info, who,
+			version, path, is_active, created_at, updated_at
+		FROM workspace_backend_lock
+		WHERE backend_id = $1 AND lock_id = $2 AND is_active = true
+		LIMIT 1`,
 		backendID.String(),
 		lockID,
 	).Scan(
@@ -438,7 +510,16 @@ func (r *workspaceBackendLockRepoPostgres) GetActiveByBackendID(backendID ID, lo
 
 func (r *workspaceBackendLockRepoPostgres) Update(l *WorkspaceBackendLock) error {
 	_, err := r.db.Exec(
-		`UPDATE workspace_backend_lock SET operation = $1, info = $2, who = $3, version = $4, path = $5, is_active = $6, updated_at = $7 WHERE id = $8`,
+		`UPDATE workspace_backend_lock
+		SET
+			operation = $1,
+			info = $2,
+			who = $3,
+			version = $4,
+			path = $5,
+			is_active = $6,
+			updated_at = $7
+		WHERE id = $8`,
 		l.Operation,
 		l.Info,
 		l.Who,
@@ -459,9 +540,29 @@ func (r *workspaceBackendLockRepoPostgres) Delete(id ID) error {
 	return err
 }
 
+func (r *workspaceBackendLockRepoPostgres) DeleteOlderThan(days int) (int64, error) {
+	if days <= 0 {
+		return 0, nil
+	}
+	cutoff := time.Now().UTC().AddDate(0, 0, -days)
+	result, err := r.db.Exec(
+		`DELETE FROM workspace_backend_lock
+		WHERE is_active = false AND updated_at < $1`,
+		cutoff,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 func (r *workspaceBackendLockRepoPostgres) SetInactive(id ID) error {
 	_, err := r.db.Exec(
-		`UPDATE workspace_backend_lock SET is_active = false, updated_at = $1 WHERE id = $2`,
+		`UPDATE workspace_backend_lock
+		SET
+			is_active = false,
+			updated_at = $1
+		WHERE id = $2`,
 		time.Now().UTC(),
 		id.String(),
 	)
@@ -473,8 +574,13 @@ func (r *workspaceBackendLockRepoPostgres) ListByBackendID(backendID ID, limit, 
 		limit = 50
 	}
 	rows, err := r.db.Query(
-		`SELECT id, backend_id, lock_id, operation, info, who, version, path, is_active, created_at, updated_at
-		FROM workspace_backend_lock WHERE backend_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
+		`SELECT
+			id, backend_id, lock_id, operation, info, who,
+			version, path, is_active, created_at, updated_at
+		FROM workspace_backend_lock
+		WHERE backend_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2 OFFSET $3`,
 		backendID.String(),
 		limit,
 		offset,
@@ -489,7 +595,9 @@ func (r *workspaceBackendLockRepoPostgres) ListByBackendID(backendID ID, limit, 
 func (r *workspaceBackendLockRepoPostgres) CountByBackendID(backendID ID) (int64, error) {
 	var count int64
 	err := r.db.QueryRow(
-		`SELECT COUNT(*) FROM workspace_backend_lock WHERE backend_id = $1`,
+		`SELECT COUNT(*)
+		FROM workspace_backend_lock
+		WHERE backend_id = $1`,
 		backendID.String(),
 	).Scan(&count)
 	return count, err

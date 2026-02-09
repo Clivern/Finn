@@ -140,10 +140,13 @@
           role="dialog"
           aria-modal="true"
           aria-labelledby="add-key-title"
-          @click.self="showAddKeyModal = false"
+          @click.self="closeAddKeyModal"
         >
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
             <h2 id="add-key-title" class="text-lg font-semibold text-theme-text">{{ $t('secretsPage.addKey') }}</h2>
+            <div v-if="addKeyModalError" class="mt-4 rounded-md border border-red-200 bg-red-50 p-3" role="alert">
+              <p class="text-sm text-red-800">{{ addKeyModalError }}</p>
+            </div>
             <form @submit.prevent="handleCreateKey" class="mt-4 space-y-4">
               <div>
                 <label for="add-key-name" class="form-label">{{ $t('secretsPage.name') }}</label>
@@ -184,7 +187,7 @@
                 />
               </div>
               <div class="flex gap-3 justify-end pt-2">
-                <button type="button" @click="showAddKeyModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
+                <button type="button" @click="closeAddKeyModal" class="btn-secondary">{{ $t('common.cancel') }}</button>
                 <button type="submit" :disabled="keyFormSaving" class="btn-primary">
                   {{ keyFormSaving ? $t('secretsPage.saving') : $t('secretsPage.add') }}
                 </button>
@@ -204,10 +207,13 @@
           role="dialog"
           aria-modal="true"
           aria-labelledby="edit-key-title"
-          @click.self="showEditKeyModal = false"
+          @click.self="closeEditKeyModal"
         >
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
             <h2 id="edit-key-title" class="text-lg font-semibold text-theme-text">{{ $t('secretsPage.editKey') }}</h2>
+            <div v-if="editKeyModalError" class="mt-4 rounded-md border border-red-200 bg-red-50 p-3" role="alert">
+              <p class="text-sm text-red-800">{{ editKeyModalError }}</p>
+            </div>
             <form @submit.prevent="handleUpdateKey" class="mt-4 space-y-4">
               <div>
                 <label for="edit-key-name" class="form-label">{{ $t('secretsPage.name') }}</label>
@@ -247,7 +253,7 @@
                 />
               </div>
               <div class="flex gap-3 justify-end pt-2">
-                <button type="button" @click="showEditKeyModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
+                <button type="button" @click="closeEditKeyModal" class="btn-secondary">{{ $t('common.cancel') }}</button>
                 <button type="submit" :disabled="keyFormSaving" class="btn-primary">
                   {{ keyFormSaving ? $t('secretsPage.saving') : $t('common.save') }}
                 </button>
@@ -267,15 +273,18 @@
           role="dialog"
           aria-modal="true"
           aria-labelledby="delete-key-title"
-          @click.self="deleteKeyModal = null"
+          @click.self="closeDeleteKeyModal"
         >
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-md p-6">
             <h2 id="delete-key-title" class="text-lg font-semibold text-theme-text">{{ $t('secretsPage.deleteKeyTitle') }}</h2>
+            <div v-if="deleteKeyModalError" class="mt-4 rounded-md border border-red-200 bg-red-50 p-3" role="alert">
+              <p class="text-sm text-red-800">{{ deleteKeyModalError }}</p>
+            </div>
             <p class="mt-2 text-sm text-theme-textLight">
               {{ $t('secretsPage.deleteKeyConfirm', { name: deleteKeyModal?.name }) }}
             </p>
             <div class="flex gap-3 justify-end mt-6">
-              <button type="button" @click="deleteKeyModal = null" class="btn-secondary">{{ $t('common.cancel') }}</button>
+              <button type="button" @click="closeDeleteKeyModal" class="btn-secondary">{{ $t('common.cancel') }}</button>
               <button type="button" @click="confirmDeleteKey" :disabled="deletingKeyId === deleteKeyModal?.id" class="btn-danger">
                 {{ deletingKeyId === deleteKeyModal?.id ? $t('secretsPage.deleting') : $t('common.delete') }}
               </button>
@@ -294,10 +303,13 @@
           role="dialog"
           aria-modal="true"
           aria-labelledby="add-cred-title"
-          @click.self="showAddCredModal = false"
+          @click.self="closeAddCredModal"
         >
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
             <h2 id="add-cred-title" class="text-lg font-semibold text-theme-text">{{ $t('secretsPage.addCredTitle') }}</h2>
+            <div v-if="addCredModalError" class="mt-4 rounded-md border border-red-200 bg-red-50 p-3" role="alert">
+              <p class="text-sm text-red-800">{{ addCredModalError }}</p>
+            </div>
             <form @submit.prevent="handleCreateCred" class="mt-4 space-y-4">
               <div>
                 <label for="add-cred-name" class="form-label">{{ $t('secretsPage.name') }}</label>
@@ -340,7 +352,7 @@
                 </div>
               </template>
               <div class="flex gap-3 justify-end pt-2">
-                <button type="button" @click="showAddCredModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
+                <button type="button" @click="closeAddCredModal" class="btn-secondary">{{ $t('common.cancel') }}</button>
                 <button type="submit" :disabled="credFormSaving" class="btn-primary">
                   {{ credFormSaving ? $t('secretsPage.saving') : $t('secretsPage.add') }}
                 </button>
@@ -360,10 +372,13 @@
           role="dialog"
           aria-modal="true"
           aria-labelledby="edit-cred-title"
-          @click.self="showEditCredModal = false"
+          @click.self="closeEditCredModal"
         >
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
             <h2 id="edit-cred-title" class="text-lg font-semibold text-theme-text">{{ $t('secretsPage.editCredTitle') }}</h2>
+            <div v-if="editCredModalError" class="mt-4 rounded-md border border-red-200 bg-red-50 p-3" role="alert">
+              <p class="text-sm text-red-800">{{ editCredModalError }}</p>
+            </div>
             <form @submit.prevent="handleUpdateCred" class="mt-4 space-y-4">
               <div>
                 <label for="edit-cred-name" class="form-label">{{ $t('secretsPage.name') }}</label>
@@ -405,7 +420,7 @@
                 </div>
               </template>
               <div class="flex gap-3 justify-end pt-2">
-                <button type="button" @click="showEditCredModal = false" class="btn-secondary">{{ $t('common.cancel') }}</button>
+                <button type="button" @click="closeEditCredModal" class="btn-secondary">{{ $t('common.cancel') }}</button>
                 <button type="submit" :disabled="credFormSaving" class="btn-primary">
                   {{ credFormSaving ? $t('secretsPage.saving') : $t('common.save') }}
                 </button>
@@ -425,15 +440,18 @@
           role="dialog"
           aria-modal="true"
           aria-labelledby="delete-cred-title"
-          @click.self="deleteCredModal = null"
+          @click.self="closeDeleteCredModal"
         >
           <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-md p-6">
             <h2 id="delete-cred-title" class="text-lg font-semibold text-theme-text">{{ $t('secretsPage.deleteCredTitle') }}</h2>
+            <div v-if="deleteCredModalError" class="mt-4 rounded-md border border-red-200 bg-red-50 p-3" role="alert">
+              <p class="text-sm text-red-800">{{ deleteCredModalError }}</p>
+            </div>
             <p class="mt-2 text-sm text-theme-textLight">
               {{ $t('secretsPage.deleteCredConfirm', { name: deleteCredModal?.name }) }}
             </p>
             <div class="flex gap-3 justify-end mt-6">
-              <button type="button" @click="deleteCredModal = null" class="btn-secondary">{{ $t('common.cancel') }}</button>
+              <button type="button" @click="closeDeleteCredModal" class="btn-secondary">{{ $t('common.cancel') }}</button>
               <button type="button" @click="confirmDeleteCred" :disabled="deletingCredId === deleteCredModal?.id" class="btn-danger">
                 {{ deletingCredId === deleteCredModal?.id ? $t('secretsPage.deleting') : $t('common.delete') }}
               </button>
@@ -494,6 +512,43 @@ const credForm = ref({
 const deleteCredModal = ref(null)
 const deletingCredId = ref(null)
 
+const addKeyModalError = ref(null)
+const editKeyModalError = ref(null)
+const deleteKeyModalError = ref(null)
+const addCredModalError = ref(null)
+const editCredModalError = ref(null)
+const deleteCredModalError = ref(null)
+
+function closeAddKeyModal() {
+  showAddKeyModal.value = false
+  addKeyModalError.value = null
+}
+
+function closeEditKeyModal() {
+  showEditKeyModal.value = false
+  editKeyModalError.value = null
+}
+
+function closeDeleteKeyModal() {
+  deleteKeyModal.value = null
+  deleteKeyModalError.value = null
+}
+
+function closeAddCredModal() {
+  showAddCredModal.value = false
+  addCredModalError.value = null
+}
+
+function closeEditCredModal() {
+  showEditCredModal.value = false
+  editCredModalError.value = null
+}
+
+function closeDeleteCredModal() {
+  deleteCredModal.value = null
+  deleteCredModalError.value = null
+}
+
 function setWorkspace() {
   workspace.value = loadWorkspaceFromStorage()
   if (!workspace.value?.id) {
@@ -539,6 +594,7 @@ function openAddKeyModal() {
     publicKey: '',
     passphrase: ''
   }
+  addKeyModalError.value = null
   showAddKeyModal.value = true
   showEditKeyModal.value = false
 }
@@ -553,6 +609,7 @@ function openEditKeyModal(k) {
     publicKey: k.publicKey ?? '',
     passphrase: ''
   }
+  editKeyModalError.value = null
   showEditKeyModal.value = true
   showAddKeyModal.value = false
 }
@@ -561,6 +618,7 @@ async function handleCreateKey() {
   keyFormSaving.value = true
   errorMessage.value = ''
   successMessage.value = ''
+  addKeyModalError.value = null
 
   try {
     const payload = {
@@ -573,10 +631,10 @@ async function handleCreateKey() {
     if (keyForm.value.passphrase?.trim()) { payload.passphrase = keyForm.value.passphrase.trim() }
     await sshKeysAPI.create(workspace.value.id, payload)
     successMessage.value = t('secretsPage.sshKeyAdded')
-    showAddKeyModal.value = false
+    closeAddKeyModal()
     await loadSshKeys()
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || t('secretsPage.failedAddKey')
+    addKeyModalError.value = err.response?.data?.errorMessage || t('secretsPage.failedAddKey')
   } finally {
     keyFormSaving.value = false
   }
@@ -586,6 +644,7 @@ async function handleUpdateKey() {
   keyFormSaving.value = true
   errorMessage.value = ''
   successMessage.value = ''
+  editKeyModalError.value = null
 
   try {
     const payload = {
@@ -598,16 +657,17 @@ async function handleUpdateKey() {
     if (keyForm.value.passphrase?.trim()) { payload.passphrase = keyForm.value.passphrase.trim() }
     await sshKeysAPI.update(workspace.value.id, editingKey.value.id, payload)
     successMessage.value = t('secretsPage.sshKeyUpdated')
-    showEditKeyModal.value = false
+    closeEditKeyModal()
     await loadSshKeys()
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || t('secretsPage.failedUpdateKey')
+    editKeyModalError.value = err.response?.data?.errorMessage || t('secretsPage.failedUpdateKey')
   } finally {
     keyFormSaving.value = false
   }
 }
 
 function openDeleteKeyModal(k) {
+  deleteKeyModalError.value = null
   deleteKeyModal.value = k
 }
 
@@ -615,6 +675,7 @@ async function confirmDeleteKey() {
   if (!workspace.value?.id || !deleteKeyModal.value?.id) return
   deletingKeyId.value = deleteKeyModal.value.id
   errorMessage.value = ''
+  deleteKeyModalError.value = null
 
   try {
     await sshKeysAPI.delete(
@@ -622,10 +683,10 @@ async function confirmDeleteKey() {
       deletingKeyId.value
     )
     successMessage.value = t('secretsPage.sshKeyDeleted')
-    deleteKeyModal.value = null
+    closeDeleteKeyModal()
     await loadSshKeys()
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || t('secretsPage.failedDeleteKey')
+    deleteKeyModalError.value = err.response?.data?.errorMessage || t('secretsPage.failedDeleteKey')
   } finally {
     deletingKeyId.value = null
   }
@@ -648,6 +709,7 @@ function openAddCredModal() {
     username: '',
     passwordOrToken: ''
   }
+  addCredModalError.value = null
   showAddCredModal.value = true
   showEditCredModal.value = false
 }
@@ -662,6 +724,7 @@ function openEditCredModal(c) {
     username: c.username ?? '',
     passwordOrToken: ''
   }
+  editCredModalError.value = null
   showEditCredModal.value = true
   showAddCredModal.value = false
 }
@@ -670,6 +733,7 @@ async function handleCreateCred() {
   credFormSaving.value = true
   errorMessage.value = ''
   successMessage.value = ''
+  addCredModalError.value = null
 
   try {
     const type = credForm.value.type || 'git'
@@ -688,10 +752,10 @@ async function handleCreateCred() {
     }
     await credentialsAPI.create(workspace.value.id, payload)
     successMessage.value = t('secretsPage.credAdded')
-    showAddCredModal.value = false
+    closeAddCredModal()
     await loadCredentials()
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || t('secretsPage.failedAddCred')
+    addCredModalError.value = err.response?.data?.errorMessage || t('secretsPage.failedAddCred')
   } finally {
     credFormSaving.value = false
   }
@@ -701,6 +765,7 @@ async function handleUpdateCred() {
   credFormSaving.value = true
   errorMessage.value = ''
   successMessage.value = ''
+  editCredModalError.value = null
 
   try {
     const type = credForm.value.type || 'git'
@@ -718,16 +783,17 @@ async function handleUpdateCred() {
     if (credForm.value.passwordOrToken) payload.passwordOrToken = credForm.value.passwordOrToken
     await credentialsAPI.update(workspace.value.id, editingCred.value.id, payload)
     successMessage.value = t('secretsPage.credUpdated')
-    showEditCredModal.value = false
+    closeEditCredModal()
     await loadCredentials()
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || t('secretsPage.failedUpdateCred')
+    editCredModalError.value = err.response?.data?.errorMessage || t('secretsPage.failedUpdateCred')
   } finally {
     credFormSaving.value = false
   }
 }
 
 function openDeleteCredModal(c) {
+  deleteCredModalError.value = null
   deleteCredModal.value = c
 }
 
@@ -735,6 +801,7 @@ async function confirmDeleteCred() {
   if (!workspace.value?.id || !deleteCredModal.value?.id) return
   deletingCredId.value = deleteCredModal.value.id
   errorMessage.value = ''
+  deleteCredModalError.value = null
 
   try {
     await credentialsAPI.delete(
@@ -742,10 +809,10 @@ async function confirmDeleteCred() {
       deletingCredId.value
     )
     successMessage.value = t('secretsPage.credDeleted')
-    deleteCredModal.value = null
+    closeDeleteCredModal()
     await loadCredentials()
   } catch (err) {
-    errorMessage.value = err.response?.data?.errorMessage || t('secretsPage.failedDeleteCred')
+    deleteCredModalError.value = err.response?.data?.errorMessage || t('secretsPage.failedDeleteCred')
   } finally {
     deletingCredId.value = null
   }

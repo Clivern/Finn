@@ -88,7 +88,8 @@ func (r *integrationRepoSQLite) Create(integration *Integration) error {
 	integration.ID = ID(strconv.FormatInt(lid, 10))
 	row := r.db.QueryRow(
 		`SELECT created_at, updated_at
-		FROM integrations WHERE id = ?`,
+		FROM integrations
+		WHERE id = ?`,
 		integration.ID.String(),
 	)
 	_ = row.Scan(&integration.CreatedAt, &integration.UpdatedAt)
@@ -99,8 +100,10 @@ func (r *integrationRepoSQLite) Create(integration *Integration) error {
 func (r *integrationRepoSQLite) GetByID(id ID) (*Integration, error) {
 	inv := &Integration{}
 	err := r.db.QueryRow(
-		`SELECT id, workspace_id, type, name, config, created_at, updated_at
-		FROM integrations WHERE id = ?`,
+		`SELECT
+			id, workspace_id, type, name, config, created_at, updated_at
+		FROM integrations
+		WHERE id = ?`,
 		id.String(),
 	).Scan(
 		&inv.ID,
@@ -123,8 +126,13 @@ func (r *integrationRepoSQLite) GetByID(id ID) (*Integration, error) {
 // Update updates a integration
 func (r *integrationRepoSQLite) Update(integration *Integration) error {
 	_, err := r.db.Exec(
-		`UPDATE integrations SET
-			workspace_id = ?, type = ?, name = ?, config = ?, updated_at = ?
+		`UPDATE integrations
+		SET
+			workspace_id = ?,
+			type = ?,
+			name = ?,
+			config = ?,
+			updated_at = ?
 		WHERE id = ?`,
 		integration.WorkspaceID.String(),
 		integration.Type,
@@ -168,7 +176,8 @@ func (r *integrationRepoSQLite) ListByWorkspaceID(workspaceID ID, limit, offset 
 func (r *integrationRepoSQLite) CountByWorkspaceID(workspaceID ID) (int64, error) {
 	var count int64
 	err := r.db.QueryRow(
-		`SELECT COUNT(*) FROM integrations
+		`SELECT COUNT(*)
+		FROM integrations
 		WHERE workspace_id = ?`,
 		workspaceID.String(),
 	).Scan(&count)
@@ -200,8 +209,10 @@ func (r *integrationRepoPostgres) Create(integration *Integration) error {
 func (r *integrationRepoPostgres) GetByID(id ID) (*Integration, error) {
 	inv := &Integration{}
 	err := r.db.QueryRow(
-		`SELECT id, workspace_id, type, name, config, created_at, updated_at
-		FROM integrations WHERE id = $1`,
+		`SELECT
+			id, workspace_id, type, name, config, created_at, updated_at
+		FROM integrations
+		WHERE id = $1`,
 		id.String(),
 	).Scan(
 		&inv.ID,
@@ -224,8 +235,13 @@ func (r *integrationRepoPostgres) GetByID(id ID) (*Integration, error) {
 // Update updates a integration
 func (r *integrationRepoPostgres) Update(integration *Integration) error {
 	_, err := r.db.Exec(
-		`UPDATE integrations SET
-			workspace_id = $1, type = $2, name = $3, config = $4, updated_at = $5
+		`UPDATE integrations
+		SET
+			workspace_id = $1,
+			type = $2,
+			name = $3,
+			config = $4,
+			updated_at = $5
 		WHERE id = $6`,
 		integration.WorkspaceID.String(),
 		integration.Type,
@@ -269,7 +285,8 @@ func (r *integrationRepoPostgres) ListByWorkspaceID(workspaceID ID, limit, offse
 func (r *integrationRepoPostgres) CountByWorkspaceID(workspaceID ID) (int64, error) {
 	var count int64
 	err := r.db.QueryRow(
-		`SELECT COUNT(*) FROM integrations
+		`SELECT COUNT(*)
+		FROM integrations
 		WHERE workspace_id = $1`,
 		workspaceID.String(),
 	).Scan(&count)

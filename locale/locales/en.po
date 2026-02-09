@@ -130,6 +130,21 @@ msgstr "Failed to delete user"
 msgid "failedDeleteWorkspace"
 msgstr "Failed to delete workspace"
 
+msgid "failedCreateTemplate"
+msgstr "Failed to create template"
+
+msgid "failedDeleteTemplate"
+msgstr "Failed to delete template"
+
+msgid "failedGetTemplate"
+msgstr "Failed to get template"
+
+msgid "failedListTemplates"
+msgstr "Failed to list templates"
+
+msgid "failedUpdateTemplate"
+msgstr "Failed to update template"
+
 msgid "failedEncryptSecretEnvironmentVariables"
 msgstr "Failed to encrypt secret environment variables"
 
@@ -298,6 +313,9 @@ msgstr "Invalid workspace ID"
 msgid "invalidWorkspaceIDOrUserID"
 msgstr "Invalid workspace ID or user ID"
 
+msgid "invalidTemplateID"
+msgstr "Invalid template ID"
+
 msgid "inviteExpired"
 msgstr "Invite has expired"
 
@@ -381,6 +399,9 @@ msgstr "Registration successful. Please sign in."
 
 msgid "repositoryNotFound"
 msgstr "Repository not found"
+
+msgid "templateNotFound"
+msgstr "Template not found"
 
 msgid "resetLinkInvalidOrExpired"
 msgstr "This reset link is invalid or has expired."

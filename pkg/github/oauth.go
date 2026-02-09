@@ -47,6 +47,7 @@ func NewOAuthApp(clientID, clientSecret, redirectURI string) *OAuthApp {
 	}
 }
 
+// GenerateState generates a random state for the OAuth app.
 func (e *OAuthApp) GenerateState() {
 	b := make([]byte, 20)
 	if _, err := rand.Read(b); err != nil {
@@ -55,16 +56,19 @@ func (e *OAuthApp) GenerateState() {
 	e.State = hex.EncodeToString(b)
 }
 
+// AddScope adds a scope to the OAuth app.
 func (e *OAuthApp) AddScope(scope string) {
 	e.Scopes = append(e.Scopes, scope)
 	e.Scope = strings.Join(e.Scopes, ",")
 }
 
+// AddScopes adds multiple scopes to the OAuth app.
 func (e *OAuthApp) AddScopes(scopes []string) {
 	e.Scopes = scopes
 	e.Scope = strings.Join(e.Scopes, ",")
 }
 
+// BuildAuthorizeURL builds the authorize URL for the OAuth app.
 func (e *OAuthApp) BuildAuthorizeURL() string {
 	e.Scope = strings.Join(e.Scopes, ",")
 	u, _ := url.Parse(GithubOAuthURL)
@@ -78,6 +82,7 @@ func (e *OAuthApp) BuildAuthorizeURL() string {
 	return u.String()
 }
 
+// FetchAccessToken fetches the access token for the OAuth app.
 func (e *OAuthApp) FetchAccessToken(ctx context.Context, code, state string) error {
 	if state != e.State {
 		return fmt.Errorf("oauth state mismatch")
@@ -133,10 +138,12 @@ func (e *OAuthApp) FetchAccessToken(ctx context.Context, code, state string) err
 	return nil
 }
 
+// GetAccessToken returns the access token for the OAuth app.
 func (e *OAuthApp) GetAccessToken() string {
 	return e.AccessToken
 }
 
+// GetTokenType returns the token type for the OAuth app.
 func (e *OAuthApp) GetTokenType() string {
 	return e.TokenType
 }
