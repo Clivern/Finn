@@ -1,4 +1,4 @@
-FROM golang:1.20.4
+FROM golang:1.26.1
 
 ARG FINN_VERSION=0.3.0
 
