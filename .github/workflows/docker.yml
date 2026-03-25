@@ -25,7 +25,7 @@ jobs:
           images: clivern/finn
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@dbac3ca1e5410ec04d2cce48cfbcfa3175fb8f4f
+        uses: docker/build-push-action@b66d8774c665b789105b440514f0c97e6f19b06f
         with:
           context: .
           file: ./Dockerfile
