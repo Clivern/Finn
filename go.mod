@@ -4,7 +4,7 @@ go 1.25.5
 
 require (
 	github.com/drone/envsubst v1.0.3
-	github.com/firebase/genkit/go v1.5.1
+	github.com/firebase/genkit/go v1.6.1
 	github.com/go-chi/chi/v5 v5.2.5
 	github.com/go-git/go-git/v5 v5.17.2
 	github.com/go-playground/validator/v10 v10.30.2
@@ -129,7 +129,7 @@ require (
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/text v0.35.0 // indirect
-	google.golang.org/genai v1.41.0 // indirect
+	google.golang.org/genai v1.51.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260209200024-4cfbd4190f57 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260209200024-4cfbd4190f57 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
