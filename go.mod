@@ -11,7 +11,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/leonelquinteros/gotext v1.7.2
 	github.com/lib/pq v1.12.1
-	github.com/mattn/go-sqlite3 v1.14.38
+	github.com/mattn/go-sqlite3 v1.14.42
 	github.com/open-policy-agent/opa v1.15.1
 	github.com/prometheus/client_golang v1.23.2
 	github.com/rs/zerolog v1.35.0
