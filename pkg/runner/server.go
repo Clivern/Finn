@@ -95,6 +95,30 @@ func (s *RunnerGRPCService) Clone(ctx context.Context, in *runv1.CloneRequest) (
 	}, nil
 }
 
+// RunTemplate enqueues a workspace template run (clone + automation).
+func (s *RunnerGRPCService) RunTemplate(ctx context.Context, in *runv1.RunTemplateRequest) (*runv1.RunTemplateResponse, error) {
+	payload := make(map[string]interface{})
+	if len(in.GetPayload()) > 0 {
+		if err := json.Unmarshal(in.Payload, &payload); err != nil {
+			return nil, status.Error(codes.InvalidArgument, "payload must be valid JSON")
+		}
+	}
+
+	task, err := s.deps.Worker.Enqueue(s.deps, TaskTypeTemplate, payload)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &runv1.RunTemplateResponse{
+		Id:        task.ID,
+		Status:    string(task.Status),
+		Type:      string(task.Type),
+		Log:       TaskLogToProto(task.Log),
+		CreatedAt: task.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		UpdatedAt: task.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
+	}, nil
+}
+
 // GetTask retrieves a task by its ID.
 func (s *RunnerGRPCService) GetTask(ctx context.Context, in *runv1.GetTaskRequest) (*runv1.GetTaskResponse, error) {
 	taskID := strings.TrimSpace(in.GetTaskId())

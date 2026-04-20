@@ -36,6 +36,7 @@ const (
 	TaskStatusSuccess TaskStatus = "success"
 	TaskStatusFailed  TaskStatus = "failed"
 	TaskTypeClone     TaskType   = "clone"
+	TaskTypeTemplate  TaskType   = "template"
 )
 
 // Task is a stored unit of work

@@ -145,6 +145,50 @@ func (x *CloneRequest) GetPayload() []byte {
 	return nil
 }
 
+type RunTemplateRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Payload       []byte                 `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RunTemplateRequest) Reset() {
+	*x = RunTemplateRequest{}
+	mi := &file_proto_runner_v1_runner_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RunTemplateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RunTemplateRequest) ProtoMessage() {}
+
+func (x *RunTemplateRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_runner_v1_runner_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RunTemplateRequest.ProtoReflect.Descriptor instead.
+func (*RunTemplateRequest) Descriptor() ([]byte, []int) {
+	return file_proto_runner_v1_runner_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *RunTemplateRequest) GetPayload() []byte {
+	if x != nil {
+		return x.Payload
+	}
+	return nil
+}
+
 // TaskLogEntry is a single log line (e.g. stdout/stderr stream).
 type TaskLogEntry struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -157,7 +201,7 @@ type TaskLogEntry struct {
 
 func (x *TaskLogEntry) Reset() {
 	*x = TaskLogEntry{}
-	mi := &file_proto_runner_v1_runner_proto_msgTypes[3]
+	mi := &file_proto_runner_v1_runner_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -169,7 +213,7 @@ func (x *TaskLogEntry) String() string {
 func (*TaskLogEntry) ProtoMessage() {}
 
 func (x *TaskLogEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_runner_v1_runner_proto_msgTypes[3]
+	mi := &file_proto_runner_v1_runner_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -182,7 +226,7 @@ func (x *TaskLogEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TaskLogEntry.ProtoReflect.Descriptor instead.
 func (*TaskLogEntry) Descriptor() ([]byte, []int) {
-	return file_proto_runner_v1_runner_proto_rawDescGZIP(), []int{3}
+	return file_proto_runner_v1_runner_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *TaskLogEntry) GetStream() string {
@@ -220,7 +264,7 @@ type CloneResponse struct {
 
 func (x *CloneResponse) Reset() {
 	*x = CloneResponse{}
-	mi := &file_proto_runner_v1_runner_proto_msgTypes[4]
+	mi := &file_proto_runner_v1_runner_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -232,7 +276,7 @@ func (x *CloneResponse) String() string {
 func (*CloneResponse) ProtoMessage() {}
 
 func (x *CloneResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_runner_v1_runner_proto_msgTypes[4]
+	mi := &file_proto_runner_v1_runner_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -245,7 +289,7 @@ func (x *CloneResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CloneResponse.ProtoReflect.Descriptor instead.
 func (*CloneResponse) Descriptor() ([]byte, []int) {
-	return file_proto_runner_v1_runner_proto_rawDescGZIP(), []int{4}
+	return file_proto_runner_v1_runner_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *CloneResponse) GetId() string {
@@ -290,6 +334,90 @@ func (x *CloneResponse) GetUpdatedAt() string {
 	return ""
 }
 
+type RunTemplateResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	Type          string                 `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
+	Log           []*TaskLogEntry        `protobuf:"bytes,5,rep,name=log,proto3" json:"log,omitempty"`
+	CreatedAt     string                 `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt     string                 `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RunTemplateResponse) Reset() {
+	*x = RunTemplateResponse{}
+	mi := &file_proto_runner_v1_runner_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RunTemplateResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RunTemplateResponse) ProtoMessage() {}
+
+func (x *RunTemplateResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_runner_v1_runner_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RunTemplateResponse.ProtoReflect.Descriptor instead.
+func (*RunTemplateResponse) Descriptor() ([]byte, []int) {
+	return file_proto_runner_v1_runner_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *RunTemplateResponse) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *RunTemplateResponse) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *RunTemplateResponse) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *RunTemplateResponse) GetLog() []*TaskLogEntry {
+	if x != nil {
+		return x.Log
+	}
+	return nil
+}
+
+func (x *RunTemplateResponse) GetCreatedAt() string {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return ""
+}
+
+func (x *RunTemplateResponse) GetUpdatedAt() string {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return ""
+}
+
 type GetTaskRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	TaskId        string                 `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
@@ -299,7 +427,7 @@ type GetTaskRequest struct {
 
 func (x *GetTaskRequest) Reset() {
 	*x = GetTaskRequest{}
-	mi := &file_proto_runner_v1_runner_proto_msgTypes[5]
+	mi := &file_proto_runner_v1_runner_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -311,7 +439,7 @@ func (x *GetTaskRequest) String() string {
 func (*GetTaskRequest) ProtoMessage() {}
 
 func (x *GetTaskRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_runner_v1_runner_proto_msgTypes[5]
+	mi := &file_proto_runner_v1_runner_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -324,7 +452,7 @@ func (x *GetTaskRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTaskRequest.ProtoReflect.Descriptor instead.
 func (*GetTaskRequest) Descriptor() ([]byte, []int) {
-	return file_proto_runner_v1_runner_proto_rawDescGZIP(), []int{5}
+	return file_proto_runner_v1_runner_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetTaskRequest) GetTaskId() string {
@@ -348,7 +476,7 @@ type GetTaskResponse struct {
 
 func (x *GetTaskResponse) Reset() {
 	*x = GetTaskResponse{}
-	mi := &file_proto_runner_v1_runner_proto_msgTypes[6]
+	mi := &file_proto_runner_v1_runner_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -360,7 +488,7 @@ func (x *GetTaskResponse) String() string {
 func (*GetTaskResponse) ProtoMessage() {}
 
 func (x *GetTaskResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_runner_v1_runner_proto_msgTypes[6]
+	mi := &file_proto_runner_v1_runner_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -373,7 +501,7 @@ func (x *GetTaskResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTaskResponse.ProtoReflect.Descriptor instead.
 func (*GetTaskResponse) Descriptor() ([]byte, []int) {
-	return file_proto_runner_v1_runner_proto_rawDescGZIP(), []int{6}
+	return file_proto_runner_v1_runner_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetTaskResponse) GetId() string {
@@ -427,12 +555,23 @@ const file_proto_runner_v1_runner_proto_rawDesc = "" +
 	"\fPingResponse\x12\x16\n" +
 	"\x06status\x18\x01 \x01(\tR\x06status\"(\n" +
 	"\fCloneRequest\x12\x18\n" +
+	"\apayload\x18\x01 \x01(\fR\apayload\".\n" +
+	"\x12RunTemplateRequest\x12\x18\n" +
 	"\apayload\x18\x01 \x01(\fR\apayload\"L\n" +
 	"\fTaskLogEntry\x12\x16\n" +
 	"\x06stream\x18\x01 \x01(\tR\x06stream\x12\x12\n" +
 	"\x04line\x18\x02 \x01(\tR\x04line\x12\x10\n" +
 	"\x03msg\x18\x03 \x01(\tR\x03msg\"\xb4\x01\n" +
 	"\rCloneResponse\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x16\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\x12\x12\n" +
+	"\x04type\x18\x03 \x01(\tR\x04type\x12)\n" +
+	"\x03log\x18\x05 \x03(\v2\x17.runner.v1.TaskLogEntryR\x03log\x12\x1d\n" +
+	"\n" +
+	"created_at\x18\x06 \x01(\tR\tcreatedAt\x12\x1d\n" +
+	"\n" +
+	"updated_at\x18\a \x01(\tR\tupdatedAt\"\xba\x01\n" +
+	"\x13RunTemplateResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x16\n" +
 	"\x06status\x18\x02 \x01(\tR\x06status\x12\x12\n" +
 	"\x04type\x18\x03 \x01(\tR\x04type\x12)\n" +
@@ -451,10 +590,11 @@ const file_proto_runner_v1_runner_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x06 \x01(\tR\tcreatedAt\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\a \x01(\tR\tupdatedAt2\xc6\x01\n" +
+	"updated_at\x18\a \x01(\tR\tupdatedAt2\x94\x02\n" +
 	"\rRunnerService\x127\n" +
 	"\x04Ping\x12\x16.runner.v1.PingRequest\x1a\x17.runner.v1.PingResponse\x12:\n" +
-	"\x05Clone\x12\x17.runner.v1.CloneRequest\x1a\x18.runner.v1.CloneResponse\x12@\n" +
+	"\x05Clone\x12\x17.runner.v1.CloneRequest\x1a\x18.runner.v1.CloneResponse\x12L\n" +
+	"\vRunTemplate\x12\x1d.runner.v1.RunTemplateRequest\x1a\x1e.runner.v1.RunTemplateResponse\x12@\n" +
 	"\aGetTask\x12\x19.runner.v1.GetTaskRequest\x1a\x1a.runner.v1.GetTaskResponseB/Z-github.com/clivern/finn/proto/runner/v1;runv1b\x06proto3"
 
 var (
@@ -469,30 +609,35 @@ func file_proto_runner_v1_runner_proto_rawDescGZIP() []byte {
 	return file_proto_runner_v1_runner_proto_rawDescData
 }
 
-var file_proto_runner_v1_runner_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_proto_runner_v1_runner_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_proto_runner_v1_runner_proto_goTypes = []any{
-	(*PingRequest)(nil),     // 0: runner.v1.PingRequest
-	(*PingResponse)(nil),    // 1: runner.v1.PingResponse
-	(*CloneRequest)(nil),    // 2: runner.v1.CloneRequest
-	(*TaskLogEntry)(nil),    // 3: runner.v1.TaskLogEntry
-	(*CloneResponse)(nil),   // 4: runner.v1.CloneResponse
-	(*GetTaskRequest)(nil),  // 5: runner.v1.GetTaskRequest
-	(*GetTaskResponse)(nil), // 6: runner.v1.GetTaskResponse
+	(*PingRequest)(nil),         // 0: runner.v1.PingRequest
+	(*PingResponse)(nil),        // 1: runner.v1.PingResponse
+	(*CloneRequest)(nil),        // 2: runner.v1.CloneRequest
+	(*RunTemplateRequest)(nil),  // 3: runner.v1.RunTemplateRequest
+	(*TaskLogEntry)(nil),        // 4: runner.v1.TaskLogEntry
+	(*CloneResponse)(nil),       // 5: runner.v1.CloneResponse
+	(*RunTemplateResponse)(nil), // 6: runner.v1.RunTemplateResponse
+	(*GetTaskRequest)(nil),      // 7: runner.v1.GetTaskRequest
+	(*GetTaskResponse)(nil),     // 8: runner.v1.GetTaskResponse
 }
 var file_proto_runner_v1_runner_proto_depIdxs = []int32{
-	3, // 0: runner.v1.CloneResponse.log:type_name -> runner.v1.TaskLogEntry
-	3, // 1: runner.v1.GetTaskResponse.log:type_name -> runner.v1.TaskLogEntry
-	0, // 2: runner.v1.RunnerService.Ping:input_type -> runner.v1.PingRequest
-	2, // 3: runner.v1.RunnerService.Clone:input_type -> runner.v1.CloneRequest
-	5, // 4: runner.v1.RunnerService.GetTask:input_type -> runner.v1.GetTaskRequest
-	1, // 5: runner.v1.RunnerService.Ping:output_type -> runner.v1.PingResponse
-	4, // 6: runner.v1.RunnerService.Clone:output_type -> runner.v1.CloneResponse
-	6, // 7: runner.v1.RunnerService.GetTask:output_type -> runner.v1.GetTaskResponse
-	5, // [5:8] is the sub-list for method output_type
-	2, // [2:5] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	4, // 0: runner.v1.CloneResponse.log:type_name -> runner.v1.TaskLogEntry
+	4, // 1: runner.v1.RunTemplateResponse.log:type_name -> runner.v1.TaskLogEntry
+	4, // 2: runner.v1.GetTaskResponse.log:type_name -> runner.v1.TaskLogEntry
+	0, // 3: runner.v1.RunnerService.Ping:input_type -> runner.v1.PingRequest
+	2, // 4: runner.v1.RunnerService.Clone:input_type -> runner.v1.CloneRequest
+	3, // 5: runner.v1.RunnerService.RunTemplate:input_type -> runner.v1.RunTemplateRequest
+	7, // 6: runner.v1.RunnerService.GetTask:input_type -> runner.v1.GetTaskRequest
+	1, // 7: runner.v1.RunnerService.Ping:output_type -> runner.v1.PingResponse
+	5, // 8: runner.v1.RunnerService.Clone:output_type -> runner.v1.CloneResponse
+	6, // 9: runner.v1.RunnerService.RunTemplate:output_type -> runner.v1.RunTemplateResponse
+	8, // 10: runner.v1.RunnerService.GetTask:output_type -> runner.v1.GetTaskResponse
+	7, // [7:11] is the sub-list for method output_type
+	3, // [3:7] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_proto_runner_v1_runner_proto_init() }
@@ -506,7 +651,7 @@ func file_proto_runner_v1_runner_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_runner_v1_runner_proto_rawDesc), len(file_proto_runner_v1_runner_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

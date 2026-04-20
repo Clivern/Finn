@@ -109,6 +109,24 @@ func (c *GRPCClient) Clone(ctx context.Context, payload map[string]interface{}) 
 	return resp.GetId(), nil
 }
 
+// RunTemplate enqueues a workspace template run on the runner and returns its task ID.
+func (c *GRPCClient) RunTemplate(ctx context.Context, payload map[string]interface{}) (taskID string, err error) {
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return "", fmt.Errorf("run template marshal: %w", err)
+	}
+
+	ctx, cancel := context.WithTimeout(c.withAuth(ctx), 30*time.Second)
+	defer cancel()
+
+	resp, err := c.client.RunTemplate(ctx, &runv1.RunTemplateRequest{Payload: data})
+	if err != nil {
+		return "", err
+	}
+
+	return resp.GetId(), nil
+}
+
 // GetTask fetches the latest state of a task by ID.
 func (c *GRPCClient) GetTask(ctx context.Context, taskID string) (*TaskResponse, error) {
 	ctx, cancel := context.WithTimeout(c.withAuth(ctx), 10*time.Second)

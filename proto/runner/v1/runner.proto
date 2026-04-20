@@ -7,6 +7,8 @@ option go_package = "github.com/clivern/finn/proto/runner/v1;runv1";
 service RunnerService {
   rpc Ping(PingRequest) returns (PingResponse);
   rpc Clone(CloneRequest) returns (CloneResponse);
+  rpc RunTemplate(RunTemplateRequest) returns (RunTemplateResponse);
+
   rpc GetTask(GetTaskRequest) returns (GetTaskResponse);
 }
 
@@ -20,6 +22,10 @@ message CloneRequest {
   bytes payload = 1;
 }
 
+message RunTemplateRequest {
+  bytes payload = 1;
+}
+
 // TaskLogEntry is a single log line (e.g. stdout/stderr stream).
 message TaskLogEntry {
   string stream = 1;  // e.g. "stdout", "stderr"
@@ -28,6 +34,15 @@ message TaskLogEntry {
 }
 
 message CloneResponse {
+  string id = 1;
+  string status = 2;
+  string type = 3;
+  repeated TaskLogEntry log = 5;
+  string created_at = 6;
+  string updated_at = 7;
+}
+
+message RunTemplateResponse {
   string id = 1;
   string status = 2;
   string type = 3;

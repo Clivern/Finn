@@ -11,4 +11,5 @@ import (
 // init registers the clone task handler.
 func init() {
 	runner.RegisterTaskHandler(runner.TaskTypeClone, Clone)
+	runner.RegisterTaskHandler(runner.TaskTypeTemplate, WorkspaceTemplate)
 }

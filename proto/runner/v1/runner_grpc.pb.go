@@ -19,9 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion8
 
 const (
-	RunnerService_Ping_FullMethodName    = "/runner.v1.RunnerService/Ping"
-	RunnerService_Clone_FullMethodName   = "/runner.v1.RunnerService/Clone"
-	RunnerService_GetTask_FullMethodName = "/runner.v1.RunnerService/GetTask"
+	RunnerService_Ping_FullMethodName        = "/runner.v1.RunnerService/Ping"
+	RunnerService_Clone_FullMethodName       = "/runner.v1.RunnerService/Clone"
+	RunnerService_RunTemplate_FullMethodName = "/runner.v1.RunnerService/RunTemplate"
+	RunnerService_GetTask_FullMethodName     = "/runner.v1.RunnerService/GetTask"
 )
 
 // RunnerServiceClient is the client API for RunnerService service.
@@ -30,6 +31,7 @@ const (
 type RunnerServiceClient interface {
 	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
 	Clone(ctx context.Context, in *CloneRequest, opts ...grpc.CallOption) (*CloneResponse, error)
+	RunTemplate(ctx context.Context, in *RunTemplateRequest, opts ...grpc.CallOption) (*RunTemplateResponse, error)
 	GetTask(ctx context.Context, in *GetTaskRequest, opts ...grpc.CallOption) (*GetTaskResponse, error)
 }
 
@@ -61,6 +63,16 @@ func (c *runnerServiceClient) Clone(ctx context.Context, in *CloneRequest, opts 
 	return out, nil
 }
 
+func (c *runnerServiceClient) RunTemplate(ctx context.Context, in *RunTemplateRequest, opts ...grpc.CallOption) (*RunTemplateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RunTemplateResponse)
+	err := c.cc.Invoke(ctx, RunnerService_RunTemplate_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *runnerServiceClient) GetTask(ctx context.Context, in *GetTaskRequest, opts ...grpc.CallOption) (*GetTaskResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetTaskResponse)
@@ -77,6 +89,7 @@ func (c *runnerServiceClient) GetTask(ctx context.Context, in *GetTaskRequest, o
 type RunnerServiceServer interface {
 	Ping(context.Context, *PingRequest) (*PingResponse, error)
 	Clone(context.Context, *CloneRequest) (*CloneResponse, error)
+	RunTemplate(context.Context, *RunTemplateRequest) (*RunTemplateResponse, error)
 	GetTask(context.Context, *GetTaskRequest) (*GetTaskResponse, error)
 	mustEmbedUnimplementedRunnerServiceServer()
 }
@@ -90,6 +103,9 @@ func (UnimplementedRunnerServiceServer) Ping(context.Context, *PingRequest) (*Pi
 }
 func (UnimplementedRunnerServiceServer) Clone(context.Context, *CloneRequest) (*CloneResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Clone not implemented")
+}
+func (UnimplementedRunnerServiceServer) RunTemplate(context.Context, *RunTemplateRequest) (*RunTemplateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RunTemplate not implemented")
 }
 func (UnimplementedRunnerServiceServer) GetTask(context.Context, *GetTaskRequest) (*GetTaskResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTask not implemented")
@@ -143,6 +159,24 @@ func _RunnerService_Clone_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RunnerService_RunTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RunTemplateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunnerServiceServer).RunTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RunnerService_RunTemplate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunnerServiceServer).RunTemplate(ctx, req.(*RunTemplateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _RunnerService_GetTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetTaskRequest)
 	if err := dec(in); err != nil {
@@ -175,6 +209,10 @@ var RunnerService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Clone",
 			Handler:    _RunnerService_Clone_Handler,
+		},
+		{
+			MethodName: "RunTemplate",
+			Handler:    _RunnerService_RunTemplate_Handler,
 		},
 		{
 			MethodName: "GetTask",
