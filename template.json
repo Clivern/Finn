@@ -1,0 +1,133 @@
+{
+    "id": "template-id",
+    "name": "template-name",
+    "description": "template-description",
+    "engine": "script|iac|ansible",
+    "repository": {
+        "id": "repo-id",
+        "name": "repository-name",
+        "git_url": "https://github.com/clivern/finn.git",
+        "git_branch": "main",
+        "git_tag": "v1.0.0",
+        "ssh_key": {
+            "id": "ssh-key-id",
+            "name": "my-deploy-key",
+            "committer_name": "John Doe",
+            "committer_email": "john.doe@example.com",
+            "private_key": "ssh-private-key",
+            "public_key": "ssh-public-key",
+            "passphrase": "ssh-passphrase"
+        },
+        "git_credential": {
+            "id": "credential-id",
+            "name": "github-token",
+            "committer_name": "John Doe",
+            "committer_email": "john.doe@example.com",
+            "username": "username",
+            "password_or_token": "password-or-token"
+        }
+    },
+    "working_dir": "working-directory",
+    "git_branch_override": "branch-override",
+    "git_tag_override": "tag-override",
+    "runner_tags": {
+        "key": "value"
+    },
+    "allow_concurrent_runs": true,
+    "max_concurrent_runs": 10,
+    "approval_required": true,
+    "extra_args": "{...json string ...}",
+    "group_vars": {
+        "id": "group-vars-id",
+        "name": "variable-group-name",
+        "extra_variables": "{...json string ...}",
+        "environment_variables": "{...json string ...}",
+        "secret_extra_variables": "{...json string ...}",
+        "secret_environment_variables": "{...json string ...}"
+    },
+    "script_config": {
+        "engine": "script-engine",
+        "engine_version": "script-engine-version",
+        "script_path": "script-path"
+    },
+    "iac_config": {
+        "engine": "iac-engine",
+        "engine_version": "iac-engine-version",
+        "auto_approve": true,
+        "backend_id": "backend-id",
+        "log_level": "log-level"
+    },
+    "ansible_config": {
+        "engine_version": "ansible-engine-version",
+        "inventory": {
+            "id": "inventory-id",
+            "name": "inventory-name",
+            "type": "static|repository",
+            "inventory": "raw inventory content (string)",
+            "inventory_path": "path/inside/repo/or/fs",
+            "ssh_key": {
+                "id": "ssh-key-id",
+                "name": "deploy-key",
+                "committer_name": "John Doe",
+                "committer_email": "john.doe@example.com",
+                "private_key": "ssh-private-key",
+                "public_key": "ssh-public-key",
+                "passphrase": "ssh-passphrase"
+            },
+            "git_credential": {
+                "id": "cred-id",
+                "name": "github-token",
+                "committer_name": "John Doe",
+                "committer_email": "john.doe@example.com",
+                "username": "username",
+                "password_or_token": "password-or-token"
+            },
+            "become_ssh_key": {
+                "id": "become-key-id",
+                "name": "sudo-key",
+                "committer_name": "John Doe",
+                "committer_email": "john.doe@example.com",
+                "private_key": "ssh-private-key",
+                "public_key": "ssh-public-key",
+                "passphrase": "ssh-passphrase"
+            },
+            "become_git_credential": {
+                "id": "become-cred-id",
+                "name": "sudo-password",
+                "committer_name": "John Doe",
+                "committer_email": "john.doe@example.com",
+                "username": "root",
+                "password_or_token": "password-or-token"
+            },
+            "repository": {
+                "id": "repo-id",
+                "name": "repository-name",
+                "git_url": "https://github.com/clivern/finn.git",
+                "git_branch": "main",
+                "git_tag": "v1.0.0",
+                "ssh_key": {
+                    "id": "ssh-key-id",
+                    "name": "my-deploy-key",
+                    "committer_name": "John Doe",
+                    "committer_email": "john.doe@example.com",
+                    "private_key": "ssh-private-key",
+                    "public_key": "ssh-public-key",
+                    "passphrase": "ssh-passphrase"
+                },
+                "git_credential": {
+                    "id": "credential-id",
+                    "name": "github-token",
+                    "committer_name": "John Doe",
+                    "committer_email": "john.doe@example.com",
+                    "username": "username",
+                    "password_or_token": "password-or-token"
+                }
+            }
+        },
+        "playbook_path": "playbook-path",
+        "vault_path": "vault-path",
+        "vault_password": "vault-password",
+        "log_level": "log-level"
+    },
+    "timeout": 3600
+}
