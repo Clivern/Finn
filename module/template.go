@@ -140,7 +140,7 @@ func (r Template) PayloadByID(templateID db.ID) (map[string]interface{}, error) 
 		}
 	}
 
-	payload := db.TemplateToPayloadFull(
+	payload := r.templateToPayloadFull(
 		t,
 		repo,
 		decryptSSHKeyPayload(repoKey),
@@ -164,6 +164,125 @@ func (r Template) PayloadByID(templateID db.ID) (map[string]interface{}, error) 
 	}
 
 	return payload, nil
+}
+
+func (Template) templateToPayloadFull(
+	t *db.WorkspaceTemplate,
+	repo *db.WorkspaceRepo,
+	repoSSHKey map[string]interface{},
+	repoCred map[string]interface{},
+	groupVars *db.WorkspaceVariableGroup,
+	ansibleInventory *db.WorkspaceInventory,
+	invSSHKey map[string]interface{},
+	invCred map[string]interface{},
+	becomeSSHKey map[string]interface{},
+	becomeCred map[string]interface{},
+	invRepo *db.WorkspaceRepo,
+	invRepoSSHKey map[string]interface{},
+	invRepoCred map[string]interface{},
+) map[string]interface{} {
+	if t == nil {
+		return map[string]interface{}{}
+	}
+
+	payload := map[string]interface{}{
+		"id":                    t.ID.String(),
+		"name":                  t.Name,
+		"description":           t.Description,
+		"engine":                t.Engine,
+		"working_dir":           t.WorkingDirectory,
+		"git_branch_override":   t.GitBranchOverride,
+		"git_tag_override":      t.GitTagOverride,
+		"allow_concurrent_runs": t.AllowConcurrentRuns,
+		"max_concurrent_runs":   t.MaxConcurrentRuns,
+		"approval_required":     t.ApprovalRequired,
+		"extra_args":            t.ExtraArgs,
+	}
+
+	if m := decodeJSONStringToMap(t.RunnerTags); m != nil {
+		payload["runner_tags"] = m
+	}
+	if m := decodeJSONStringToMap(t.ScriptConfig); m != nil {
+		payload["script_config"] = m
+	}
+	if m := decodeJSONStringToMap(t.IaCConfig); m != nil {
+		payload["iac_config"] = m
+	}
+
+	var ansibleCfg map[string]interface{}
+	if m := decodeJSONStringToMap(t.AnsibleConfig); m != nil {
+		ansibleCfg = m
+		payload["ansible_config"] = ansibleCfg
+	}
+
+	if repo != nil {
+		r := map[string]interface{}{
+			"id":         repo.ID.String(),
+			"name":       repo.Name,
+			"git_url":    repo.GitURL,
+			"git_branch": repo.GitBranch,
+			"git_tag":    repo.GitTag,
+		}
+		if len(repoSSHKey) > 0 {
+			r["ssh_key"] = repoSSHKey
+		}
+		if len(repoCred) > 0 {
+			r["git_credential"] = repoCred
+		}
+		payload["repository"] = r
+	}
+
+	if groupVars != nil {
+		payload["group_vars"] = map[string]interface{}{
+			"id":                           groupVars.ID.String(),
+			"name":                         groupVars.Name,
+			"extra_variables":              groupVars.ExtraVariables,
+			"environment_variables":        groupVars.EnvironmentVariables,
+			"secret_extra_variables":       groupVars.SecretExtraVariables,
+			"secret_environment_variables": groupVars.SecretEnvironmentVariables,
+		}
+	}
+
+	if ansibleCfg != nil && ansibleInventory != nil {
+		inv := map[string]interface{}{
+			"id":             ansibleInventory.ID.String(),
+			"name":           ansibleInventory.Name,
+			"type":           ansibleInventory.Type,
+			"inventory":      ansibleInventory.Inventory,
+			"inventory_path": ansibleInventory.InventoryPath,
+		}
+		if len(invSSHKey) > 0 {
+			inv["ssh_key"] = invSSHKey
+		}
+		if len(invCred) > 0 {
+			inv["git_credential"] = invCred
+		}
+		if len(becomeSSHKey) > 0 {
+			inv["become_ssh_key"] = becomeSSHKey
+		}
+		if len(becomeCred) > 0 {
+			inv["become_git_credential"] = becomeCred
+		}
+		if invRepo != nil {
+			invR := map[string]interface{}{
+				"id":         invRepo.ID.String(),
+				"name":       invRepo.Name,
+				"git_url":    invRepo.GitURL,
+				"git_branch": invRepo.GitBranch,
+				"git_tag":    invRepo.GitTag,
+			}
+			if len(invRepoSSHKey) > 0 {
+				invR["ssh_key"] = invRepoSSHKey
+			}
+			if len(invRepoCred) > 0 {
+				invR["git_credential"] = invRepoCred
+			}
+			inv["repository"] = invR
+		}
+		ansibleCfg["inventory"] = inv
+	}
+
+	return payload
 }
 
 func decodeJSONStringToMap(s string) map[string]interface{} {
