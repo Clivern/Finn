@@ -5,6 +5,7 @@
 package module
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 
@@ -20,6 +21,18 @@ type Template struct {
 	Creds       db.WorkspaceCredRepository
 	GVars       db.WorkspaceVariableGroupRepository
 	Inventories db.WorkspaceInventoryRepository
+}
+
+// NewTemplate creates a template module using repositories backed by dbConn.
+func NewTemplate(dbConn *sql.DB) *Template {
+	return &Template{
+		Templates:   db.NewWorkspaceTemplateRepository(dbConn),
+		Repos:       db.NewWorkspaceRepoRepository(dbConn),
+		SSHKeys:     db.NewWorkspaceSSHKeyRepository(dbConn),
+		Creds:       db.NewWorkspaceCredRepository(dbConn),
+		GVars:       db.NewWorkspaceVariableGroupRepository(dbConn),
+		Inventories: db.NewWorkspaceInventoryRepository(dbConn),
+	}
 }
 
 // PayloadByID builds a nested template payload by template ID.

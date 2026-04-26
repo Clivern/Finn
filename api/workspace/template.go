@@ -494,6 +494,36 @@ func GetWorkspaceTemplateAction(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
+	tmplModule := module.NewTemplate(db.GetDB())
+	tmplPayload, err := tmplModule.PayloadByID(tmpl.ID)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("templateID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Str("userID", user.ID.String()).
+			Msg("Failed to get workspace template payload")
+		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+			"errorMessage": locale.TR(r, "failedProcessRequest"),
+		})
+		return
+	}
+	if payloadJSON, mErr := json.MarshalIndent(tmplPayload, "", "  "); mErr == nil {
+		log.Info().
+			Str("templateID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			RawJSON("templatePayload", payloadJSON).
+			Msg("Workspace template payload from module (info)")
+	} else {
+		log.Info().
+			Str("templateID", idStr).
+			Str("workspaceID", workspaceIDStr).
+			Interface("templatePayload", tmplPayload).
+			Err(mErr).
+			Msg("Workspace template payload from module (info, json marshal failed)")
+	}
+
 	util.WriteJSON(w, http.StatusOK, resp)
 }
 

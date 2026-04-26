@@ -8,6 +8,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/clivern/finn/db"
@@ -514,23 +515,25 @@ func UpdateWorkspaceSSHKeyAction(w http.ResponseWriter, r *http.Request) {
 		key.PublicKey = &req.PublicKey
 	}
 
-	passphraseEnc, err := util.EncryptToBase64String(
-		req.Passphrase,
-		util.GetEncryptionKey(),
-	)
-	if err != nil {
-		log.Error().
-			Err(err).
-			Str("sshKeyID", idStr).
-			Str("workspaceID", workspaceIDStr).
-			Str("userID", user.ID.String()).
-			Msg("Failed to encrypt SSH key passphrase")
-		util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
-			"errorMessage": locale.TR(r, "failedUpdateSshKey"),
-		})
-		return
+	if strings.TrimSpace(req.Passphrase) != "" {
+		passphraseEnc, err := util.EncryptToBase64String(
+			req.Passphrase,
+			util.GetEncryptionKey(),
+		)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Str("sshKeyID", idStr).
+				Str("workspaceID", workspaceIDStr).
+				Str("userID", user.ID.String()).
+				Msg("Failed to encrypt SSH key passphrase")
+			util.WriteJSON(w, http.StatusInternalServerError, map[string]interface{}{
+				"errorMessage": locale.TR(r, "failedUpdateSshKey"),
+			})
+			return
+		}
+		key.Passphrase = passphraseEnc
 	}
-	key.Passphrase = passphraseEnc
 
 	if err := repo.Update(key); err != nil {
 		log.Error().

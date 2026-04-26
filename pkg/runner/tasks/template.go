@@ -19,6 +19,77 @@ import (
 
 const defaultTemplateTimeout = time.Hour
 
+type templateCloneFields struct {
+	repoURL       string
+	branch        string
+	tag           string
+	username      string
+	password      string
+	sshPrivateKey string
+	sshPassphrase string
+	workingSubdir string
+}
+
+func templateFirstNonEmpty(vals ...string) string {
+	for _, s := range vals {
+		if strings.TrimSpace(s) != "" {
+			return strings.TrimSpace(s)
+		}
+	}
+	return ""
+}
+
+// cloneFieldsFromTemplatePayload supports the flat clone payload (repository string, ssh_private_key, …)
+// and the module API payload where repository is an object (git_url, ssh_key.private_key, ssh_key.passphrase, …).
+func cloneFieldsFromTemplatePayload(p map[string]interface{}) templateCloneFields {
+	var out templateCloneFields
+	repo := MapFromPayload(p, "repository")
+	if u := strings.TrimSpace(StringFromPayload(p, "repository")); u != "" {
+		out.repoURL = u
+	} else {
+		out.repoURL = StringFromMap(repo, "git_url")
+	}
+	out.branch = templateFirstNonEmpty(
+		StringFromPayload(p, "branch"),
+		StringFromPayload(p, "git_branch_override"),
+		StringFromMap(repo, "git_branch"),
+	)
+	out.tag = templateFirstNonEmpty(
+		StringFromPayload(p, "tag"),
+		StringFromPayload(p, "git_tag_override"),
+		StringFromMap(repo, "git_tag"),
+	)
+	out.username = StringFromPayload(p, "username")
+	out.password = StringFromPayload(p, "password")
+	if c := MapFromPayload(repo, "git_credential"); c != nil {
+		if out.username == "" {
+			out.username = StringFromMap(c, "username")
+		}
+		if out.password == "" {
+			out.password = StringFromMap(c, "password_or_token")
+		}
+	}
+	out.sshPrivateKey = StringFromPayload(p, "ssh_private_key")
+	out.sshPassphrase = StringFromPayload(p, "ssh_passphrase")
+	sshKey := MapFromPayload(p, "ssh_key")
+	if len(sshKey) == 0 {
+		sshKey = MapFromPayload(repo, "ssh_key")
+	}
+	if len(sshKey) > 0 {
+		if out.sshPrivateKey == "" {
+			out.sshPrivateKey = StringFromMap(sshKey, "private_key")
+		}
+		if out.sshPassphrase == "" {
+			out.sshPassphrase = StringFromMap(sshKey, "passphrase")
+		}
+	}
+	out.workingSubdir = templateFirstNonEmpty(
+		StringFromPayload(p, "working_directory"),
+		StringFromPayload(p, "working_dir"),
+	)
+	return out
+}
+
 // WorkspaceTemplate clones the repository then runs script, IaC, or Ansible per payload.
 func WorkspaceTemplate(deps *runner.Deps, task *runner.Task) error {
 	p := task.Payload
@@ -35,16 +106,17 @@ func WorkspaceTemplate(deps *runner.Deps, task *runner.Task) error {
 	}
 	defer os.RemoveAll(dir)
 
+	clone := cloneFieldsFromTemplatePayload(p)
 	commit, err := workspace.Clone(runCtx, &workspace.CloneOptions{
-		URL:           StringFromPayload(p, "repository"),
-		Branch:        StringFromPayload(p, "branch"),
-		Tag:           StringFromPayload(p, "tag"),
+		URL:           clone.repoURL,
+		Branch:        clone.branch,
+		Tag:           clone.tag,
 		Dir:           dir,
 		Timeout:       time.Duration(timeoutSec) * time.Second,
-		Username:      StringFromPayload(p, "username"),
-		Password:      StringFromPayload(p, "password"),
-		SSHPrivateKey: StringFromPayload(p, "ssh_private_key"),
-		SSHPassphrase: StringFromPayload(p, "ssh_passphrase"),
+		Username:      clone.username,
+		Password:      clone.password,
+		SSHPrivateKey: clone.sshPrivateKey,
+		SSHPassphrase: clone.sshPassphrase,
 		OnProgress: func(msg string) {
 			_ = deps.Worker.AppendTaskLog(task.ID, map[string]string{
 				"stream": "stdout",
@@ -63,7 +135,7 @@ func WorkspaceTemplate(deps *runner.Deps, task *runner.Task) error {
 		"msg":    "clone",
 	})
 
-	workRoot := filepath.Join(dir, strings.TrimSpace(StringFromPayload(p, "working_directory")))
+	workRoot := filepath.Join(dir, strings.TrimSpace(clone.workingSubdir))
 	st, err := os.Stat(workRoot)
 	if err != nil || !st.IsDir() {
 		return fmt.Errorf("template: working directory not found or not a directory")
