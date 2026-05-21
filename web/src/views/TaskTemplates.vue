@@ -19,22 +19,81 @@
         {{ successMessage }}
       </div>
 
-      <section class="rounded-xl border border-theme-border bg-white shadow-sm overflow-hidden" :aria-label="$t('taskTemplatesPage.sectionTitle')">
+      <section class="rounded-xl border border-theme-border bg-white shadow-sm overflow-visible" :aria-label="$t('taskTemplatesPage.sectionTitle')">
         <div class="px-6 py-4 border-b border-theme-border flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 class="text-lg font-semibold text-theme-text">{{ $t('taskTemplatesPage.sectionTitle') }}</h2>
             <p class="text-sm text-theme-textLight mt-0.5">{{ $t('taskTemplatesPage.sectionDescription') }}</p>
           </div>
-          <button type="button" class="btn-primary text-sm inline-flex items-center gap-2" @click="openCreateModal">
-            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            {{ $t('taskTemplatesPage.addTemplate') }}
-          </button>
+          <div ref="addTemplateDropdownRef" class="relative shrink-0">
+            <button
+              type="button"
+              class="btn-primary text-sm inline-flex items-center gap-2"
+              :aria-expanded="addTemplateMenuOpen"
+              aria-haspopup="menu"
+              :aria-label="$t('taskTemplatesPage.addTemplateMenuAria')"
+              @click.stop="toggleAddTemplateMenu"
+            >
+              <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              {{ $t('taskTemplatesPage.addTemplate') }}
+              <svg
+                class="h-4 w-4 shrink-0 text-white/90 transition-transform"
+                :class="{ 'rotate-180': addTemplateMenuOpen }"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <Transition
+              enter-active-class="transition ease-out duration-100"
+              enter-from-class="opacity-0 scale-95"
+              enter-to-class="opacity-100 scale-100"
+              leave-active-class="transition ease-in duration-75"
+              leave-from-class="opacity-100 scale-100"
+              leave-to-class="opacity-0 scale-95"
+            >
+              <div
+                v-show="addTemplateMenuOpen"
+                class="absolute right-0 top-full z-40 mt-2 w-56 min-w-max rounded-lg border border-theme-border bg-white py-1 shadow-lg origin-top-right"
+                role="menu"
+                :aria-label="$t('taskTemplatesPage.addTemplateMenuAria')"
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  class="flex w-full items-center px-4 py-2.5 text-left text-sm text-theme-text hover:bg-theme-hover"
+                  @click="openCreateModal('ansible')"
+                >
+                  {{ $t('taskTemplatesPage.addAnsibleTemplate') }}
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  class="flex w-full items-center px-4 py-2.5 text-left text-sm text-theme-text hover:bg-theme-hover"
+                  @click="openCreateModal('iac')"
+                >
+                  {{ $t('taskTemplatesPage.addIacTemplate') }}
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  class="flex w-full items-center px-4 py-2.5 text-left text-sm text-theme-text hover:bg-theme-hover"
+                  @click="openCreateModal('script')"
+                >
+                  {{ $t('taskTemplatesPage.addScriptTemplate') }}
+                </button>
+              </div>
+            </Transition>
+          </div>
         </div>
 
-        <div v-if="loading" class="p-8 text-center text-theme-textLight text-sm">{{ $t('taskTemplatesPage.loading') }}</div>
-        <div v-else-if="templates.length === 0" class="p-8 text-center text-theme-textLight text-sm">{{ $t('taskTemplatesPage.empty') }}</div>
+        <div v-if="loading" class="p-8 text-center text-theme-textLight text-sm rounded-b-xl">{{ $t('taskTemplatesPage.loading') }}</div>
+        <div v-else-if="templates.length === 0" class="p-8 text-center text-theme-textLight text-sm rounded-b-xl">{{ $t('taskTemplatesPage.empty') }}</div>
         <template v-else>
           <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-theme-border">
@@ -76,7 +135,7 @@
               </tbody>
             </table>
           </div>
-          <div class="px-6 py-4 border-t border-theme-border flex flex-wrap items-center justify-between gap-3">
+          <div class="px-6 py-4 border-t border-theme-border flex flex-wrap items-center justify-between gap-3 rounded-b-xl">
             <div class="text-sm text-theme-textLight">
               <template v-if="hasPagination">
                 {{ $t('taskTemplatesPage.showing', { from: showingFrom, to: showingTo, total: totalTemplates }) }}
@@ -98,230 +157,29 @@
       </section>
     </main>
 
-    <Teleport to="body">
-      <Transition name="modal">
-        <div
-          v-show="editModalOpen"
-          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
-          role="dialog"
-          aria-modal="true"
-          :aria-labelledby="editModalTitleId"
-          @click.self="closeEditModal"
-        >
-          <div class="bg-white rounded-lg shadow-xl border border-theme-border w-full max-w-3xl max-h-[92vh] flex flex-col">
-            <div class="px-6 py-4 border-b border-theme-border flex items-start justify-between gap-3 shrink-0">
-              <h2 :id="editModalTitleId" class="text-lg font-semibold text-theme-text pr-8">
-                {{ editingTemplate ? $t('taskTemplatesPage.editTemplate') : $t('taskTemplatesPage.createTemplate') }}
-              </h2>
-              <button type="button" class="text-theme-textLight hover:text-theme-text p-1 rounded shrink-0 -mr-1" :aria-label="$t('common.close')" @click="closeEditModal">
-                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <form class="flex flex-col flex-1 min-h-0" @submit.prevent="handleSaveTemplate">
-              <div class="px-6 py-3 border-b border-theme-border flex gap-4 flex-wrap shrink-0" role="tablist">
-                <button
-                  v-for="tab in modalTabs"
-                  :key="tab.id"
-                  type="button"
-                  role="tab"
-                  :aria-selected="modalTab === tab.id"
-                  class="pb-2 text-sm font-medium border-b-2 -mb-px transition-colors"
-                  :class="modalTab === tab.id ? 'border-primary-600 text-primary-600' : 'border-transparent text-theme-textLight hover:text-theme-text'"
-                  @click="modalTab = tab.id"
-                >
-                  {{ tab.label }}
-                </button>
-              </div>
-
-              <div class="px-6 py-4 overflow-y-auto flex-1 space-y-4">
-                <div v-if="modalError" class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-                  {{ modalError }}
-                </div>
-
-                <div v-show="modalTab === 'general'" class="space-y-4">
-                  <div>
-                    <label for="tmpl-name" class="form-label">{{ $t('taskTemplatesPage.name') }}</label>
-                    <input id="tmpl-name" v-model="form.name" type="text" required maxlength="100" class="input-field" />
-                  </div>
-                  <div>
-                    <label for="tmpl-desc" class="form-label">{{ $t('taskTemplatesPage.description') }}</label>
-                    <textarea id="tmpl-desc" v-model="form.description" rows="2" required maxlength="10000" class="input-field" />
-                  </div>
-                  <div>
-                    <label for="tmpl-engine" class="form-label">{{ $t('taskTemplatesPage.engine') }}</label>
-                    <select id="tmpl-engine" v-model="form.engine" required class="input-field">
-                      <option value="script">{{ $t('taskTemplatesPage.engineScript') }}</option>
-                      <option value="iac">{{ $t('taskTemplatesPage.engineIac') }}</option>
-                      <option value="ansible">{{ $t('taskTemplatesPage.engineAnsible') }}</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label for="tmpl-repo" class="form-label">{{ $t('taskTemplatesPage.repository') }}</label>
-                    <select id="tmpl-repo" v-model="form.repositoryId" required class="input-field">
-                      <option disabled value="">{{ $t('taskTemplatesPage.selectRepository') }}</option>
-                      <option v-for="r in repositories" :key="r.id" :value="String(r.id)">{{ r.name }}</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label for="tmpl-wd" class="form-label">{{ $t('taskTemplatesPage.workingDirectory') }}</label>
-                    <input id="tmpl-wd" v-model="form.workingDirectory" type="text" maxlength="500" class="input-field" />
-                  </div>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label for="tmpl-branch" class="form-label">{{ $t('taskTemplatesPage.branchOverride') }}</label>
-                      <input id="tmpl-branch" v-model="form.branchOverride" type="text" maxlength="100" class="input-field" />
-                    </div>
-                    <div>
-                      <label for="tmpl-tag" class="form-label">{{ $t('taskTemplatesPage.tagOverride') }}</label>
-                      <input id="tmpl-tag" v-model="form.tagOverride" type="text" maxlength="100" class="input-field" />
-                    </div>
-                  </div>
-                  <div>
-                    <label for="tmpl-gv" class="form-label">{{ $t('taskTemplatesPage.groupVars') }}</label>
-                    <select id="tmpl-gv" v-model="form.groupVarsId" class="input-field">
-                      <option value="">{{ $t('taskTemplatesPage.groupVarsNone') }}</option>
-                      <option v-for="g in groupVarsList" :key="g.id" :value="String(g.id)">{{ g.name }}</option>
-                    </select>
-                  </div>
-                  <div class="flex flex-wrap gap-6 items-center">
-                    <label class="inline-flex items-center gap-2 text-sm text-theme-text">
-                      <input v-model="form.allowConcurrentRuns" type="checkbox" class="rounded border-theme-border" />
-                      {{ $t('taskTemplatesPage.allowConcurrentRuns') }}
-                    </label>
-                    <label class="inline-flex items-center gap-2 text-sm text-theme-text">
-                      <input v-model="form.approvalRequired" type="checkbox" class="rounded border-theme-border" />
-                      {{ $t('taskTemplatesPage.approvalRequired') }}
-                    </label>
-                  </div>
-                  <div>
-                    <label for="tmpl-max-conc" class="form-label">{{ $t('taskTemplatesPage.maxConcurrentRuns') }}</label>
-                    <input id="tmpl-max-conc" v-model.number="form.maxConcurrentRuns" type="number" min="0" class="input-field max-w-xs" />
-                  </div>
-                  <div>
-                    <label for="tmpl-extra" class="form-label">{{ $t('taskTemplatesPage.extraArgs') }}</label>
-                    <input id="tmpl-extra" v-model="form.extraArgs" type="text" maxlength="10000" class="input-field" />
-                  </div>
-                </div>
-
-                <div v-show="modalTab === 'tags'" class="space-y-3">
-                  <span class="block text-sm font-medium text-theme-text">{{ $t('runnersPage.tags') }}</span>
-                  <p class="text-xs text-theme-textLight">{{ $t('runnersPage.tagsHint') }}</p>
-                  <div class="space-y-2">
-                    <div class="flex gap-2 text-xs font-medium text-theme-textLight uppercase">
-                      <span class="flex-1">{{ $t('runnersPage.tagKey') }}</span>
-                      <span class="flex-1">{{ $t('runnersPage.tagValue') }}</span>
-                      <span class="w-8 shrink-0" aria-hidden="true" />
-                    </div>
-                    <div v-for="(row, idx) in runnerTagEntries" :key="idx" class="flex gap-2 items-center">
-                      <input v-model="row.key" type="text" class="input-field flex-1 text-sm" :placeholder="$t('runnersPage.tagKeyPlaceholder')" />
-                      <input v-model="row.value" type="text" class="input-field flex-1 text-sm" :placeholder="$t('runnersPage.tagValuePlaceholder')" />
-                      <button type="button" class="text-red-600 hover:text-red-700 p-1 shrink-0 text-sm" :aria-label="$t('common.delete')" @click="removeTagRow(idx)">
-                        ×
-                      </button>
-                    </div>
-                    <button type="button" class="btn-secondary text-sm" @click="addTagRow">{{ $t('taskTemplatesPage.addTagRow') }}</button>
-                  </div>
-                </div>
-
-                <div v-show="modalTab === 'script'" class="space-y-4">
-                  <div>
-                    <label for="scr-engine" class="form-label">{{ $t('taskTemplatesPage.scriptEngine') }}</label>
-                    <select id="scr-engine" v-model="form.script.engine" class="input-field">
-                      <option v-for="e in scriptEngineOptions" :key="e" :value="e">{{ e }}</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label for="scr-ver" class="form-label">{{ $t('taskTemplatesPage.scriptEngineVersion') }}</label>
-                    <input id="scr-ver" v-model="form.script.engineVersion" type="text" maxlength="100" class="input-field" />
-                  </div>
-                  <div>
-                    <label for="scr-path" class="form-label">{{ $t('taskTemplatesPage.scriptPath') }}</label>
-                    <input id="scr-path" v-model="form.script.scriptPath" type="text" maxlength="10000" class="input-field" placeholder="scripts/deploy.sh" />
-                  </div>
-                </div>
-
-                <div v-show="modalTab === 'iac'" class="space-y-4">
-                  <div>
-                    <label for="iac-engine" class="form-label">{{ $t('taskTemplatesPage.iacEngine') }}</label>
-                    <select id="iac-engine" v-model="form.iac.engine" class="input-field">
-                      <option value="terraform">{{ $t('taskTemplatesPage.engineTerraform') }}</option>
-                      <option value="opentofu">{{ $t('taskTemplatesPage.engineOpenTofu') }}</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label for="iac-ver" class="form-label">{{ $t('taskTemplatesPage.iacEngineVersion') }}</label>
-                    <input id="iac-ver" v-model="form.iac.engineVersion" type="text" maxlength="100" class="input-field" />
-                  </div>
-                  <div>
-                    <label class="inline-flex items-center gap-2 text-sm text-theme-text">
-                      <input v-model="form.iac.autoApprove" type="checkbox" class="rounded border-theme-border" />
-                      {{ $t('taskTemplatesPage.autoApprove') }}
-                    </label>
-                  </div>
-                  <div>
-                    <label for="iac-backend" class="form-label">{{ $t('taskTemplatesPage.backend') }}</label>
-                    <select id="iac-backend" v-model="form.iac.backendID" class="input-field">
-                      <option value="">{{ $t('taskTemplatesPage.backendNone') }}</option>
-                      <option v-for="b in backendsList" :key="b.id" :value="String(b.id)">{{ b.name }}</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label for="iac-log" class="form-label">{{ $t('taskTemplatesPage.logLevel') }}</label>
-                    <select id="iac-log" v-model="form.iac.logLevel" class="input-field">
-                      <option value="">{{ $t('taskTemplatesPage.iacLogLevelNone') }}</option>
-                      <option v-for="lvl in iacLogLevelOptions" :key="lvl" :value="lvl">{{ lvl }}</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div v-show="modalTab === 'ansible'" class="space-y-4">
-                  <div>
-                    <label for="ans-ver" class="form-label">{{ $t('taskTemplatesPage.ansibleEngineVersion') }}</label>
-                    <input id="ans-ver" v-model="form.ansible.engineVersion" type="text" maxlength="100" class="input-field" />
-                  </div>
-                  <div>
-                    <label for="ans-inv" class="form-label">{{ $t('taskTemplatesPage.inventory') }}</label>
-                    <select id="ans-inv" v-model="form.ansible.inventoryID" class="input-field">
-                      <option value="">{{ $t('taskTemplatesPage.inventoryNone') }}</option>
-                      <option v-for="inv in inventoriesList" :key="inv.id" :value="String(inv.id)">{{ inv.name }}</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label for="ans-pb" class="form-label">{{ $t('taskTemplatesPage.playbookPath') }}</label>
-                    <input id="ans-pb" v-model="form.ansible.playbookPath" type="text" maxlength="4096" class="input-field" />
-                  </div>
-                  <div>
-                    <label for="ans-vault" class="form-label">{{ $t('taskTemplatesPage.vaultPath') }}</label>
-                    <input id="ans-vault" v-model="form.ansible.vaultPath" type="text" maxlength="4096" class="input-field" />
-                  </div>
-                  <div>
-                    <label for="ans-vpw" class="form-label">{{ $t('taskTemplatesPage.vaultPassword') }}</label>
-                    <input id="ans-vpw" v-model="form.ansible.vaultPassword" type="password" maxlength="4096" autocomplete="new-password" class="input-field" />
-                  </div>
-                  <div>
-                    <label for="ans-log" class="form-label">{{ $t('taskTemplatesPage.logLevel') }}</label>
-                    <select id="ans-log" v-model="form.ansible.logLevel" class="input-field">
-                      <option value="">{{ $t('taskTemplatesPage.ansibleLogLevelNone') }}</option>
-                      <option v-for="n in ansibleLogLevelOptions" :key="n" :value="String(n)">{{ $t('taskTemplatesPage.ansibleLogLevelN', { n }) }}</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div class="px-6 py-4 border-t border-theme-border flex justify-end gap-3 shrink-0 bg-white rounded-b-lg">
-                <button type="button" class="btn-secondary" @click="closeEditModal">{{ $t('common.cancel') }}</button>
-                <button type="submit" class="btn-primary" :disabled="editSaving">
-                  {{ editSaving ? $t('taskTemplatesPage.saving') : $t('common.save') }}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
+    <template v-for="eng in templateModalEngines" :key="eng">
+      <TaskTemplateEngineModal
+        v-if="templateModalEngine === eng"
+        :engine="eng"
+        :editing="!!editingTemplate"
+        :title-id="`tmpl-modal-${eng}-title`"
+        :form="form"
+        :runner-tag-entries="runnerTagEntries"
+        :modal-error="modalError"
+        :edit-saving="editSaving"
+        :repositories="repositories"
+        :group-vars-list="groupVarsList"
+        :backends-list="backendsList"
+        :inventories-list="inventoriesList"
+        :script-engine-options="scriptEngineOptions"
+        :iac-log-level-options="iacLogLevelOptions"
+        :ansible-log-level-options="ansibleLogLevelOptions"
+        :add-runner-tag-row="addTagRow"
+        :remove-runner-tag-row="removeTagRow"
+        @close="closeTemplateModal"
+        @save="handleSaveTemplate"
+      />
+    </template>
 
     <Teleport to="body">
       <Transition name="modal">
@@ -352,10 +210,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppNav from '@/components/AppNav.vue'
+import TaskTemplateEngineModal from '@/components/TaskTemplateEngineModal.vue'
 import { loadWorkspaceFromStorage } from '@/utils/storage'
 import { formatCreatedAt } from '@/utils/date'
 import {
@@ -382,23 +241,18 @@ const offset = ref(0)
 const errorMessage = ref('')
 const successMessage = ref('')
 
-const editModalOpen = ref(false)
-const editModalTitleId = 'tmpl-edit-title'
+const templateModalEngines = ['ansible', 'iac', 'script']
+
+const addTemplateDropdownRef = ref(null)
+const addTemplateMenuOpen = ref(false)
+/** Which template modal is open: 'script' | 'iac' | 'ansible' | null */
+const templateModalEngine = ref(null)
 const editingTemplate = ref(null)
 const editSaving = ref(false)
 const modalError = ref('')
-const modalTab = ref('general')
 
 const deleteModalTemplate = ref(null)
 const deletingId = ref(null)
-
-const modalTabs = computed(() => [
-  { id: 'general', label: t('taskTemplatesPage.tabGeneral') },
-  { id: 'tags', label: t('taskTemplatesPage.tabRunnerTags') },
-  { id: 'script', label: t('taskTemplatesPage.tabScript') },
-  { id: 'iac', label: t('taskTemplatesPage.tabIac') },
-  { id: 'ansible', label: t('taskTemplatesPage.tabAnsible') },
-])
 
 /** Matches API `Script.engine` oneof */
 const scriptEngineOptions = ['bash', 'sh', 'python3', 'node']
@@ -458,7 +312,6 @@ function resetForm() {
   Object.assign(form, defaultFormState())
   runnerTagEntries.value = [{ key: '', value: '' }]
   modalError.value = ''
-  modalTab.value = 'general'
 }
 
 function tagsObjectFromEntries(entries) {
@@ -491,6 +344,14 @@ function removeTagRow(idx) {
   if (runnerTagEntries.value.length === 0) {
     runnerTagEntries.value.push({ key: '', value: '' })
   }
+}
+
+/** Normalize API `engine` to modal kind (script | iac | ansible). */
+function templateModalKindFromEngine(raw) {
+  const e = raw != null && raw !== '' ? String(raw).toLowerCase() : ''
+  if (e === 'terraform' || e === 'opentofu') return 'iac'
+  if (e === 'script' || e === 'iac' || e === 'ansible') return e
+  return 'script'
 }
 
 function fillFormFromTemplate(tmpl) {
@@ -647,13 +508,29 @@ function goToPage(newOffset) {
   loadTemplates(off)
 }
 
-function openCreateModal() {
+function toggleAddTemplateMenu() {
+  addTemplateMenuOpen.value = !addTemplateMenuOpen.value
+}
+
+function onClickOutsideAddTemplate(event) {
+  if (addTemplateDropdownRef.value && !addTemplateDropdownRef.value.contains(event.target)) {
+    addTemplateMenuOpen.value = false
+  }
+}
+
+/** @param {'script' | 'iac' | 'ansible'} engine */
+function openCreateModal(engine) {
   editingTemplate.value = null
   resetForm()
-  editModalOpen.value = true
+  if (engine === 'script' || engine === 'iac' || engine === 'ansible') {
+    form.engine = engine
+  }
+  addTemplateMenuOpen.value = false
+  templateModalEngine.value = templateModalKindFromEngine(form.engine)
 }
 
 async function openEditModal(tmpl) {
+  addTemplateMenuOpen.value = false
   editingTemplate.value = tmpl
   resetForm()
   try {
@@ -668,11 +545,11 @@ async function openEditModal(tmpl) {
     console.error('Failed to load template:', err)
     fillFormFromTemplate(tmpl)
   }
-  editModalOpen.value = true
+  templateModalEngine.value = templateModalKindFromEngine(form.engine)
 }
 
-function closeEditModal() {
-  editModalOpen.value = false
+function closeTemplateModal() {
+  templateModalEngine.value = null
   editingTemplate.value = null
   resetForm()
 }
@@ -702,7 +579,7 @@ async function handleSaveTemplate() {
       await workspaceTemplatesAPI.create(workspace.value.id, payload)
       successMessage.value = t('taskTemplatesPage.templateCreated')
     }
-    closeEditModal()
+    closeTemplateModal()
     await loadTemplates()
     setTimeout(() => { successMessage.value = '' }, 3000)
   } catch (err) {
@@ -741,10 +618,15 @@ async function confirmDelete() {
 }
 
 onMounted(async () => {
+  document.addEventListener('click', onClickOutsideAddTemplate)
   setWorkspace()
   if (workspace.value?.id) {
     await loadAuxiliaryLists()
     loadTemplates()
   }
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', onClickOutsideAddTemplate)
 })
 </script>
