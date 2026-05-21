@@ -172,8 +172,8 @@
                 />
               </div>
               <div>
-                <label for="add-key-publicKey" class="form-label">{{ $t('secretsPage.publicKeyPlaceholder') }}</label>
-                <input id="add-key-publicKey" v-model="keyForm.publicKey" type="text" class="input-field font-mono text-sm" placeholder="ssh-rsa AAAA..." />
+                <label for="add-key-publicKey" class="form-label">{{ $t('secretsPage.publicKey') }} {{ $t('secretsPage.publicKeyOptional') }}</label>
+                <input id="add-key-publicKey" v-model="keyForm.publicKey" type="text" class="input-field font-mono text-sm" :placeholder="$t('secretsPage.publicKeyPlaceholder')" />
               </div>
               <div>
                 <label for="add-key-passphrase" class="form-label">{{ $t('secretsPage.passphrase') }}</label>
@@ -238,8 +238,8 @@
                 />
               </div>
               <div>
-                <label for="edit-key-publicKey" class="form-label">{{ $t('secretsPage.publicKeyOptional') }}</label>
-                <input id="edit-key-publicKey" v-model="keyForm.publicKey" type="text" class="input-field font-mono text-sm" placeholder="ssh-rsa AAAA..." />
+                <label for="edit-key-publicKey" class="form-label">{{ $t('secretsPage.publicKey') }} {{ $t('secretsPage.publicKeyOptional') }}</label>
+                <input id="edit-key-publicKey" v-model="keyForm.publicKey" type="text" class="input-field font-mono text-sm" :placeholder="$t('secretsPage.publicKeyPlaceholder')" />
               </div>
               <div>
                 <label for="edit-key-passphrase" class="form-label">{{ $t('secretsPage.passphrase') }} {{ $t('secretsPage.passphraseLeaveBlank') }}</label>
