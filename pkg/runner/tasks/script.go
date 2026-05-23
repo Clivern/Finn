@@ -10,10 +10,28 @@ import (
 	"github.com/clivern/finn/pkg/runner"
 )
 
-func RunScript(ctx context.Context, task *runner.Task, dir string) error {
-	task.Log = append(task.Log, map[string]string{
+// RunScript runs a script template task.
+func RunScript(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
+	if IsDockerAvailable() {
+		return RunScriptDocker(ctx, deps, task, dir)
+	}
+
+	return RunScriptLocal(ctx, deps, task, dir)
+}
+
+func RunScriptLocal(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
+	deps.Worker.AppendTaskLog(task.ID, map[string]string{
 		"stream": "stdout",
-		"line":   "script engine placeholder",
+		"line":   "script local engine placeholder",
+		"msg":    "template",
+	})
+	return nil
+}
+
+func RunScriptDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
+	deps.Worker.AppendTaskLog(task.ID, map[string]string{
+		"stream": "stdout",
+		"line":   "script docker engine placeholder",
 		"msg":    "template",
 	})
 	return nil

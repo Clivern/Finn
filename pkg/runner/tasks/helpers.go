@@ -7,6 +7,7 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -186,4 +187,9 @@ func remaining(ctx context.Context, fallback time.Duration) time.Duration {
 		return time.Second
 	}
 	return left
+}
+
+func IsDockerAvailable() bool {
+	_, err := exec.LookPath("docker")
+	return err == nil
 }

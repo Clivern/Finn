@@ -11,8 +11,8 @@ import (
 )
 
 // RunAnsible runs an Ansible template task.
-func RunAnsible(ctx context.Context, task *runner.Task, dir string) error {
-	task.Log = append(task.Log, map[string]string{
+func RunAnsible(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
+	deps.Worker.AppendTaskLog(task.ID, map[string]string{
 		"stream": "stdout",
 		"line":   "Ansible engine placeholder",
 		"msg":    "template",

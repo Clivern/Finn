@@ -11,8 +11,8 @@ import (
 )
 
 // RunIaC runs an IaC template task.
-func RunIaC(ctx context.Context, task *runner.Task, dir string) error {
-	task.Log = append(task.Log, map[string]string{
+func RunIaC(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
+	deps.Worker.AppendTaskLog(task.ID, map[string]string{
 		"stream": "stdout",
 		"line":   "IaC engine placeholder",
 		"msg":    "template",

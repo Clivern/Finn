@@ -38,7 +38,7 @@ func WorkspaceTemplate(ctx context.Context, deps *runner.Deps, task *runner.Task
 		SSHPrivateKey: StringFromPayload(p, "repository.ssh_key.private_key"),
 		SSHPassphrase: StringFromPayload(p, "repository.ssh_key.passphrase"),
 		OnProgress: func(msg string) {
-			_ = deps.Worker.AppendTaskLog(task.ID, map[string]string{
+			deps.Worker.AppendTaskLog(task.ID, map[string]string{
 				"stream": "stdout",
 				"line":   msg,
 				"msg":    "clone",
@@ -49,7 +49,7 @@ func WorkspaceTemplate(ctx context.Context, deps *runner.Deps, task *runner.Task
 		return err
 	}
 
-	_ = deps.Worker.AppendTaskLog(task.ID, map[string]string{
+	deps.Worker.AppendTaskLog(task.ID, map[string]string{
 		"stream": "stdout",
 		"line":   "HEAD is at " + commit,
 		"msg":    "clone",
@@ -58,12 +58,17 @@ func WorkspaceTemplate(ctx context.Context, deps *runner.Deps, task *runner.Task
 	engine := strings.TrimSpace(StringFromPayload(p, "engine"))
 	switch engine {
 	case "script":
-		return RunScript(ctx, task, dir)
+		return RunScript(ctx, deps, task, dir)
 	case "iac":
-		return RunIaC(ctx, task, dir)
+		return RunIaC(ctx, deps, task, dir)
 	case "ansible":
-		return RunAnsible(ctx, task, dir)
+		return RunAnsible(ctx, deps, task, dir)
 	default:
-		return fmt.Errorf("template: unknown engine %q", engine)
+		deps.Worker.AppendTaskLog(task.ID, map[string]string{
+			"stream": "stdout",
+			"line":   fmt.Sprintf("unknown engine %s", engine),
+			"msg":    "template",
+		})
+		return fmt.Errorf("unknown engine %s", engine)
 	}
 }
