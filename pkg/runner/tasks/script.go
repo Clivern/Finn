@@ -124,6 +124,8 @@ func scriptDockerImage(engine, version string) string {
 	switch engine {
 	case "sh":
 		return "docker.io/alpine:3.20"
+	case "bash":
+		return "docker.io/bash:5.2"
 	case "python", "python3":
 		if version != "" {
 			return "docker.io/python:" + version + "-slim"
@@ -135,6 +137,6 @@ func scriptDockerImage(engine, version string) string {
 		}
 		return "docker.io/node:20-bookworm-slim"
 	default:
-		return "docker.io/bash:5.2"
+		return "docker.io/alpine:3.20"
 	}
 }

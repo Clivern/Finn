@@ -36,7 +36,7 @@ func main() {
 		},
 		"repository": map[string]interface{}{
 			"name":       "finn",
-			"git_url":    "git@github.com:clivern/finn.git",
+			"git_url":    "git@github.com:Clivern/f6.git",
 			"git_branch": "main",
 			//"git_tag":    "v1.0.0",
 			"ssh_key": map[string]interface{}{
@@ -58,7 +58,7 @@ func main() {
 		"script": map[string]interface{}{
 			"engine":        "bash",
 			"engineVersion": "",
-			"scriptPath":    "etc/runner-ping.sh",
+			"scriptPath":    "bash/clivern.sh",
 		},
 		"extraArgs": map[string]interface{}{
 			"key":  "value",
