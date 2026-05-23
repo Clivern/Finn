@@ -3,3 +3,19 @@
 // license that can be found in the LICENSE file.
 
 package tasks
+
+import (
+	"context"
+
+	"github.com/clivern/finn/pkg/runner"
+)
+
+// RunIaC runs an IaC template task.
+func RunIaC(ctx context.Context, task *runner.Task, dir string) error {
+	task.Log = append(task.Log, map[string]string{
+		"stream": "stdout",
+		"line":   "IaC engine placeholder",
+		"msg":    "template",
+	})
+	return nil
+}
