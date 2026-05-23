@@ -22,6 +22,8 @@ import (
 )
 
 func main() {
+	sshPrivateKey, _ := os.ReadFile("/Users/ahmedfathy/.ssh/pid_ed25519")
+
 	payload := map[string]interface{}{
 		"name":             "testscript",
 		"description":      "testscript",
@@ -33,29 +35,26 @@ func main() {
 			"key": "value",
 		},
 		"repository": map[string]interface{}{
-			"name":       "repository-name",
-			"git_url":    "https://github.com/clivern/finn.git",
+			"name":       "finn",
+			"git_url":    "git@github.com:clivern/finn.git",
 			"git_branch": "main",
-			"git_tag":    "v1.0.0",
+			//"git_tag":    "v1.0.0",
 			"ssh_key": map[string]interface{}{
 				"name":            "my-deploy-key",
 				"committer_name":  "John Doe",
 				"committer_email": "john.doe@example.com",
-				"private_key":     "ssh-private-key",
-				"public_key":      "ssh-public-key",
-				"passphrase":      "ssh-passphrase",
+				"private_key":     string(sshPrivateKey),
+				//"public_key":      "ssh-public-key",
+				//"passphrase":      "ssh-passphrase",
 			},
-			"git_credential": map[string]interface{}{
+			/*"git_credential": map[string]interface{}{
 				"name":              "github-token",
 				"committer_name":    "John Doe",
 				"committer_email":   "john.doe@example.com",
 				"username":          "username",
 				"password_or_token": "password-or-token",
-			},
+			},*/
 		},
-		"allowConcurrentRuns": true,
-		"maxConcurrentRuns":   1,
-		"approvalRequired":    false,
 		"script": map[string]interface{}{
 			"engine":        "bash",
 			"engineVersion": "",
