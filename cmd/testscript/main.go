@@ -126,7 +126,33 @@ func main() {
 	defer cancel()
 
 	_ = worker.UpdateTaskStatus(task.ID, runner.TaskStatusRunning)
-	templateErr := tasks.WorkspaceTemplate(ctx, deps, task)
+	templateDone := make(chan error, 1)
+	go func() {
+		templateDone <- tasks.WorkspaceTemplate(ctx, deps, task)
+	}()
+
+	var templateErr error
+	templateFinished := false
+	printedLogs := 0
+	for !templateFinished {
+		select {
+		case templateErr = <-templateDone:
+			templateFinished = true
+		case <-time.After(250 * time.Millisecond):
+		}
+
+		storedTask, err := worker.GetTask(task.ID)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "get task logs: %s\n", err)
+			break
+		}
+		for printedLogs < len(storedTask.Log) {
+			entry := storedTask.Log[printedLogs]
+			fmt.Printf("[%s] %s\n", entry["stream"], entry["line"])
+			printedLogs++
+		}
+	}
+
 	if templateErr != nil {
 		_ = worker.UpdateTaskStatus(task.ID, runner.TaskStatusFailed)
 	} else {
@@ -142,7 +168,7 @@ func main() {
 	fmt.Printf("task id: %s\n", task.ID)
 	fmt.Printf("bolt db: %s\n", bolt.Path)
 	fmt.Println("task output:")
-	for _, entry := range storedTask.Log {
+	for _, entry := range storedTask.Log[printedLogs:] {
 		fmt.Printf("[%s] %s\n", entry["stream"], entry["line"])
 	}
 
