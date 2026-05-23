@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/clivern/finn/pkg/runner"
+	"github.com/clivern/finn/pkg/runner/workspace"
 )
 
 // RunScript runs a script template task.
@@ -26,14 +27,14 @@ func RunScript(ctx context.Context, deps *runner.Deps, task *runner.Task, dir st
 }
 
 func RunScriptLocal(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
-	scriptCmd, err := BuildScriptExec(dir, task.Payload)
+	command, err := BuildScriptExec(dir, task.Payload)
 	if err != nil {
 		return err
 	}
 
-	cmd := exec.CommandContext(ctx, scriptCmd.Engine, append([]string{scriptCmd.ScriptPath}, scriptCmd.Args...)...)
+	cmd := exec.CommandContext(ctx, command.Engine, append([]string{command.ScriptPath}, command.Args...)...)
 	cmd.Dir = dir
-	cmd.Env = append(os.Environ(), scriptCmd.Env...)
+	cmd.Env = append(os.Environ(), command.Env...)
 
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
@@ -61,17 +62,25 @@ func RunScriptLocal(ctx context.Context, deps *runner.Deps, task *runner.Task, d
 }
 
 func RunScriptDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
-	command, err := BuildScriptCommand(dir, task.Payload)
+	command, err := BuildScriptExec(dir, task.Payload)
 	if err != nil {
 		return err
 	}
 
-	_ = deps.Worker.AppendTaskLog(task.ID, map[string]string{
-		"stream": "stdout",
-		"line":   "script docker engine placeholder: " + strings.Join(command, " "),
-		"msg":    "template",
+	return workspace.Exec(ctx, &workspace.ExecOptions{
+		Dir:     dir,
+		Image:   scriptDockerImage(command.Engine, StringFromPayload(task.Payload, "script.engineVersion")),
+		Command: append([]string{command.Engine, command.ScriptPath}, command.Args...),
+		Env:     envListToMap(command.Env),
+		Timeout: remaining(ctx, defaultTemplateTimeout),
+		OnOutput: func(stream, line string) {
+			_ = deps.Worker.AppendTaskLog(task.ID, map[string]string{
+				"stream": stream,
+				"line":   line,
+				"msg":    "template",
+			})
+		},
 	})
-	return nil
 }
 
 func appendScriptOutput(r io.Reader, stream string, deps *runner.Deps, taskID string, done chan<- struct{}) {
@@ -88,5 +97,44 @@ func appendScriptOutput(r io.Reader, stream string, deps *runner.Deps, taskID st
 			"line":   line,
 			"msg":    "template",
 		})
+	}
+}
+
+func envListToMap(env []string) map[string]string {
+	if len(env) == 0 {
+		return nil
+	}
+
+	out := make(map[string]string)
+	for _, entry := range env {
+		key, value, ok := strings.Cut(entry, "=")
+		if !ok || strings.TrimSpace(key) == "" {
+			continue
+		}
+		out[key] = value
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
+
+func scriptDockerImage(engine, version string) string {
+	version = strings.TrimSpace(version)
+	switch engine {
+	case "sh":
+		return "docker.io/alpine:3.20"
+	case "python", "python3":
+		if version != "" {
+			return "docker.io/python:" + version + "-slim"
+		}
+		return "docker.io/python:3.12-slim"
+	case "node":
+		if version != "" {
+			return "docker.io/node:" + version + "-bookworm-slim"
+		}
+		return "docker.io/node:20-bookworm-slim"
+	default:
+		return "docker.io/bash:5.2"
 	}
 }

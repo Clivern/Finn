@@ -14,7 +14,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/clivern/finn/pkg/runner"
@@ -85,13 +84,6 @@ func main() {
 			},
 		},
 	}
-
-	command, err := tasks.BuildScriptCommand(payload)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "build script command: %s\n", err)
-		os.Exit(1)
-	}
-	fmt.Printf("command: %s\n", strings.Join(command, " "))
 
 	id, err := uuid.NewRandom()
 	if err != nil {
