@@ -15,24 +15,19 @@ import (
 )
 
 // Clone clones a repository using go-git and streams progress to the task log.
-func Clone(deps *runner.Deps, task *runner.Task) error {
+func Clone(ctx context.Context, deps *runner.Deps, task *runner.Task) error {
 	dir, err := os.MkdirTemp("", task.ID)
 	if err != nil {
 		return fmt.Errorf("clone: create temp dir: %w", err)
 	}
 	defer os.RemoveAll(dir)
 
-	timeoutSec := IntFromPayload(task.Payload, "timeout")
-	if timeoutSec <= 0 {
-		timeoutSec = 300
-	}
-
-	commit, err := workspace.Clone(context.Background(), &workspace.CloneOptions{
+	commit, err := workspace.Clone(ctx, &workspace.CloneOptions{
 		URL:           StringFromPayload(task.Payload, "repository"),
 		Branch:        StringFromPayload(task.Payload, "branch"),
 		Tag:           StringFromPayload(task.Payload, "tag"),
 		Dir:           dir,
-		Timeout:       time.Duration(timeoutSec) * time.Second,
+		Timeout:       remaining(ctx, 5*time.Minute),
 		Username:      StringFromPayload(task.Payload, "username"),
 		Password:      StringFromPayload(task.Payload, "password"),
 		SSHPrivateKey: StringFromPayload(task.Payload, "ssh_private_key"),

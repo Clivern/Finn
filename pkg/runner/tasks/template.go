@@ -91,14 +91,8 @@ func cloneFieldsFromTemplatePayload(p map[string]interface{}) templateCloneField
 }
 
 // WorkspaceTemplate clones the repository then runs script, IaC, or Ansible per payload.
-func WorkspaceTemplate(deps *runner.Deps, task *runner.Task) error {
+func WorkspaceTemplate(ctx context.Context, deps *runner.Deps, task *runner.Task) error {
 	p := task.Payload
-	timeoutSec := IntFromPayload(p, "timeout")
-	if timeoutSec <= 0 {
-		timeoutSec = int(defaultTemplateTimeout / time.Second)
-	}
-	runCtx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSec)*time.Second)
-	defer cancel()
 
 	dir, err := os.MkdirTemp("", task.ID)
 	if err != nil {
@@ -107,12 +101,12 @@ func WorkspaceTemplate(deps *runner.Deps, task *runner.Task) error {
 	defer os.RemoveAll(dir)
 
 	clone := cloneFieldsFromTemplatePayload(p)
-	commit, err := workspace.Clone(runCtx, &workspace.CloneOptions{
+	commit, err := workspace.Clone(ctx, &workspace.CloneOptions{
 		URL:           clone.repoURL,
 		Branch:        clone.branch,
 		Tag:           clone.tag,
 		Dir:           dir,
-		Timeout:       time.Duration(timeoutSec) * time.Second,
+		Timeout:       remaining(ctx, defaultTemplateTimeout),
 		Username:      clone.username,
 		Password:      clone.password,
 		SSHPrivateKey: clone.sshPrivateKey,
@@ -144,11 +138,11 @@ func WorkspaceTemplate(deps *runner.Deps, task *runner.Task) error {
 	engine := strings.TrimSpace(StringFromPayload(p, "engine"))
 	switch engine {
 	case "script":
-		return runScriptEngine(runCtx, deps, task, workRoot, p)
+		return runScriptEngine(ctx, deps, task, workRoot, p)
 	case "iac":
-		return runIacEngine(runCtx, deps, task, workRoot, p)
+		return runIacEngine(ctx, deps, task, workRoot, p)
 	case "ansible":
-		return runAnsibleEngine(runCtx, deps, task, workRoot, p)
+		return runAnsibleEngine(ctx, deps, task, workRoot, p)
 	default:
 		return fmt.Errorf("template: unknown engine %q", engine)
 	}
@@ -160,78 +154,6 @@ func appendTemplateLog(deps *runner.Deps, taskID, stream, line string) {
 		"line":   line,
 		"msg":    "template",
 	})
-}
-
-func runScriptEngine(ctx context.Context, deps *runner.Deps, task *runner.Task, workRoot string, p map[string]interface{}) error {
-	sm := MapFromPayload(p, "script")
-	if len(sm) == 0 {
-		return fmt.Errorf("template: missing script configuration")
-	}
-	engine := strings.ToLower(StringFromMap(sm, "engine"))
-	if engine == "" {
-		engine = "bash"
-	}
-	scriptRel := strings.TrimSpace(StringFromMap(sm, "scriptPath"))
-	if scriptRel == "" {
-		return fmt.Errorf("template: script path is required")
-	}
-
-	hostScript := filepath.Join(workRoot, filepath.FromSlash(scriptRel))
-	hostScript = filepath.Clean(hostScript)
-	baseClean := filepath.Clean(workRoot)
-	if rel, err := filepath.Rel(baseClean, hostScript); err != nil || strings.HasPrefix(rel, "..") {
-		return fmt.Errorf("template: invalid script path")
-	}
-	if _, err := os.Stat(hostScript); err != nil {
-		return fmt.Errorf("template: script file: %w", err)
-	}
-
-	image := scriptDockerImage(engine, StringFromMap(sm, "engineVersion"))
-	dockerScript := "/workspace/" + filepath.ToSlash(strings.TrimPrefix(
-		strings.TrimPrefix(hostScript, baseClean), string(filepath.Separator)))
-
-	var cmd []string
-	switch engine {
-	case "python3":
-		cmd = []string{"python3", dockerScript}
-	case "node":
-		cmd = []string{"node", dockerScript}
-	case "sh":
-		cmd = []string{"sh", dockerScript}
-	default:
-		cmd = []string{"bash", dockerScript}
-	}
-
-	return workspace.Exec(ctx, &workspace.ExecOptions{
-		Dir:     workRoot,
-		Image:   image,
-		Command: cmd,
-		Env:     EnvFromPayload(p),
-		Timeout: remaining(ctx, defaultTemplateTimeout),
-		OnOutput: func(stream, line string) {
-			appendTemplateLog(deps, task.ID, stream, line)
-		},
-	})
-}
-
-func scriptDockerImage(engine, version string) string {
-	v := strings.TrimSpace(version)
-	switch engine {
-	case "sh":
-		return "docker.io/alpine:3.20"
-	case "python3":
-		if v != "" {
-			return "docker.io/python:" + v + "-slim"
-		}
-		return "docker.io/python:3.12-slim"
-	case "node":
-		if v != "" {
-			return "docker.io/node:" + v + "-bookworm-slim"
-		}
-		return "docker.io/node:20-bookworm-slim"
-	default:
-		return "docker.io/bash:5.2"
-	}
 }
 
 func runIacEngine(ctx context.Context, deps *runner.Deps, task *runner.Task, workRoot string, p map[string]interface{}) error {
@@ -368,16 +290,4 @@ func ansibleVerbosity(logLevel string) string {
 		return ""
 	}
 	return "-" + strings.Repeat("v", n)
-}
-
-func remaining(ctx context.Context, fallback time.Duration) time.Duration {
-	d, ok := ctx.Deadline()
-	if !ok {
-		return fallback
-	}
-	left := time.Until(d)
-	if left <= 0 {
-		return time.Second
-	}
-	return left
 }

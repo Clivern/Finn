@@ -7,7 +7,10 @@ package runner
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -19,7 +22,7 @@ var (
 )
 
 // TaskHandler runs a task. It is registered per TaskType.
-type TaskHandler func(deps *Deps, task *Task) error
+type TaskHandler func(ctx context.Context, deps *Deps, task *Task) error
 
 // taskHandlers maps task types to their handlers.
 var taskHandlers = make(map[TaskType]TaskHandler)
@@ -216,15 +219,54 @@ func (w *Worker) handleTask(ctx context.Context, deps *Deps, taskID string) {
 		return
 	}
 
-	if err := handler(deps, task); err != nil {
+	ctx, cancel := context.WithTimeout(ctx, getTaskTimeout(task))
+	defer cancel()
+
+	if err := handler(ctx, deps, task); err != nil {
 		w.UpdateTaskStatus(taskID, TaskStatusFailed)
+		line := err.Error()
+		if errors.Is(err, context.DeadlineExceeded) || errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			line = "task timed out"
+		}
 		w.AppendTaskLog(taskID, map[string]string{
 			"stream": "stderr",
-			"line":   err.Error(),
+			"line":   line,
 			"msg":    string(task.Type),
 		})
 		return
 	}
 
 	w.UpdateTaskStatus(taskID, TaskStatusSuccess)
+}
+
+func getTaskTimeout(task *Task) time.Duration {
+	if sec := timeoutSecondsFromPayload(task.Payload); sec > 0 {
+		return time.Duration(sec) * time.Second
+	}
+
+	switch task.Type {
+	case TaskTypeTemplate:
+		return time.Hour
+	default:
+		return 10 * time.Minute
+	}
+}
+
+func timeoutSecondsFromPayload(payload map[string]interface{}) int {
+	v, ok := payload["timeout"]
+	if !ok || v == nil {
+		return 0
+	}
+
+	switch n := v.(type) {
+	case float64:
+		return int(n)
+	case int:
+		return n
+	case string:
+		i, _ := strconv.Atoi(strings.TrimSpace(n))
+		return i
+	default:
+		return 0
+	}
 }

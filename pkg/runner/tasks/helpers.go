@@ -5,9 +5,11 @@
 package tasks
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // StringFromPayload returns the string value from the payload map.
@@ -130,4 +132,16 @@ func EnvFromPayload(p map[string]interface{}) map[string]string {
 		return nil
 	}
 	return out
+}
+
+func remaining(ctx context.Context, fallback time.Duration) time.Duration {
+	d, ok := ctx.Deadline()
+	if !ok {
+		return fallback
+	}
+	left := time.Until(d)
+	if left <= 0 {
+		return time.Second
+	}
+	return left
 }

@@ -48,10 +48,10 @@ type Worker struct {
 }
 
 // NewWorker creates a worker with a buffered channel for task ID + type (buffer size cap).
-func NewWorker(cloneTasks db.WorkspaceRepositoryCloneTaskRepository, runners db.RunnerRepository) *Worker {
+func NewWorker(cloneTasksRepo db.WorkspaceRepositoryCloneTaskRepository, runnersRepo db.RunnerRepository) *Worker {
 	return &Worker{
-		CloneTasks: cloneTasks,
-		Runners:    runners,
+		CloneTasks: cloneTasksRepo,
+		Runners:    runnersRepo,
 		TaskChan:   make(chan FollowUpTask, 256),
 	}
 }
