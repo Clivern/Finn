@@ -13,10 +13,11 @@ import (
 
 // ScriptExec is the parsed local script command.
 type ScriptExec struct {
-	Engine     string
-	ScriptPath string
-	Env        []string
-	Args       []string
+	Engine        string
+	ScriptRelPath string
+	ScriptPath    string
+	Env           []string
+	Args          []string
 }
 
 // BuildScriptExec parses a script payload into engine, env, and args for exec.
@@ -42,11 +43,18 @@ func BuildScriptExec(dir string, payload map[string]interface{}) (*ScriptExec, e
 	args = append(args, keyValueArgs(MapFromPayload(payload, "groupVars.secretExtraVariables"))...)
 
 	return &ScriptExec{
-		Engine:     engine,
-		ScriptPath: filepath.Join(dir, filepath.FromSlash(scriptPath)),
-		Env:        env,
-		Args:       args,
+		Engine:        engine,
+		ScriptRelPath: scriptPath,
+		ScriptPath:    filepath.Join(dir, filepath.FromSlash(scriptPath)),
+		Env:           env,
+		Args:          args,
 	}, nil
+}
+
+// DockerScriptPath returns the script path inside a /workspace-mounted container.
+func DockerScriptPath(relPath string) string {
+	relPath = strings.TrimPrefix(filepath.ToSlash(relPath), "/")
+	return "/workspace/" + relPath
 }
 
 // BuildScriptCommand builds shell-style command tokens from a script payload.

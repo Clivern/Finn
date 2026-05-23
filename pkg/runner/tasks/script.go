@@ -70,7 +70,7 @@ func RunScriptDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, 
 	return workspace.Exec(ctx, &workspace.ExecOptions{
 		Dir:     dir,
 		Image:   scriptDockerImage(command.Engine, StringFromPayload(task.Payload, "script.engineVersion")),
-		Command: append([]string{command.Engine, command.ScriptPath}, command.Args...),
+		Command: append([]string{command.Engine, DockerScriptPath(command.ScriptRelPath)}, command.Args...),
 		Env:     envListToMap(command.Env),
 		Timeout: remaining(ctx, defaultTemplateTimeout),
 		OnOutput: func(stream, line string) {
