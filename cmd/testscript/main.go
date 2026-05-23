@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/clivern/finn/pkg/runner"
@@ -67,23 +68,30 @@ func main() {
 		"groupVars": map[string]interface{}{
 			"name": "variable-group-name",
 			"extraVariables": map[string]interface{}{
-				"key":  "value",
-				"key2": "value2",
+				"evkey":  "value",
+				"evkey2": "value2",
 			},
 			"environmentVariables": map[string]interface{}{
-				"key":  "value",
-				"key2": "value2",
+				"ekey":  "value",
+				"ekey2": "value2",
 			},
 			"secretExtraVariables": map[string]interface{}{
-				"key":  "value",
-				"key2": "value2",
+				"skey":  "value",
+				"skey2": "value2",
 			},
 			"secretEnvironmentVariables": map[string]interface{}{
-				"key":  "value",
-				"key2": "value2",
+				"sekey":  "value",
+				"sekey2": "value2",
 			},
 		},
 	}
+
+	command, err := tasks.BuildScriptCommand(payload)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "build script command: %s\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("command: %s\n", strings.Join(command, " "))
 
 	id, err := uuid.NewRandom()
 	if err != nil {
