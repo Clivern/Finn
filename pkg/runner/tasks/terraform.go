@@ -34,19 +34,7 @@ type IaCExec struct {
 	RootDir       string
 	ChdirArg      []string
 	Env           []string
-}
-
-// RunIaC runs an IaC template task.
-func RunIaC(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
-	engine := iacEngine(task.Payload)
-	switch engine {
-	case "terraform", "":
-		return RunTerraform(ctx, deps, task, dir)
-	case "opentofu":
-		return RunOpenTofu(ctx, deps, task, dir)
-	default:
-		return fmt.Errorf("iac: unsupported engine %q", engine)
-	}
+	Args          []string
 }
 
 func RunTerraform(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
@@ -81,56 +69,38 @@ func BuildIaCExec(dir string, payload map[string]interface{}) (*IaCExec, error) 
 		keyValueArgs(MapFromPayload(payload, "groupVars.environmentVariables")),
 		keyValueArgs(MapFromPayload(payload, "groupVars.secretEnvironmentVariables"))...,
 	)
-	if env == nil {
-		env = append(
-			keyValueArgs(MapFromPayload(payload, "group_vars.environment_variables")),
-			keyValueArgs(MapFromPayload(payload, "group_vars.secret_environment_variables"))...,
-		)
+	if logLevel := StringFromPayload(payload, "iac.logLevel"); logLevel != "" {
+		env = append(env, "TF_LOG="+strings.ToUpper(logLevel))
 	}
-	if lvl := iacLogLevel(payload); lvl != "" {
-		env = append(env, "TF_LOG="+strings.ToUpper(lvl))
-	}
+	args := append(
+		append(
+			iacVarFlags(MapFromPayload(payload, "extraArgs")),
+			iacVarFlags(MapFromPayload(payload, "groupVars.extraVariables"))...,
+		),
+		iacVarFlags(MapFromPayload(payload, "groupVars.secretExtraVariables"))...,
+	)
 
 	return &IaCExec{
-		EngineVersion: iacEngineVersion(payload),
+		EngineVersion: StringFromPayload(payload, "iac.engineVersion"),
 		WorkDir:       workDir,
 		RootDir:       dir,
 		ChdirArg:      iacChdirArg(dir, workDir),
 		Env:           env,
+		Args:          args,
 	}, nil
 }
 
-func iacEngine(payload map[string]interface{}) string {
-	engine := StringFromPayload(payload, "iac.engine")
-	if engine == "" {
-		engine = StringFromPayload(payload, "iac_config.engine")
+func iacVarFlags(values map[string]interface{}) []string {
+	pairs := keyValueArgs(values)
+	if len(pairs) == 0 {
+		return nil
 	}
-	if engine == "" {
-		return "terraform"
-	}
-	return engine
-}
 
-func iacEngineVersion(payload map[string]interface{}) string {
-	version := StringFromPayload(payload, "iac.engineVersion")
-	if version == "" {
-		version = StringFromPayload(payload, "iac_config.engineVersion")
+	flags := make([]string, 0, len(pairs)*2)
+	for _, pair := range pairs {
+		flags = append(flags, "-var", pair)
 	}
-	if version == "" {
-		version = StringFromPayload(payload, "iac_config.engine_version")
-	}
-	return version
-}
-
-func iacLogLevel(payload map[string]interface{}) string {
-	level := StringFromPayload(payload, "iac.logLevel")
-	if level == "" {
-		level = StringFromPayload(payload, "iac_config.logLevel")
-	}
-	if level == "" {
-		level = StringFromPayload(payload, "iac_config.log_level")
-	}
-	return level
+	return flags
 }
 
 func iacWorkDir(root string, payload map[string]interface{}) (string, error) {
@@ -171,7 +141,7 @@ func iacChdirArg(root, workDir string) []string {
 	return []string{"-chdir=" + filepath.ToSlash(rel)}
 }
 
-func iacSteps(execCmd *IaCExec) [][]string {
+func iacSteps() [][]string {
 	return [][]string{
 		{"init", "-input=false"},
 		{"plan", "-input=false"},
@@ -180,8 +150,9 @@ func iacSteps(execCmd *IaCExec) [][]string {
 }
 
 func runIaCLocal(ctx context.Context, deps *runner.Deps, task *runner.Task, execCmd *IaCExec, binary string) error {
-	for _, step := range iacSteps(execCmd) {
+	for _, step := range iacSteps() {
 		args := append(append([]string{}, execCmd.ChdirArg...), step...)
+		args = append(args, execCmd.Args...)
 		if err := runIaCStepLocal(ctx, deps, task.ID, execCmd.RootDir, binary, args, execCmd.Env); err != nil {
 			return err
 		}
@@ -202,8 +173,9 @@ func runIaCDocker(
 		return err
 	}
 
-	for _, step := range iacSteps(execCmd) {
+	for _, step := range iacSteps() {
 		args := append(append([]string{binary}, execCmd.ChdirArg...), step...)
+		args = append(args, execCmd.Args...)
 		if err := runIaCStepDocker(ctx, deps, task.ID, execCmd.RootDir, image, args, execCmd.Env); err != nil {
 			return err
 		}
