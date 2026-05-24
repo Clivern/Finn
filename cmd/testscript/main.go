@@ -36,8 +36,8 @@ func main() {
 		},
 		"repository": map[string]interface{}{
 			"name":       "finn",
-			"git_url":    "git@github.com:Clivern/f6.git",
-			"git_branch": "main",
+			"git_url":    "git@github.com:Clivern/finn.git",
+			"git_branch": "dev",
 			//"git_tag":    "v1.0.0",
 			"ssh_key": map[string]interface{}{
 				"name":            "my-deploy-key",
@@ -56,9 +56,9 @@ func main() {
 			},*/
 		},
 		"script": map[string]interface{}{
-			"engine":        "bash",
-			"engineVersion": "",
-			"scriptPath":    "bash/clivern.sh",
+			"engine":        "python",
+			"engineVersion": "3.12",
+			"scriptPath":    "etc/scripts/python/clivern.py",
 		},
 		"extraArgs": map[string]interface{}{
 			"key":  "value",
