@@ -1,19 +1,17 @@
 #!/usr/bin/env node
 
-const { spawnSync } = require("node:child_process");
+const { setTimeout: sleep } = require("node:timers/promises");
 
 const HOST = "clivern.com";
 const DURATION_SECONDS = 60;
 
-const result = spawnSync("ping", ["-c", String(DURATION_SECONDS), HOST], {
-  stdio: "inherit",
-});
-
-if (result.error) {
-  throw result.error;
-}
-
-process.exitCode = result.status ?? 1;
-if (process.exitCode === 0) {
+(async () => {
+  for (let i = 1; i <= DURATION_SECONDS; i++) {
+    console.log(`tick ${i}/${DURATION_SECONDS} host=${HOST}`);
+    await sleep(1000);
+  }
   console.log("Done.");
-}
+})().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

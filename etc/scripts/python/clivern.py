@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
-import subprocess
-
+import time
 
 HOST = "clivern.com"
 DURATION_SECONDS = 60
 
-subprocess.run(["ping", "-c", str(DURATION_SECONDS), HOST], check=True)
+for i in range(1, DURATION_SECONDS + 1):
+    print(f"tick {i}/{DURATION_SECONDS} host={HOST}", flush=True)
+    time.sleep(1)
+
 print("Done.")
