@@ -167,9 +167,6 @@ func envListToMap(env []string) map[string]string {
 }
 
 func scriptDockerImage(engine, version string) (string, error) {
-	engine = strings.TrimSpace(engine)
-	version = strings.TrimSpace(version)
-
 	versions, ok := scriptImages[engine]
 	if !ok {
 		return "", fmt.Errorf("script: unsupported engine %q", engine)
