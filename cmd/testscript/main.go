@@ -56,9 +56,9 @@ func main() {
 			},*/
 		},
 		"script": map[string]interface{}{
-			"engine":        "python",
-			"engineVersion": "3.12",
-			"scriptPath":    "etc/scripts/python/clivern.py",
+			"engine":        "node",
+			"engineVersion": "20",
+			"scriptPath":    "etc/scripts/node/clivern.js",
 		},
 		"extraArgs": map[string]interface{}{
 			"key":  "value",
