@@ -190,6 +190,12 @@ func remaining(ctx context.Context, fallback time.Duration) time.Duration {
 }
 
 func IsDockerAvailable() bool {
-	_, err := exec.LookPath("docker")
-	return err == nil
+	if _, err := exec.LookPath("docker"); err != nil {
+		return false
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	return exec.CommandContext(ctx, "docker", "info").Run() == nil
 }
