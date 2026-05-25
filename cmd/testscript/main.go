@@ -25,14 +25,14 @@ func main() {
 	sshPrivateKey, _ := os.ReadFile("/Users/ahmedfathy/.ssh/pid_ed25519")
 
 	payload := map[string]interface{}{
-		"name":             "testscript",
-		"description":      "testscript",
-		"engine":           "script",
-		"workingDirectory": "etc/scripts/python",
-		"branchOverride":   "main",
-		"timeout":          300,
-		"tagOverride":      "",
-		"runnerTags": map[string]string{
+		"name":            "testscript",
+		"description":     "testscript",
+		"engine":          "script",
+		"working_dir":     "etc/scripts/python",
+		"branch_override": "main",
+		"timeout":         300,
+		"tag_override":    "",
+		"runner_tags": map[string]string{
 			"key": "value",
 		},
 		"repository": map[string]interface{}{
@@ -61,25 +61,25 @@ func main() {
 			"version": "3.12",
 			"path":    "clivern.py",
 		},
-		"extraArgs": map[string]interface{}{
+		"extra_args": map[string]interface{}{
 			"key":  "value",
 			"key2": "value2",
 		},
-		"groupVars": map[string]interface{}{
+		"group_vars": map[string]interface{}{
 			"name": "variable-group-name",
-			"extraVariables": map[string]interface{}{
+			"extra_variables": map[string]interface{}{
 				"evkey":  "value",
 				"evkey2": "value2",
 			},
-			"environmentVariables": map[string]interface{}{
+			"environment_variables": map[string]interface{}{
 				"ekey":  "value",
 				"ekey2": "value2",
 			},
-			"secretExtraVariables": map[string]interface{}{
+			"secret_extra_variables": map[string]interface{}{
 				"skey":  "value",
 				"skey2": "value2",
 			},
-			"secretEnvironmentVariables": map[string]interface{}{
+			"secret_environment_variables": map[string]interface{}{
 				"sekey":  "value",
 				"sekey2": "value2",
 			},

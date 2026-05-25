@@ -181,25 +181,25 @@ func envListToMap(env []string) map[string]string {
 
 func BuildScriptExec(dir string, payload map[string]interface{}) (*ScriptExec, error) {
 	env := append(
-		keyValueArgs(MapFromPayload(payload, "groupVars.environmentVariables")),
-		keyValueArgs(MapFromPayload(payload, "groupVars.secretEnvironmentVariables"))...,
+		keyValueArgs(MapFromPayload(payload, "group_vars.environment_variables")),
+		keyValueArgs(MapFromPayload(payload, "group_vars.secret_environment_variables"))...,
 	)
 	args := append(
 		append(
-			keyValueArgs(MapFromPayload(payload, "extraArgs")),
-			keyValueArgs(MapFromPayload(payload, "groupVars.extraVariables"))...,
+			keyValueArgs(MapFromPayload(payload, "extra_args")),
+			keyValueArgs(MapFromPayload(payload, "group_vars.extra_variables"))...,
 		),
-		keyValueArgs(MapFromPayload(payload, "groupVars.secretExtraVariables"))...,
+		keyValueArgs(MapFromPayload(payload, "group_vars.secret_extra_variables"))...,
 	)
 
 	return &ScriptExec{
 		Bin:     StringFromPayload(payload, "script.bin"),
 		Version: StringFromPayload(payload, "script.version"),
 		WorkDir: filepath.Join(
-			dir, filepath.FromSlash(StringFromPayload(payload, "workingDirectory")),
+			dir, filepath.FromSlash(StringFromPayload(payload, "working_dir")),
 		),
 		WorkRelPath: strings.TrimPrefix(
-			filepath.ToSlash(StringFromPayload(payload, "workingDirectory")),
+			filepath.ToSlash(StringFromPayload(payload, "working_dir")),
 			"/",
 		),
 		ScriptRelPath: StringFromPayload(payload, "script.path"),

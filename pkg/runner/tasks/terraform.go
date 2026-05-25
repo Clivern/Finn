@@ -40,16 +40,11 @@ type TerraformExec struct {
 
 // RunTerraform runs Terraform for a cloned workspace.
 func RunTerraform(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
-	execCmd, err := BuildTerraformExec(dir, task.Payload)
-	if err != nil {
-		return err
-	}
-
 	if IsDockerAvailable() {
-		return runTerraformDocker(ctx, deps, task, execCmd)
+		return RunTerraformDocker(ctx, deps, task, dir)
 	}
 
-	return runTerraformLocal(ctx, deps, task, execCmd)
+	return RunTerraformLocal(ctx, deps, task, dir)
 }
 
 func terraformDockerImage(version string) (string, error) {
@@ -61,7 +56,6 @@ func terraformDockerImage(version string) (string, error) {
 	return image, nil
 }
 
-// BuildTerraformExec builds a Terraform command from the task payload.
 func BuildTerraformExec(dir string, payload map[string]interface{}) (*TerraformExec, error) {
 	workDir, err := terraformWorkDir(dir, payload)
 	if err != nil {
@@ -69,18 +63,18 @@ func BuildTerraformExec(dir string, payload map[string]interface{}) (*TerraformE
 	}
 
 	env := append(
-		keyValueArgs(MapFromPayload(payload, "groupVars.environmentVariables")),
-		keyValueArgs(MapFromPayload(payload, "groupVars.secretEnvironmentVariables"))...,
+		keyValueArgs(MapFromPayload(payload, "group_vars.environment_variables")),
+		keyValueArgs(MapFromPayload(payload, "group_vars.secret_environment_variables"))...,
 	)
 	if logLevel := StringFromPayload(payload, "iac.logLevel"); logLevel != "" {
 		env = append(env, "TF_LOG="+strings.ToUpper(logLevel))
 	}
 	args := append(
 		append(
-			terraformVarFlags(MapFromPayload(payload, "extraArgs")),
-			terraformVarFlags(MapFromPayload(payload, "groupVars.extraVariables"))...,
+			terraformVarFlags(MapFromPayload(payload, "extra_args")),
+			terraformVarFlags(MapFromPayload(payload, "group_vars.extra_variables"))...,
 		),
-		terraformVarFlags(MapFromPayload(payload, "groupVars.secretExtraVariables"))...,
+		terraformVarFlags(MapFromPayload(payload, "group_vars.secret_extra_variables"))...,
 	)
 
 	return &TerraformExec{
@@ -107,10 +101,7 @@ func terraformVarFlags(values map[string]interface{}) []string {
 }
 
 func terraformWorkDir(root string, payload map[string]interface{}) (string, error) {
-	rel := StringFromPayload(payload, "workingDirectory")
-	if rel == "" {
-		rel = StringFromPayload(payload, "working_dir")
-	}
+	rel := StringFromPayload(payload, "working_dir")
 	rel = strings.TrimSpace(rel)
 	if rel == "" || rel == "/" {
 		return root, nil
@@ -152,7 +143,12 @@ func terraformSteps() [][]string {
 	}
 }
 
-func runTerraformLocal(ctx context.Context, deps *runner.Deps, task *runner.Task, execCmd *TerraformExec) error {
+func RunTerraformLocal(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
+	execCmd, err := BuildTerraformExec(dir, task.Payload)
+	if err != nil {
+		return err
+	}
+
 	for _, step := range terraformSteps() {
 		args := append(append([]string{}, execCmd.ChdirArg...), step...)
 		args = append(args, execCmd.Args...)
@@ -163,7 +159,12 @@ func runTerraformLocal(ctx context.Context, deps *runner.Deps, task *runner.Task
 	return nil
 }
 
-func runTerraformDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, execCmd *TerraformExec) error {
+func RunTerraformDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
+	execCmd, err := BuildTerraformExec(dir, task.Payload)
+	if err != nil {
+		return err
+	}
+
 	image, err := terraformDockerImage(execCmd.Version)
 	if err != nil {
 		return err

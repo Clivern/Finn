@@ -27,11 +27,14 @@ func WorkspaceTemplate(ctx context.Context, deps *runner.Deps, task *runner.Task
 
 	branch := StringFromPayload(p, "repository.git_branch")
 	tag := StringFromPayload(p, "repository.git_tag")
-	branchOverride := StringFromPayload(p, "branchOverride")
+	branchOverride := StringFromPayload(p, "branch_override")
+	tagOverride := StringFromPayload(p, "tag_override")
 
 	if branchOverride != "" {
 		branch = branchOverride
-		tag = ""
+	}
+	if tagOverride != "" {
+		tag = tagOverride
 	}
 
 	commit, err := workspace.Clone(ctx, &workspace.CloneOptions{
@@ -67,13 +70,13 @@ func WorkspaceTemplate(ctx context.Context, deps *runner.Deps, task *runner.Task
 	case "script":
 		return RunScript(ctx, deps, task, dir)
 	case "iac":
-		switch StringFromPayload(p, "iac.engine") {
-		case "terraform", "":
+		switch StringFromPayload(p, "iac.bin") {
+		case "terraform":
 			return RunTerraform(ctx, deps, task, dir)
 		case "opentofu":
 			return RunOpenTofu(ctx, deps, task, dir)
 		default:
-			return fmt.Errorf("iac: unsupported engine %q", StringFromPayload(p, "iac.engine"))
+			return fmt.Errorf("iac: unsupported bin %q", StringFromPayload(p, "iac.bin"))
 		}
 	case "ansible":
 		return RunAnsible(ctx, deps, task, dir)
