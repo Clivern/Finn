@@ -54,8 +54,8 @@ var (
 )
 
 type ScriptExec struct {
-	Engine        string
-	EngineVersion string
+	Bin           string
+	Version       string
 	WorkDir       string
 	WorkRelPath   string
 	ScriptRelPath string
@@ -78,7 +78,7 @@ func RunScriptLocal(ctx context.Context, deps *runner.Deps, task *runner.Task, d
 	}
 
 	cmd := exec.CommandContext(
-		ctx, command.Engine, append(
+		ctx, command.Bin, append(
 			[]string{command.ScriptRelPath}, command.Args...,
 		)...,
 	)
@@ -116,21 +116,21 @@ func RunScriptDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, 
 		return err
 	}
 
-	versions, ok := scriptImages[command.Engine]
+	versions, ok := scriptImages[command.Bin]
 	if !ok {
-		return fmt.Errorf("script: unsupported engine %q", command.Engine)
+		return fmt.Errorf("script: unsupported engine %q", command.Bin)
 	}
 
-	image, ok := versions[command.EngineVersion]
+	image, ok := versions[command.Version]
 	if !ok {
-		return fmt.Errorf("script: unsupported %s version %q", command.Engine, command.EngineVersion)
+		return fmt.Errorf("script: unsupported %s version %q", command.Bin, command.Version)
 	}
 
 	return workspace.Exec(ctx, &workspace.ExecOptions{
 		Dir:     dir,
 		RelPath: command.WorkRelPath,
 		Image:   image,
-		Command: append([]string{command.Engine, command.ScriptRelPath}, command.Args...),
+		Command: append([]string{command.Bin, command.ScriptRelPath}, command.Args...),
 		Env:     envListToMap(command.Env),
 		Timeout: time.Duration(IntFromPayload(task.Payload, "timeout")) * time.Second,
 		OnOutput: func(stream, line string) {
@@ -193,8 +193,8 @@ func BuildScriptExec(dir string, payload map[string]interface{}) (*ScriptExec, e
 	)
 
 	return &ScriptExec{
-		Engine:        StringFromPayload(payload, "script.engine"),
-		EngineVersion: StringFromPayload(payload, "script.engineVersion"),
+		Bin:     StringFromPayload(payload, "script.bin"),
+		Version: StringFromPayload(payload, "script.version"),
 		WorkDir: filepath.Join(
 			dir, filepath.FromSlash(StringFromPayload(payload, "workingDirectory")),
 		),
@@ -202,7 +202,7 @@ func BuildScriptExec(dir string, payload map[string]interface{}) (*ScriptExec, e
 			filepath.ToSlash(StringFromPayload(payload, "workingDirectory")),
 			"/",
 		),
-		ScriptRelPath: StringFromPayload(payload, "script.scriptPath"),
+		ScriptRelPath: StringFromPayload(payload, "script.path"),
 		Env:           env,
 		Args:          args,
 	}, nil
