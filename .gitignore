@@ -29,3 +29,4 @@ coverage.html
 # Binary
 finn
 mgmt_config.test.yml
+__pycache__
