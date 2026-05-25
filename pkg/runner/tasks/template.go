@@ -15,8 +15,6 @@ import (
 	"github.com/clivern/finn/pkg/runner/workspace"
 )
 
-const defaultTemplateTimeout = time.Hour
-
 // WorkspaceTemplate clones the repository then runs script, IaC, or Ansible per payload.
 func WorkspaceTemplate(ctx context.Context, deps *runner.Deps, task *runner.Task) error {
 	p := task.Payload

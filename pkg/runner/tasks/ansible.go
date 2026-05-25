@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/clivern/finn/pkg/runner"
 	"github.com/clivern/finn/pkg/runner/workspace"
@@ -94,7 +95,7 @@ func RunAnsibleDocker(ctx context.Context, deps *runner.Deps, task *runner.Task,
 		Image:   image,
 		Command: command,
 		Env:     envListToMap(execCmd.Env),
-		Timeout: remaining(ctx, defaultTemplateTimeout),
+		Timeout: time.Duration(IntFromPayload(task.Payload, "timeout")) * time.Second,
 		OnOutput: func(stream, line string) {
 			_ = deps.Worker.AppendTaskLog(task.ID, map[string]string{
 				"stream": stream,

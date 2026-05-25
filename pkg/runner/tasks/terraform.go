@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/clivern/finn/pkg/runner"
 	"github.com/clivern/finn/pkg/runner/workspace"
@@ -176,7 +177,7 @@ func runIaCDocker(
 	for _, step := range iacSteps() {
 		args := append(append([]string{binary}, execCmd.ChdirArg...), step...)
 		args = append(args, execCmd.Args...)
-		if err := runIaCStepDocker(ctx, deps, task.ID, execCmd.RootDir, image, args, execCmd.Env); err != nil {
+		if err := runIaCStepDocker(ctx, deps, task, execCmd.RootDir, image, args, execCmd.Env); err != nil {
 			return err
 		}
 	}
@@ -213,15 +214,15 @@ func runIaCStepLocal(ctx context.Context, deps *runner.Deps, taskID, dir, binary
 	return nil
 }
 
-func runIaCStepDocker(ctx context.Context, deps *runner.Deps, taskID, dir, image string, command, env []string) error {
+func runIaCStepDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, dir, image string, command, env []string) error {
 	return workspace.Exec(ctx, &workspace.ExecOptions{
 		Dir:     dir,
 		Image:   image,
 		Command: command,
 		Env:     envListToMap(env),
-		Timeout: remaining(ctx, defaultTemplateTimeout),
+		Timeout: time.Duration(IntFromPayload(task.Payload, "timeout")) * time.Second,
 		OnOutput: func(stream, line string) {
-			_ = deps.Worker.AppendTaskLog(taskID, map[string]string{
+			_ = deps.Worker.AppendTaskLog(task.ID, map[string]string{
 				"stream": stream,
 				"line":   line,
 				"msg":    "template",

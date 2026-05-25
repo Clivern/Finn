@@ -177,18 +177,6 @@ func EnvFromPayload(p map[string]interface{}) map[string]string {
 	return out
 }
 
-func remaining(ctx context.Context, fallback time.Duration) time.Duration {
-	d, ok := ctx.Deadline()
-	if !ok {
-		return fallback
-	}
-	left := time.Until(d)
-	if left <= 0 {
-		return time.Second
-	}
-	return left
-}
-
 func IsDockerAvailable() bool {
 	if _, err := exec.LookPath("docker"); err != nil {
 		return false
