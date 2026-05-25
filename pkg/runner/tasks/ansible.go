@@ -5,8 +5,10 @@
 package tasks
 
 import (
+	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -70,8 +72,8 @@ func RunAnsibleLocal(ctx context.Context, deps *runner.Deps, task *runner.Task, 
 	}
 
 	done := make(chan struct{})
-	go appendIaCOutput(stdoutPipe, "stdout", deps, task.ID, done)
-	go appendIaCOutput(stderrPipe, "stderr", deps, task.ID, done)
+	go appendAnsibleOutput(stdoutPipe, "stdout", deps, task.ID, done)
+	go appendAnsibleOutput(stderrPipe, "stderr", deps, task.ID, done)
 	<-done
 	<-done
 
@@ -246,6 +248,23 @@ func ansibleExtraVarArgs(values map[string]interface{}) []string {
 		args = append(args, "--extra-vars", pair)
 	}
 	return args
+}
+
+func appendAnsibleOutput(r io.Reader, stream string, deps *runner.Deps, taskID string, done chan<- struct{}) {
+	defer func() { done <- struct{}{} }()
+
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" {
+			continue
+		}
+		_ = deps.Worker.AppendTaskLog(taskID, map[string]string{
+			"stream": stream,
+			"line":   line,
+			"msg":    "template",
+		})
+	}
 }
 
 func writeWorkspaceFile(dir, relPath, contents string) error {

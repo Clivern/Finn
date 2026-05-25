@@ -28,40 +28,42 @@ var (
 	}
 )
 
-// IaCExec is the parsed IaC command for a cloned workspace.
-type IaCExec struct {
-	EngineVersion string
-	WorkDir       string
-	RootDir       string
-	ChdirArg      []string
-	Env           []string
-	Args          []string
+// TerraformExec is the parsed Terraform command for a cloned workspace.
+type TerraformExec struct {
+	Version  string
+	WorkDir  string
+	RootDir  string
+	ChdirArg []string
+	Env      []string
+	Args     []string
 }
 
+// RunTerraform runs Terraform for a cloned workspace.
 func RunTerraform(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
-	execCmd, err := BuildIaCExec(dir, task.Payload)
+	execCmd, err := BuildTerraformExec(dir, task.Payload)
 	if err != nil {
 		return err
 	}
 
 	if IsDockerAvailable() {
-		return runIaCDocker(ctx, deps, task, execCmd, "terraform", terraformDockerImage)
+		return runTerraformDocker(ctx, deps, task, execCmd)
 	}
 
-	return runIaCLocal(ctx, deps, task, execCmd, "terraform")
+	return runTerraformLocal(ctx, deps, task, execCmd)
 }
 
 func terraformDockerImage(version string) (string, error) {
 	version = strings.TrimSpace(version)
 	image, ok := terraformImages[version]
 	if !ok {
-		return "", fmt.Errorf("iac: unsupported terraform version %q", version)
+		return "", fmt.Errorf("terraform: unsupported version %q", version)
 	}
 	return image, nil
 }
 
-func BuildIaCExec(dir string, payload map[string]interface{}) (*IaCExec, error) {
-	workDir, err := iacWorkDir(dir, payload)
+// BuildTerraformExec builds a Terraform command from the task payload.
+func BuildTerraformExec(dir string, payload map[string]interface{}) (*TerraformExec, error) {
+	workDir, err := terraformWorkDir(dir, payload)
 	if err != nil {
 		return nil, err
 	}
@@ -75,23 +77,23 @@ func BuildIaCExec(dir string, payload map[string]interface{}) (*IaCExec, error) 
 	}
 	args := append(
 		append(
-			iacVarFlags(MapFromPayload(payload, "extraArgs")),
-			iacVarFlags(MapFromPayload(payload, "groupVars.extraVariables"))...,
+			terraformVarFlags(MapFromPayload(payload, "extraArgs")),
+			terraformVarFlags(MapFromPayload(payload, "groupVars.extraVariables"))...,
 		),
-		iacVarFlags(MapFromPayload(payload, "groupVars.secretExtraVariables"))...,
+		terraformVarFlags(MapFromPayload(payload, "groupVars.secretExtraVariables"))...,
 	)
 
-	return &IaCExec{
-		EngineVersion: StringFromPayload(payload, "iac.engineVersion"),
-		WorkDir:       workDir,
-		RootDir:       dir,
-		ChdirArg:      iacChdirArg(dir, workDir),
-		Env:           env,
-		Args:          args,
+	return &TerraformExec{
+		Version:  StringFromPayload(payload, "iac.engineVersion"),
+		WorkDir:  workDir,
+		RootDir:  dir,
+		ChdirArg: terraformChdirArg(dir, workDir),
+		Env:      env,
+		Args:     args,
 	}, nil
 }
 
-func iacVarFlags(values map[string]interface{}) []string {
+func terraformVarFlags(values map[string]interface{}) []string {
 	pairs := keyValueArgs(values)
 	if len(pairs) == 0 {
 		return nil
@@ -104,7 +106,7 @@ func iacVarFlags(values map[string]interface{}) []string {
 	return flags
 }
 
-func iacWorkDir(root string, payload map[string]interface{}) (string, error) {
+func terraformWorkDir(root string, payload map[string]interface{}) (string, error) {
 	rel := StringFromPayload(payload, "workingDirectory")
 	if rel == "" {
 		rel = StringFromPayload(payload, "working_dir")
@@ -118,19 +120,19 @@ func iacWorkDir(root string, payload map[string]interface{}) (string, error) {
 	workDir := filepath.Join(root, filepath.FromSlash(rel))
 	absWorkDir, err := filepath.Abs(workDir)
 	if err != nil {
-		return "", fmt.Errorf("iac: resolve working directory: %w", err)
+		return "", fmt.Errorf("terraform: resolve working directory: %w", err)
 	}
 	absRoot, err := filepath.Abs(root)
 	if err != nil {
-		return "", fmt.Errorf("iac: resolve workspace directory: %w", err)
+		return "", fmt.Errorf("terraform: resolve workspace directory: %w", err)
 	}
 	if absWorkDir != absRoot && !strings.HasPrefix(absWorkDir, absRoot+string(filepath.Separator)) {
-		return "", fmt.Errorf("iac: working directory escapes workspace")
+		return "", fmt.Errorf("terraform: working directory escapes workspace")
 	}
 	return absWorkDir, nil
 }
 
-func iacChdirArg(root, workDir string) []string {
+func terraformChdirArg(root, workDir string) []string {
 	if workDir == root {
 		return nil
 	}
@@ -142,7 +144,7 @@ func iacChdirArg(root, workDir string) []string {
 	return []string{"-chdir=" + filepath.ToSlash(rel)}
 }
 
-func iacSteps() [][]string {
+func terraformSteps() [][]string {
 	return [][]string{
 		{"init", "-input=false"},
 		{"plan", "-input=false"},
@@ -150,71 +152,64 @@ func iacSteps() [][]string {
 	}
 }
 
-func runIaCLocal(ctx context.Context, deps *runner.Deps, task *runner.Task, execCmd *IaCExec, binary string) error {
-	for _, step := range iacSteps() {
+func runTerraformLocal(ctx context.Context, deps *runner.Deps, task *runner.Task, execCmd *TerraformExec) error {
+	for _, step := range terraformSteps() {
 		args := append(append([]string{}, execCmd.ChdirArg...), step...)
 		args = append(args, execCmd.Args...)
-		if err := runIaCStepLocal(ctx, deps, task.ID, execCmd.RootDir, binary, args, execCmd.Env); err != nil {
+		if err := runTerraformStepLocal(ctx, deps, task.ID, execCmd.RootDir, args, execCmd.Env); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func runIaCDocker(
-	ctx context.Context,
-	deps *runner.Deps,
-	task *runner.Task,
-	execCmd *IaCExec,
-	binary string,
-	imageFn func(string) (string, error),
-) error {
-	image, err := imageFn(execCmd.EngineVersion)
+func runTerraformDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, execCmd *TerraformExec) error {
+	image, err := terraformDockerImage(execCmd.Version)
 	if err != nil {
 		return err
 	}
 
-	for _, step := range iacSteps() {
-		args := append(append([]string{binary}, execCmd.ChdirArg...), step...)
+	for _, step := range terraformSteps() {
+		args := append(append([]string{"terraform"}, execCmd.ChdirArg...), step...)
 		args = append(args, execCmd.Args...)
-		if err := runIaCStepDocker(ctx, deps, task, execCmd.RootDir, image, args, execCmd.Env); err != nil {
+		if err := runTerraformStepDocker(ctx, deps, task, execCmd.RootDir, image, args, execCmd.Env); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func runIaCStepLocal(ctx context.Context, deps *runner.Deps, taskID, dir, binary string, args, env []string) error {
-	cmd := exec.CommandContext(ctx, binary, args...)
+func runTerraformStepLocal(ctx context.Context, deps *runner.Deps, taskID, dir string, args, env []string) error {
+	cmd := exec.CommandContext(ctx, "terraform", args...)
 	cmd.Dir = dir
 	cmd.Env = append(os.Environ(), env...)
 
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
-		return fmt.Errorf("iac: stdout pipe: %w", err)
+		return fmt.Errorf("terraform: stdout pipe: %w", err)
 	}
 	stderrPipe, err := cmd.StderrPipe()
 	if err != nil {
-		return fmt.Errorf("iac: stderr pipe: %w", err)
+		return fmt.Errorf("terraform: stderr pipe: %w", err)
 	}
 
 	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("iac: start local: %w", err)
+		return fmt.Errorf("terraform: start local: %w", err)
 	}
 
 	done := make(chan struct{})
-	go appendIaCOutput(stdoutPipe, "stdout", deps, taskID, done)
-	go appendIaCOutput(stderrPipe, "stderr", deps, taskID, done)
+	go appendTerraformOutput(stdoutPipe, "stdout", deps, taskID, done)
+	go appendTerraformOutput(stderrPipe, "stderr", deps, taskID, done)
 	<-done
 	<-done
 
 	if err := cmd.Wait(); err != nil {
-		return fmt.Errorf("iac: local %s: %w", strings.Join(args, " "), err)
+		return fmt.Errorf("terraform: local %s: %w", strings.Join(args, " "), err)
 	}
 	return nil
 }
 
-func runIaCStepDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, dir, image string, command, env []string) error {
+func runTerraformStepDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, dir, image string, command, env []string) error {
 	return workspace.Exec(ctx, &workspace.ExecOptions{
 		Dir:     dir,
 		Image:   image,
@@ -231,7 +226,7 @@ func runIaCStepDocker(ctx context.Context, deps *runner.Deps, task *runner.Task,
 	})
 }
 
-func appendIaCOutput(r io.Reader, stream string, deps *runner.Deps, taskID string, done chan<- struct{}) {
+func appendTerraformOutput(r io.Reader, stream string, deps *runner.Deps, taskID string, done chan<- struct{}) {
 	defer func() { done <- struct{}{} }()
 
 	scanner := bufio.NewScanner(r)

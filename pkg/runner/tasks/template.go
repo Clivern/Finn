@@ -15,7 +15,7 @@ import (
 	"github.com/clivern/finn/pkg/runner/workspace"
 )
 
-// WorkspaceTemplate clones the repository then runs script, IaC, or Ansible per payload.
+// WorkspaceTemplate clones the repository then runs the selected engine.
 func WorkspaceTemplate(ctx context.Context, deps *runner.Deps, task *runner.Task) error {
 	p := task.Payload
 
@@ -67,7 +67,14 @@ func WorkspaceTemplate(ctx context.Context, deps *runner.Deps, task *runner.Task
 	case "script":
 		return RunScript(ctx, deps, task, dir)
 	case "iac":
-		return RunIaC(ctx, deps, task, dir)
+		switch StringFromPayload(p, "iac.engine") {
+		case "terraform", "":
+			return RunTerraform(ctx, deps, task, dir)
+		case "opentofu":
+			return RunOpenTofu(ctx, deps, task, dir)
+		default:
+			return fmt.Errorf("iac: unsupported engine %q", StringFromPayload(p, "iac.engine"))
+		}
 	case "ansible":
 		return RunAnsible(ctx, deps, task, dir)
 	default:
