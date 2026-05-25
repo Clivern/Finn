@@ -11,7 +11,15 @@ terraform {
 
 provider "local" {}
 
+variable "example" {
+  type = string
+}
+
+variable "evkey" {
+  type = string
+}
+
 resource "local_file" "hello" {
   filename = "${path.module}/terraform-output.txt"
-  content  = "Hello from Terraform!\n"
+  content  = "Hello from Terraform! example=${var.example}, evkey=${var.evkey}\n"
 }

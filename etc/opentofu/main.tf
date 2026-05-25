@@ -11,7 +11,15 @@ terraform {
 
 provider "local" {}
 
+variable "example" {
+  type = string
+}
+
+variable "evkey" {
+  type = string
+}
+
 resource "local_file" "hello" {
   filename = "${path.module}/opentofu-output.txt"
-  content  = "Hello from OpenTofu!\n"
+  content  = "Hello from OpenTofu! example=${var.example}, evkey=${var.evkey}\n"
 }
