@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/clivern/finn/pkg/runner"
 	"github.com/clivern/finn/pkg/runner/workspace"
@@ -130,7 +131,7 @@ func RunScriptDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, 
 		Image:   image,
 		Command: append([]string{command.Engine, command.ScriptRelPath}, command.Args...),
 		Env:     envListToMap(command.Env),
-		Timeout: remaining(ctx, defaultTemplateTimeout),
+		Timeout: time.Duration(IntFromPayload(task.Payload, "timeout")) * time.Second,
 		OnOutput: func(stream, line string) {
 			_ = deps.Worker.AppendTaskLog(task.ID, map[string]string{
 				"stream": stream,

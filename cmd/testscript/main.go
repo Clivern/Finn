@@ -30,6 +30,7 @@ func main() {
 		"engine":           "script",
 		"workingDirectory": "etc/scripts/python",
 		"branchOverride":   "main",
+		"timeout":          300,
 		"tagOverride":      "",
 		"runnerTags": map[string]string{
 			"key": "value",

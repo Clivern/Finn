@@ -27,12 +27,21 @@ func WorkspaceTemplate(ctx context.Context, deps *runner.Deps, task *runner.Task
 	}
 	defer os.RemoveAll(dir)
 
+	branch := StringFromPayload(p, "repository.git_branch")
+	tag := StringFromPayload(p, "repository.git_tag")
+	branchOverride := StringFromPayload(p, "branchOverride")
+
+	if branchOverride != "" {
+		branch = branchOverride
+		tag = ""
+	}
+
 	commit, err := workspace.Clone(ctx, &workspace.CloneOptions{
 		URL:           StringFromPayload(p, "repository.git_url"),
-		Branch:        StringFromPayload(p, "repository.git_branch"),
-		Tag:           StringFromPayload(p, "repository.git_tag"),
+		Branch:        branch,
+		Tag:           tag,
 		Dir:           dir,
-		Timeout:       remaining(ctx, defaultTemplateTimeout),
+		Timeout:       time.Duration(IntFromPayload(task.Payload, "timeout")) * time.Second,
 		Username:      StringFromPayload(p, "repository.git_credential.username"),
 		Password:      StringFromPayload(p, "repository.git_credential.password_or_token"),
 		SSHPrivateKey: StringFromPayload(p, "repository.ssh_key.private_key"),
