@@ -21,15 +21,19 @@ import (
 
 var (
 	opentofuImages = map[string]string{
-		"":     "ghcr.io/opentofu/opentofu:1.9",
 		"1.8":  "ghcr.io/opentofu/opentofu:1.8",
 		"1.9":  "ghcr.io/opentofu/opentofu:1.9",
 		"1.10": "ghcr.io/opentofu/opentofu:1.10",
 	}
+
+	opentofuSteps = [][]string{
+		{"init", "-input=false"},
+		{"plan", "-input=false"},
+		{"apply", "-input=false", "-auto-approve"},
+	}
 )
 
-// OpenTofuExec is the parsed OpenTofu command for a cloned workspace.
-type OpenTofuExec struct {
+type OpentofuExec struct {
 	Version     string
 	WorkDir     string
 	WorkRelPath string
@@ -38,58 +42,41 @@ type OpenTofuExec struct {
 	Args        []string
 }
 
-// RunOpenTofu runs OpenTofu for a cloned workspace.
-func RunOpenTofu(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
-	execCmd, err := BuildOpenTofuExec(dir, task.Payload)
-	if err != nil {
-		return err
-	}
-
+func RunOpentofu(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
 	if IsDockerAvailable() {
-		return runOpenTofuDocker(ctx, deps, task, execCmd)
+		return RunOpentofuDocker(ctx, deps, task, dir)
 	}
 
-	return runOpenTofuLocal(ctx, deps, task, execCmd)
+	return RunOpentofuLocal(ctx, deps, task, dir)
 }
 
-func opentofuDockerImage(version string) (string, error) {
-	version = strings.TrimSpace(version)
-	image, ok := opentofuImages[version]
-	if !ok {
-		return "", fmt.Errorf("opentofu: unsupported version %q", version)
-	}
-	return image, nil
-}
-
-// BuildOpenTofuExec builds an OpenTofu command from the task payload.
-func BuildOpenTofuExec(dir string, payload map[string]interface{}) (*OpenTofuExec, error) {
-	workDir, workRelPath, err := opentofuWorkDir(dir, payload)
-	if err != nil {
-		return nil, err
-	}
-
+func BuildOpentofuExec(dir string, payload map[string]interface{}) (*OpentofuExec, error) {
 	env := append(
-		keyValueArgs(MapFromPayload(payload, "groupVars.environmentVariables")),
-		keyValueArgs(MapFromPayload(payload, "groupVars.secretEnvironmentVariables"))...,
+		keyValueArgs(MapFromPayload(payload, "group_vars.environment_variables")),
+		keyValueArgs(MapFromPayload(payload, "group_vars.secret_environment_variables"))...,
 	)
-	if logLevel := StringFromPayload(payload, "iac.logLevel"); logLevel != "" {
-		env = append(env, "TF_LOG="+strings.ToUpper(logLevel))
-	}
+	env = append(env, fmt.Sprintf("TF_LOG=%s", strings.ToUpper(StringFromPayload(payload, "iac.log_level"))))
+
 	args := append(
 		append(
-			opentofuVarFlags(MapFromPayload(payload, "extraArgs")),
-			opentofuVarFlags(MapFromPayload(payload, "groupVars.extraVariables"))...,
+			opentofuVarFlags(MapFromPayload(payload, "extra_args")),
+			opentofuVarFlags(MapFromPayload(payload, "group_vars.extra_variables"))...,
 		),
-		opentofuVarFlags(MapFromPayload(payload, "groupVars.secretExtraVariables"))...,
+		opentofuVarFlags(MapFromPayload(payload, "group_vars.secret_extra_variables"))...,
 	)
 
-	return &OpenTofuExec{
-		Version:     StringFromPayload(payload, "iac.engineVersion"),
-		WorkDir:     workDir,
-		WorkRelPath: workRelPath,
-		RootDir:     dir,
-		Env:         env,
-		Args:        args,
+	return &OpentofuExec{
+		Version: StringFromPayload(payload, "iac.version"),
+		WorkDir: filepath.Join(
+			dir, filepath.FromSlash(StringFromPayload(payload, "working_dir")),
+		),
+		WorkRelPath: strings.TrimPrefix(
+			filepath.ToSlash(StringFromPayload(payload, "working_dir")),
+			"/",
+		),
+		RootDir: dir,
+		Env:     env,
+		Args:    args,
 	}, nil
 }
 
@@ -106,75 +93,36 @@ func opentofuVarFlags(values map[string]interface{}) []string {
 	return flags
 }
 
-func opentofuWorkDir(root string, payload map[string]interface{}) (string, string, error) {
-	rel := StringFromPayload(payload, "workingDirectory")
-	if rel == "" {
-		rel = StringFromPayload(payload, "working_dir")
-	}
-	rel = strings.TrimPrefix(filepath.ToSlash(strings.TrimSpace(rel)), "/")
-	if rel == "" || rel == "." {
-		return root, "", nil
-	}
-
-	workDir := filepath.Join(root, filepath.FromSlash(rel))
-	absRoot, err := filepath.Abs(root)
-	if err != nil {
-		return "", "", fmt.Errorf("opentofu: resolve workspace directory: %w", err)
-	}
-	absWorkDir, err := filepath.Abs(workDir)
-	if err != nil {
-		return "", "", fmt.Errorf("opentofu: resolve working directory: %w", err)
-	}
-	if absWorkDir != absRoot && !strings.HasPrefix(absWorkDir, absRoot+string(filepath.Separator)) {
-		return "", "", fmt.Errorf("opentofu: working directory escapes workspace")
-	}
-
-	workRelPath, err := filepath.Rel(absRoot, absWorkDir)
-	if err != nil || workRelPath == "." {
-		return absWorkDir, "", nil
-	}
-	return absWorkDir, filepath.ToSlash(workRelPath), nil
-}
-
-func opentofuSteps() [][]string {
-	return [][]string{
-		{"init", "-input=false"},
-		{"plan", "-input=false"},
-		{"apply", "-input=false", "-auto-approve"},
-	}
-}
-
-func runOpenTofuLocal(ctx context.Context, deps *runner.Deps, task *runner.Task, execCmd *OpenTofuExec) error {
-	for _, step := range opentofuSteps() {
-		args := append([]string{}, step...)
-		args = append(args, execCmd.Args...)
-		if err := runOpenTofuStepLocal(ctx, deps, task.ID, execCmd.WorkDir, args, execCmd.Env); err != nil {
+func RunOpentofuLocal(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
+	for _, step := range opentofuSteps {
+		if err := RunOpentofuLocalStep(ctx, deps, task, dir, step); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func runOpenTofuDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, execCmd *OpenTofuExec) error {
-	image, err := opentofuDockerImage(execCmd.Version)
+func RunOpentofuDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
+	for _, step := range opentofuSteps {
+		if err := RunOpentofuDockerStep(ctx, deps, task, dir, step); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func RunOpentofuLocalStep(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string, step []string) error {
+	command, err := BuildOpentofuExec(dir, task.Payload)
 	if err != nil {
 		return err
 	}
 
-	for _, step := range opentofuSteps() {
-		args := append([]string{"tofu"}, step...)
-		args = append(args, execCmd.Args...)
-		if err := runOpenTofuStepDocker(ctx, deps, task, execCmd.RootDir, execCmd.WorkRelPath, image, args, execCmd.Env); err != nil {
-			return err
-		}
-	}
-	return nil
-}
+	args := append([]string{}, step...)
+	args = append(args, command.Args...)
 
-func runOpenTofuStepLocal(ctx context.Context, deps *runner.Deps, taskID, dir string, args, env []string) error {
 	cmd := exec.CommandContext(ctx, "tofu", args...)
-	cmd.Dir = dir
-	cmd.Env = append(os.Environ(), env...)
+	cmd.Dir = command.WorkDir
+	cmd.Env = append(os.Environ(), command.Env...)
 
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
@@ -190,8 +138,8 @@ func runOpenTofuStepLocal(ctx context.Context, deps *runner.Deps, taskID, dir st
 	}
 
 	done := make(chan struct{})
-	go appendOpenTofuOutput(stdoutPipe, "stdout", deps, taskID, done)
-	go appendOpenTofuOutput(stderrPipe, "stderr", deps, taskID, done)
+	go appendOpentofuOutput(stdoutPipe, "stdout", deps, task.ID, done)
+	go appendOpentofuOutput(stderrPipe, "stderr", deps, task.ID, done)
 	<-done
 	<-done
 
@@ -201,13 +149,26 @@ func runOpenTofuStepLocal(ctx context.Context, deps *runner.Deps, taskID, dir st
 	return nil
 }
 
-func runOpenTofuStepDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, dir, relPath, image string, command, env []string) error {
+func RunOpentofuDockerStep(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string, step []string) error {
+	command, err := BuildOpentofuExec(dir, task.Payload)
+	if err != nil {
+		return err
+	}
+
+	image, ok := opentofuImages[command.Version]
+	if !ok {
+		return fmt.Errorf("opentofu: unsupported version %q", command.Version)
+	}
+
+	args := append([]string{"tofu"}, step...)
+	args = append(args, command.Args...)
+
 	return workspace.Exec(ctx, &workspace.ExecOptions{
-		Dir:     dir,
-		RelPath: relPath,
+		Dir:     command.RootDir,
+		RelPath: command.WorkRelPath,
 		Image:   image,
-		Command: command,
-		Env:     envListToMap(env),
+		Command: args,
+		Env:     envListToMap(command.Env),
 		Timeout: time.Duration(IntFromPayload(task.Payload, "timeout")) * time.Second,
 		OnOutput: func(stream, line string) {
 			_ = deps.Worker.AppendTaskLog(task.ID, map[string]string{
@@ -219,7 +180,7 @@ func runOpenTofuStepDocker(ctx context.Context, deps *runner.Deps, task *runner.
 	})
 }
 
-func appendOpenTofuOutput(r io.Reader, stream string, deps *runner.Deps, taskID string, done chan<- struct{}) {
+func appendOpentofuOutput(r io.Reader, stream string, deps *runner.Deps, taskID string, done chan<- struct{}) {
 	defer func() { done <- struct{}{} }()
 
 	scanner := bufio.NewScanner(r)
