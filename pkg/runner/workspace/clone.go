@@ -58,7 +58,7 @@ func Clone(ctx context.Context, opts *CloneOptions) (string, error) {
 		return "", fmt.Errorf("clone: create dir: %w", err)
 	}
 
-	cloneCtx, cancel := context.WithTimeout(ctx, opts.Timeout)
+	ctx, cancel := context.WithTimeout(ctx, opts.Timeout)
 	defer cancel()
 
 	auth, err := buildAuth(opts)
@@ -89,7 +89,7 @@ func Clone(ctx context.Context, opts *CloneOptions) (string, error) {
 		Str("dir", opts.Dir).
 		Msg("Starting git clone")
 
-	repo, err := git.PlainCloneContext(cloneCtx, opts.Dir, false, cloneOpts)
+	repo, err := git.PlainCloneContext(ctx, opts.Dir, false, cloneOpts)
 	if err != nil {
 		return "", fmt.Errorf("clone: %w", err)
 	}
