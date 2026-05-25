@@ -54,8 +54,9 @@ var (
 type ScriptExec struct {
 	Engine        string
 	EngineVersion string
+	WorkDir       string
+	WorkRelPath   string
 	ScriptRelPath string
-	ScriptPath    string
 	Env           []string
 	Args          []string
 }
@@ -74,8 +75,12 @@ func RunScriptLocal(ctx context.Context, deps *runner.Deps, task *runner.Task, d
 		return err
 	}
 
-	cmd := exec.CommandContext(ctx, command.Engine, append([]string{command.ScriptPath}, command.Args...)...)
-	cmd.Dir = dir
+	cmd := exec.CommandContext(
+		ctx, command.Engine, append(
+			[]string{command.ScriptRelPath}, command.Args...,
+		)...,
+	)
+	cmd.Dir = command.WorkDir
 	cmd.Env = append(os.Environ(), command.Env...)
 
 	stdoutPipe, err := cmd.StdoutPipe()
@@ -109,15 +114,21 @@ func RunScriptDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, 
 		return err
 	}
 
-	image, err := scriptDockerImage(command.Engine, command.EngineVersion)
-	if err != nil {
-		return err
+	versions, ok := scriptImages[command.Engine]
+	if !ok {
+		return fmt.Errorf("script: unsupported engine %q", command.Engine)
+	}
+
+	image, ok := versions[command.EngineVersion]
+	if !ok {
+		return fmt.Errorf("script: unsupported %s version %q", command.Engine, command.EngineVersion)
 	}
 
 	return workspace.Exec(ctx, &workspace.ExecOptions{
 		Dir:     dir,
+		RelPath: command.WorkRelPath,
 		Image:   image,
-		Command: append([]string{command.Engine, DockerScriptPath(command.ScriptRelPath)}, command.Args...),
+		Command: append([]string{command.Engine, command.ScriptRelPath}, command.Args...),
 		Env:     envListToMap(command.Env),
 		Timeout: remaining(ctx, defaultTemplateTimeout),
 		OnOutput: func(stream, line string) {
@@ -166,19 +177,6 @@ func envListToMap(env []string) map[string]string {
 	return out
 }
 
-func scriptDockerImage(engine, version string) (string, error) {
-	versions, ok := scriptImages[engine]
-	if !ok {
-		return "", fmt.Errorf("script: unsupported engine %q", engine)
-	}
-
-	image, ok := versions[version]
-	if !ok {
-		return "", fmt.Errorf("script: unsupported %s version %q", engine, version)
-	}
-	return image, nil
-}
-
 func BuildScriptExec(dir string, payload map[string]interface{}) (*ScriptExec, error) {
 	env := append(
 		keyValueArgs(MapFromPayload(payload, "groupVars.environmentVariables")),
@@ -195,19 +193,17 @@ func BuildScriptExec(dir string, payload map[string]interface{}) (*ScriptExec, e
 	return &ScriptExec{
 		Engine:        StringFromPayload(payload, "script.engine"),
 		EngineVersion: StringFromPayload(payload, "script.engineVersion"),
-		ScriptRelPath: StringFromPayload(payload, "script.scriptPath"),
-		ScriptPath: filepath.Join(
-			dir,
-			filepath.FromSlash(StringFromPayload(payload, "script.scriptPath")),
+		WorkDir: filepath.Join(
+			dir, filepath.FromSlash(StringFromPayload(payload, "workingDirectory")),
 		),
-		Env:  env,
-		Args: args,
+		WorkRelPath: strings.TrimPrefix(
+			filepath.ToSlash(StringFromPayload(payload, "workingDirectory")),
+			"/",
+		),
+		ScriptRelPath: StringFromPayload(payload, "script.scriptPath"),
+		Env:           env,
+		Args:          args,
 	}, nil
-}
-
-func DockerScriptPath(relPath string) string {
-	relPath = strings.TrimPrefix(filepath.ToSlash(relPath), "/")
-	return "/workspace/" + relPath
 }
 
 func keyValueArgs(values map[string]interface{}) []string {

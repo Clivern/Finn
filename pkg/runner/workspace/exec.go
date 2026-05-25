@@ -9,53 +9,33 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
-	"path/filepath"
+	"path"
 	"strings"
 	"time"
 )
 
 const DefaultExecTimeout = 10 * time.Minute
 
-// ExecOptions configures a command execution inside a Docker container
+// ExecOptions configures a command execution.
 type ExecOptions struct {
-	Dir     string            // host directory to mount as /workspace
-	Image   string            // Docker image to run
-	Command []string          // command and arguments
-	Env     map[string]string // extra environment variables
-	Timeout time.Duration
-
-	// OnOutput is called for each line of stdout/stderr.
+	Dir      string
+	RelPath  string
+	Image    string
+	Command  []string
+	Env      map[string]string
+	Timeout  time.Duration
 	OnOutput func(stream, line string)
 }
 
-// Exec runs a command inside a Docker container
+// Exec runs a command.
 func Exec(ctx context.Context, opts *ExecOptions) error {
-	if opts.Dir == "" {
-		return fmt.Errorf("exec: workspace directory is required")
-	}
-	if opts.Image == "" {
-		return fmt.Errorf("exec: Docker image is required")
-	}
-	if len(opts.Command) == 0 {
-		return fmt.Errorf("exec: command is required")
-	}
-
-	absDir, err := filepath.Abs(opts.Dir)
-	if err != nil {
-		return fmt.Errorf("exec: resolve dir: %w", err)
-	}
-
-	timeout := opts.Timeout
-	if timeout == 0 {
-		timeout = DefaultExecTimeout
-	}
-	runCtx, cancel := context.WithTimeout(ctx, timeout)
+	ctx, cancel := context.WithTimeout(ctx, opts.Timeout)
 	defer cancel()
 
 	args := []string{
 		"run", "--rm",
-		"-v", absDir + ":/workspace",
-		"-w", "/workspace",
+		"-v", opts.Dir + ":/workspace",
+		"-w", path.Join("/workspace", opts.RelPath),
 	}
 	for k, v := range opts.Env {
 		args = append(args, "-e", k+"="+v)
@@ -63,7 +43,7 @@ func Exec(ctx context.Context, opts *ExecOptions) error {
 	args = append(args, opts.Image)
 	args = append(args, opts.Command...)
 
-	cmd := exec.CommandContext(runCtx, "docker", args...)
+	cmd := exec.CommandContext(ctx, "docker", args...)
 
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
