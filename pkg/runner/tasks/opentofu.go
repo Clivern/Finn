@@ -30,12 +30,12 @@ var (
 
 // OpenTofuExec is the parsed OpenTofu command for a cloned workspace.
 type OpenTofuExec struct {
-	Version  string
-	WorkDir  string
-	RootDir  string
-	ChdirArg []string
-	Env      []string
-	Args     []string
+	Version     string
+	WorkDir     string
+	WorkRelPath string
+	RootDir     string
+	Env         []string
+	Args        []string
 }
 
 // RunOpenTofu runs OpenTofu for a cloned workspace.
@@ -63,7 +63,7 @@ func opentofuDockerImage(version string) (string, error) {
 
 // BuildOpenTofuExec builds an OpenTofu command from the task payload.
 func BuildOpenTofuExec(dir string, payload map[string]interface{}) (*OpenTofuExec, error) {
-	workDir, err := opentofuWorkDir(dir, payload)
+	workDir, workRelPath, err := opentofuWorkDir(dir, payload)
 	if err != nil {
 		return nil, err
 	}
@@ -84,12 +84,12 @@ func BuildOpenTofuExec(dir string, payload map[string]interface{}) (*OpenTofuExe
 	)
 
 	return &OpenTofuExec{
-		Version:  StringFromPayload(payload, "iac.engineVersion"),
-		WorkDir:  workDir,
-		RootDir:  dir,
-		ChdirArg: opentofuChdirArg(dir, workDir),
-		Env:      env,
-		Args:     args,
+		Version:     StringFromPayload(payload, "iac.engineVersion"),
+		WorkDir:     workDir,
+		WorkRelPath: workRelPath,
+		RootDir:     dir,
+		Env:         env,
+		Args:        args,
 	}, nil
 }
 
@@ -106,42 +106,34 @@ func opentofuVarFlags(values map[string]interface{}) []string {
 	return flags
 }
 
-func opentofuWorkDir(root string, payload map[string]interface{}) (string, error) {
+func opentofuWorkDir(root string, payload map[string]interface{}) (string, string, error) {
 	rel := StringFromPayload(payload, "workingDirectory")
 	if rel == "" {
 		rel = StringFromPayload(payload, "working_dir")
 	}
-	rel = strings.TrimSpace(rel)
-	if rel == "" || rel == "/" {
-		return root, nil
+	rel = strings.TrimPrefix(filepath.ToSlash(strings.TrimSpace(rel)), "/")
+	if rel == "" || rel == "." {
+		return root, "", nil
 	}
 
-	rel = strings.TrimPrefix(filepath.ToSlash(rel), "/")
 	workDir := filepath.Join(root, filepath.FromSlash(rel))
-	absWorkDir, err := filepath.Abs(workDir)
-	if err != nil {
-		return "", fmt.Errorf("opentofu: resolve working directory: %w", err)
-	}
 	absRoot, err := filepath.Abs(root)
 	if err != nil {
-		return "", fmt.Errorf("opentofu: resolve workspace directory: %w", err)
+		return "", "", fmt.Errorf("opentofu: resolve workspace directory: %w", err)
+	}
+	absWorkDir, err := filepath.Abs(workDir)
+	if err != nil {
+		return "", "", fmt.Errorf("opentofu: resolve working directory: %w", err)
 	}
 	if absWorkDir != absRoot && !strings.HasPrefix(absWorkDir, absRoot+string(filepath.Separator)) {
-		return "", fmt.Errorf("opentofu: working directory escapes workspace")
-	}
-	return absWorkDir, nil
-}
-
-func opentofuChdirArg(root, workDir string) []string {
-	if workDir == root {
-		return nil
+		return "", "", fmt.Errorf("opentofu: working directory escapes workspace")
 	}
 
-	rel, err := filepath.Rel(root, workDir)
-	if err != nil || rel == "." {
-		return nil
+	workRelPath, err := filepath.Rel(absRoot, absWorkDir)
+	if err != nil || workRelPath == "." {
+		return absWorkDir, "", nil
 	}
-	return []string{"-chdir=" + filepath.ToSlash(rel)}
+	return absWorkDir, filepath.ToSlash(workRelPath), nil
 }
 
 func opentofuSteps() [][]string {
@@ -154,9 +146,9 @@ func opentofuSteps() [][]string {
 
 func runOpenTofuLocal(ctx context.Context, deps *runner.Deps, task *runner.Task, execCmd *OpenTofuExec) error {
 	for _, step := range opentofuSteps() {
-		args := append(append([]string{}, execCmd.ChdirArg...), step...)
+		args := append([]string{}, step...)
 		args = append(args, execCmd.Args...)
-		if err := runOpenTofuStepLocal(ctx, deps, task.ID, execCmd.RootDir, args, execCmd.Env); err != nil {
+		if err := runOpenTofuStepLocal(ctx, deps, task.ID, execCmd.WorkDir, args, execCmd.Env); err != nil {
 			return err
 		}
 	}
@@ -170,9 +162,9 @@ func runOpenTofuDocker(ctx context.Context, deps *runner.Deps, task *runner.Task
 	}
 
 	for _, step := range opentofuSteps() {
-		args := append(append([]string{"tofu"}, execCmd.ChdirArg...), step...)
+		args := append([]string{"tofu"}, step...)
 		args = append(args, execCmd.Args...)
-		if err := runOpenTofuStepDocker(ctx, deps, task, execCmd.RootDir, image, args, execCmd.Env); err != nil {
+		if err := runOpenTofuStepDocker(ctx, deps, task, execCmd.RootDir, execCmd.WorkRelPath, image, args, execCmd.Env); err != nil {
 			return err
 		}
 	}
@@ -209,9 +201,10 @@ func runOpenTofuStepLocal(ctx context.Context, deps *runner.Deps, taskID, dir st
 	return nil
 }
 
-func runOpenTofuStepDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, dir, image string, command, env []string) error {
+func runOpenTofuStepDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, dir, relPath, image string, command, env []string) error {
 	return workspace.Exec(ctx, &workspace.ExecOptions{
 		Dir:     dir,
+		RelPath: relPath,
 		Image:   image,
 		Command: command,
 		Env:     envListToMap(env),

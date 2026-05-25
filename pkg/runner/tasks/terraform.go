@@ -30,12 +30,12 @@ var (
 
 // TerraformExec is the parsed Terraform command for a cloned workspace.
 type TerraformExec struct {
-	Version  string
-	WorkDir  string
-	RootDir  string
-	ChdirArg []string
-	Env      []string
-	Args     []string
+	Version     string
+	WorkDir     string
+	WorkRelPath string
+	RootDir     string
+	Env         []string
+	Args        []string
 }
 
 // RunTerraform runs Terraform for a cloned workspace.
@@ -57,7 +57,7 @@ func terraformDockerImage(version string) (string, error) {
 }
 
 func BuildTerraformExec(dir string, payload map[string]interface{}) (*TerraformExec, error) {
-	workDir, err := terraformWorkDir(dir, payload)
+	workDir, workRelPath, err := terraformWorkDir(dir, StringFromPayload(payload, "working_dir"))
 	if err != nil {
 		return nil, err
 	}
@@ -66,9 +66,8 @@ func BuildTerraformExec(dir string, payload map[string]interface{}) (*TerraformE
 		keyValueArgs(MapFromPayload(payload, "group_vars.environment_variables")),
 		keyValueArgs(MapFromPayload(payload, "group_vars.secret_environment_variables"))...,
 	)
-	if logLevel := StringFromPayload(payload, "iac.logLevel"); logLevel != "" {
-		env = append(env, "TF_LOG="+strings.ToUpper(logLevel))
-	}
+	env = append(env, fmt.Sprintf("TF_LOG=%s", strings.ToUpper(StringFromPayload(payload, "iac.log_level"))))
+
 	args := append(
 		append(
 			terraformVarFlags(MapFromPayload(payload, "extra_args")),
@@ -78,12 +77,12 @@ func BuildTerraformExec(dir string, payload map[string]interface{}) (*TerraformE
 	)
 
 	return &TerraformExec{
-		Version:  StringFromPayload(payload, "iac.engineVersion"),
-		WorkDir:  workDir,
-		RootDir:  dir,
-		ChdirArg: terraformChdirArg(dir, workDir),
-		Env:      env,
-		Args:     args,
+		Version:     StringFromPayload(payload, "iac.version"),
+		WorkDir:     workDir,
+		WorkRelPath: workRelPath,
+		RootDir:     dir,
+		Env:         env,
+		Args:        args,
 	}, nil
 }
 
@@ -100,39 +99,30 @@ func terraformVarFlags(values map[string]interface{}) []string {
 	return flags
 }
 
-func terraformWorkDir(root string, payload map[string]interface{}) (string, error) {
-	rel := StringFromPayload(payload, "working_dir")
-	rel = strings.TrimSpace(rel)
-	if rel == "" || rel == "/" {
-		return root, nil
+func terraformWorkDir(root, rel string) (string, string, error) {
+	rel = strings.TrimPrefix(filepath.ToSlash(strings.TrimSpace(rel)), "/")
+	if rel == "" || rel == "." {
+		return root, "", nil
 	}
 
-	rel = strings.TrimPrefix(filepath.ToSlash(rel), "/")
 	workDir := filepath.Join(root, filepath.FromSlash(rel))
-	absWorkDir, err := filepath.Abs(workDir)
-	if err != nil {
-		return "", fmt.Errorf("terraform: resolve working directory: %w", err)
-	}
 	absRoot, err := filepath.Abs(root)
 	if err != nil {
-		return "", fmt.Errorf("terraform: resolve workspace directory: %w", err)
+		return "", "", fmt.Errorf("terraform: resolve workspace directory: %w", err)
+	}
+	absWorkDir, err := filepath.Abs(workDir)
+	if err != nil {
+		return "", "", fmt.Errorf("terraform: resolve working directory: %w", err)
 	}
 	if absWorkDir != absRoot && !strings.HasPrefix(absWorkDir, absRoot+string(filepath.Separator)) {
-		return "", fmt.Errorf("terraform: working directory escapes workspace")
-	}
-	return absWorkDir, nil
-}
-
-func terraformChdirArg(root, workDir string) []string {
-	if workDir == root {
-		return nil
+		return "", "", fmt.Errorf("terraform: working directory escapes workspace")
 	}
 
-	rel, err := filepath.Rel(root, workDir)
-	if err != nil || rel == "." {
-		return nil
+	workRelPath, err := filepath.Rel(absRoot, absWorkDir)
+	if err != nil || workRelPath == "." {
+		return absWorkDir, "", nil
 	}
-	return []string{"-chdir=" + filepath.ToSlash(rel)}
+	return absWorkDir, filepath.ToSlash(workRelPath), nil
 }
 
 func terraformSteps() [][]string {
@@ -150,9 +140,9 @@ func RunTerraformLocal(ctx context.Context, deps *runner.Deps, task *runner.Task
 	}
 
 	for _, step := range terraformSteps() {
-		args := append(append([]string{}, execCmd.ChdirArg...), step...)
+		args := append([]string{}, step...)
 		args = append(args, execCmd.Args...)
-		if err := runTerraformStepLocal(ctx, deps, task.ID, execCmd.RootDir, args, execCmd.Env); err != nil {
+		if err := runTerraformStepLocal(ctx, deps, task.ID, execCmd.WorkDir, args, execCmd.Env); err != nil {
 			return err
 		}
 	}
@@ -171,9 +161,9 @@ func RunTerraformDocker(ctx context.Context, deps *runner.Deps, task *runner.Tas
 	}
 
 	for _, step := range terraformSteps() {
-		args := append(append([]string{"terraform"}, execCmd.ChdirArg...), step...)
+		args := append([]string{"terraform"}, step...)
 		args = append(args, execCmd.Args...)
-		if err := runTerraformStepDocker(ctx, deps, task, execCmd.RootDir, image, args, execCmd.Env); err != nil {
+		if err := runTerraformStepDocker(ctx, deps, task, execCmd.RootDir, execCmd.WorkRelPath, image, args, execCmd.Env); err != nil {
 			return err
 		}
 	}
@@ -210,9 +200,10 @@ func runTerraformStepLocal(ctx context.Context, deps *runner.Deps, taskID, dir s
 	return nil
 }
 
-func runTerraformStepDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, dir, image string, command, env []string) error {
+func runTerraformStepDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, dir, relPath, image string, command, env []string) error {
 	return workspace.Exec(ctx, &workspace.ExecOptions{
 		Dir:     dir,
+		RelPath: relPath,
 		Image:   image,
 		Command: command,
 		Env:     envListToMap(env),
