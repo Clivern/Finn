@@ -21,6 +21,7 @@ import (
 )
 
 var (
+	// @TODO: Allow customers to override the script images
 	scriptImages = map[string]map[string]string{
 		"bash": {
 			"":    "docker.io/bash:5.2",
