@@ -24,19 +24,16 @@ var (
 	// @TODO: Allow customers to override the script images
 	scriptImages = map[string]map[string]string{
 		"bash": {
-			"":    "docker.io/bash:5.2",
 			"5.2": "docker.io/bash:5.2",
 			"5.3": "docker.io/bash:5.3",
 		},
 		"sh": {
-			"":     "docker.io/alpine:3.20",
 			"3.20": "docker.io/alpine:3.20",
 			"3.21": "docker.io/alpine:3.21",
 			"3.22": "docker.io/alpine:3.22",
 			"3.23": "docker.io/alpine:3.23",
 		},
 		"python": {
-			"":     "docker.io/python:3.12-slim",
 			"3.10": "docker.io/python:3.10-slim",
 			"3.11": "docker.io/python:3.11-slim",
 			"3.12": "docker.io/python:3.12-slim",
@@ -44,7 +41,6 @@ var (
 			"3.14": "docker.io/python:3.14-slim",
 		},
 		"node": {
-			"":   "docker.io/node:20-bookworm-slim",
 			"18": "docker.io/node:18-bookworm-slim",
 			"20": "docker.io/node:20-bookworm-slim",
 			"22": "docker.io/node:22-bookworm-slim",
