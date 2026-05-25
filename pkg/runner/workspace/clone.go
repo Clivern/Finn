@@ -53,22 +53,22 @@ func Clone(ctx context.Context, opts *CloneOptions) (string, error) {
 		return "", fmt.Errorf("clone: auth: %w", err)
 	}
 
-	cloneOpts := &git.CloneOptions{
+	copts := &git.CloneOptions{
 		URL:   opts.URL,
 		Auth:  auth,
 		Depth: 1,
 	}
 
 	if opts.Tag != "" {
-		cloneOpts.ReferenceName = plumbing.NewTagReferenceName(opts.Tag)
-		cloneOpts.SingleBranch = true
+		copts.ReferenceName = plumbing.NewTagReferenceName(opts.Tag)
+		copts.SingleBranch = true
 	} else if opts.Branch != "" {
-		cloneOpts.ReferenceName = plumbing.NewBranchReferenceName(opts.Branch)
-		cloneOpts.SingleBranch = true
+		copts.ReferenceName = plumbing.NewBranchReferenceName(opts.Branch)
+		copts.SingleBranch = true
 	}
 
 	if opts.OnProgress != nil {
-		cloneOpts.Progress = &lineWriter{callback: opts.OnProgress}
+		copts.Progress = &lineWriter{callback: opts.OnProgress}
 	}
 
 	log.Info().
@@ -76,7 +76,7 @@ func Clone(ctx context.Context, opts *CloneOptions) (string, error) {
 		Str("dir", opts.Dir).
 		Msg("Starting git clone")
 
-	repo, err := git.PlainCloneContext(ctx, opts.Dir, false, cloneOpts)
+	repo, err := git.PlainCloneContext(ctx, opts.Dir, false, copts)
 	if err != nil {
 		return "", fmt.Errorf("clone: %w", err)
 	}
