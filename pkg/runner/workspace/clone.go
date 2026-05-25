@@ -47,13 +47,6 @@ type CloneOptions struct {
 
 // Clone performs a shallow git clone into opts.Dir
 func Clone(ctx context.Context, opts *CloneOptions) (string, error) {
-	if opts.URL == "" {
-		return "", fmt.Errorf("clone: repository URL is required")
-	}
-	if opts.Dir == "" {
-		return "", fmt.Errorf("clone: target directory is required")
-	}
-
 	if err := os.MkdirAll(opts.Dir, 0o750); err != nil {
 		return "", fmt.Errorf("clone: create dir: %w", err)
 	}
