@@ -27,7 +27,7 @@ func Clone(ctx context.Context, deps *runner.Deps, task *runner.Task) error {
 		Branch:        StringFromPayload(task.Payload, "branch"),
 		Tag:           StringFromPayload(task.Payload, "tag"),
 		Dir:           dir,
-		Timeout:       remaining(ctx, 5*time.Minute),
+		Timeout:       time.Duration(IntFromPayload(task.Payload, "timeout")) * time.Second,
 		Username:      StringFromPayload(task.Payload, "username"),
 		Password:      StringFromPayload(task.Payload, "password"),
 		SSHPrivateKey: StringFromPayload(task.Payload, "ssh_private_key"),

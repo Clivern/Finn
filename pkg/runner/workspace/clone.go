@@ -58,11 +58,7 @@ func Clone(ctx context.Context, opts *CloneOptions) (string, error) {
 		return "", fmt.Errorf("clone: create dir: %w", err)
 	}
 
-	timeout := opts.Timeout
-	if timeout == 0 {
-		timeout = DefaultCloneTimeout
-	}
-	cloneCtx, cancel := context.WithTimeout(ctx, timeout)
+	cloneCtx, cancel := context.WithTimeout(ctx, opts.Timeout)
 	defer cancel()
 
 	auth, err := buildAuth(opts)
@@ -106,7 +102,6 @@ func Clone(ctx context.Context, opts *CloneOptions) (string, error) {
 	return head.Hash().String(), nil
 }
 
-// buildAuth returns the appropriate go-git transport auth method.
 func buildAuth(opts *CloneOptions) (transport.AuthMethod, error) {
 	if opts.SSHPrivateKey != "" {
 		publicKeys, err := ssh.NewPublicKeys(
@@ -131,7 +126,6 @@ func buildAuth(opts *CloneOptions) (transport.AuthMethod, error) {
 	return nil, nil
 }
 
-// lineWriter adapts an OnProgress callback to an io.Writer by splitting on newlines.
 type lineWriter struct {
 	callback func(msg string)
 }
@@ -147,5 +141,4 @@ func (w *lineWriter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-// Ensure lineWriter implements io.Writer.
 var _ io.Writer = (*lineWriter)(nil)
