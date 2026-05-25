@@ -160,7 +160,7 @@ func RunTerraformDockerStep(ctx context.Context, deps *runner.Deps, task *runner
 		return fmt.Errorf("terraform: unsupported version %q", command.Version)
 	}
 
-	args := append([]string{"terraform"}, step...)
+	args := append([]string{}, step...)
 	args = append(args, command.Args...)
 
 	return workspace.Exec(ctx, &workspace.ExecOptions{

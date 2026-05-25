@@ -160,7 +160,7 @@ func RunOpentofuDockerStep(ctx context.Context, deps *runner.Deps, task *runner.
 		return fmt.Errorf("opentofu: unsupported version %q", command.Version)
 	}
 
-	args := append([]string{"tofu"}, step...)
+	args := append([]string{}, step...)
 	args = append(args, command.Args...)
 
 	return workspace.Exec(ctx, &workspace.ExecOptions{
