@@ -94,18 +94,8 @@ func terraformVarFlags(values map[string]interface{}) []string {
 }
 
 func RunTerraformLocal(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
-	command, err := BuildTerraformExec(dir, task.Payload)
-	if err != nil {
-		return err
-	}
-
 	for _, step := range terraformSteps {
-		args := append([]string{}, step...)
-		args = append(args, command.Args...)
-		err := RunTerraformLocalStep(
-			ctx, deps, task.ID, command.WorkDir, args, command.Env,
-		)
-		if err != nil {
+		if err := RunTerraformLocalStep(ctx, deps, task, dir, step); err != nil {
 			return err
 		}
 	}
@@ -113,40 +103,26 @@ func RunTerraformLocal(ctx context.Context, deps *runner.Deps, task *runner.Task
 }
 
 func RunTerraformDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
-	command, err := BuildTerraformExec(dir, task.Payload)
-	if err != nil {
-		return err
-	}
-
-	image, ok := terraformImages[command.Version]
-	if !ok {
-		return fmt.Errorf("terraform: unsupported version %q", command.Version)
-	}
-
 	for _, step := range terraformSteps {
-		args := append([]string{"terraform"}, step...)
-		args = append(args, command.Args...)
-		err := RunTerraformDockerStep(
-			ctx, deps, task, command.RootDir, command.WorkRelPath, image, args, command.Env,
-		)
-		if err != nil {
+		if err := RunTerraformDockerStep(ctx, deps, task, dir, step); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func RunTerraformLocalStep(
-	ctx context.Context,
-	deps *runner.Deps,
-	taskID,
-	dir string,
-	args,
-	env []string,
-) error {
+func RunTerraformLocalStep(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string, step []string) error {
+	command, err := BuildTerraformExec(dir, task.Payload)
+	if err != nil {
+		return err
+	}
+
+	args := append([]string{}, step...)
+	args = append(args, command.Args...)
+
 	cmd := exec.CommandContext(ctx, "terraform", args...)
-	cmd.Dir = dir
-	cmd.Env = append(os.Environ(), env...)
+	cmd.Dir = command.WorkDir
+	cmd.Env = append(os.Environ(), command.Env...)
 
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
@@ -162,8 +138,8 @@ func RunTerraformLocalStep(
 	}
 
 	done := make(chan struct{})
-	go appendTerraformOutput(stdoutPipe, "stdout", deps, taskID, done)
-	go appendTerraformOutput(stderrPipe, "stderr", deps, taskID, done)
+	go appendTerraformOutput(stdoutPipe, "stdout", deps, task.ID, done)
+	go appendTerraformOutput(stderrPipe, "stderr", deps, task.ID, done)
 	<-done
 	<-done
 
@@ -173,22 +149,26 @@ func RunTerraformLocalStep(
 	return nil
 }
 
-func RunTerraformDockerStep(
-	ctx context.Context,
-	deps *runner.Deps,
-	task *runner.Task,
-	dir,
-	relPath,
-	image string,
-	command,
-	env []string,
-) error {
+func RunTerraformDockerStep(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string, step []string) error {
+	command, err := BuildTerraformExec(dir, task.Payload)
+	if err != nil {
+		return err
+	}
+
+	image, ok := terraformImages[command.Version]
+	if !ok {
+		return fmt.Errorf("terraform: unsupported version %q", command.Version)
+	}
+
+	args := append([]string{"terraform"}, step...)
+	args = append(args, command.Args...)
+
 	return workspace.Exec(ctx, &workspace.ExecOptions{
-		Dir:     dir,
-		RelPath: relPath,
+		Dir:     command.RootDir,
+		RelPath: command.WorkRelPath,
 		Image:   image,
-		Command: command,
-		Env:     envListToMap(env),
+		Command: args,
+		Env:     envListToMap(command.Env),
 		Timeout: time.Duration(IntFromPayload(task.Payload, "timeout")) * time.Second,
 		OnOutput: func(stream, line string) {
 			_ = deps.Worker.AppendTaskLog(task.ID, map[string]string{
