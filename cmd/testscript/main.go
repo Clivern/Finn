@@ -28,7 +28,7 @@ func main() {
 		"name":             "testscript",
 		"description":      "testscript",
 		"engine":           "script",
-		"workingDirectory": "/",
+		"workingDirectory": "etc/scripts/python",
 		"branchOverride":   "main",
 		"tagOverride":      "",
 		"runnerTags": map[string]string{
@@ -56,9 +56,9 @@ func main() {
 			},*/
 		},
 		"script": map[string]interface{}{
-			"engine":        "node",
-			"engineVersion": "20",
-			"scriptPath":    "etc/scripts/node/clivern.js",
+			"engine":        "python3",
+			"engineVersion": "3.12",
+			"scriptPath":    "clivern.py",
 		},
 		"extraArgs": map[string]interface{}{
 			"key":  "value",
