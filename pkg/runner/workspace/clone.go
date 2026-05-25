@@ -26,22 +26,16 @@ const DefaultCloneTimeout = 5 * time.Minute
 
 // CloneOptions configures a git clone operation.
 type CloneOptions struct {
-	URL    string
-	Branch string
-	Tag    string
-	Dir    string
-
-	Timeout time.Duration
-
-	// HTTPS auth
-	Username string
-	Password string
-
-	// SSH auth
+	URL           string
+	Branch        string
+	Tag           string
+	Dir           string
+	Timeout       time.Duration
+	Username      string
+	Password      string
 	SSHPrivateKey string
 	SSHPassphrase string
 
-	// OnProgress is called for each line of clone progress output.
 	OnProgress func(msg string)
 }
 
