@@ -65,6 +65,16 @@ func BuildTerraformExec(dir string, payload map[string]interface{}) (*TerraformE
 		terraformVarFlags(MapFromPayload(payload, "group_vars.secret_extra_variables"))...,
 	)
 
+	if StringFromPayload(payload, "iac.backend.id") != "" {
+		env = append(env, "TF_HTTP_USERNAME="+StringFromPayload(payload, "iac.backend.username"))
+		env = append(env, "TF_HTTP_PASSWORD="+StringFromPayload(payload, "iac.backend.password"))
+		env = append(env, "TF_HTTP_ADDRESS="+StringFromPayload(payload, "iac.backend.http.address"))
+		env = append(env, "TF_HTTP_LOCK_ADDRESS="+StringFromPayload(payload, "iac.backend.http.lock_address"))
+		env = append(env, "TF_HTTP_UNLOCK_ADDRESS="+StringFromPayload(payload, "iac.backend.http.unlock_address"))
+		env = append(env, "TF_HTTP_LOCK_METHOD="+StringFromPayload(payload, "iac.backend.http.lock_method"))
+		env = append(env, "TF_HTTP_UNLOCK_METHOD="+StringFromPayload(payload, "iac.backend.http.unlock_method"))
+	}
+
 	return &TerraformExec{
 		Version: StringFromPayload(payload, "iac.version"),
 		WorkDir: filepath.Join(
