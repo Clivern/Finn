@@ -46,19 +46,31 @@
         "secret_environment_variables": "{...json string ...}"
     },
     "script": {
-        "engine": "script-engine",
-        "engine_version": "script-engine-version",
-        "script_path": "script-path"
+        "bin": "script-engine",
+        "version": "script-engine-version",
+        "path": "script-path"
     },
     "iac": {
-        "engine": "iac-engine",
-        "engine_version": "iac-engine-version",
-        "auto_approve": true,
-        "backend_id": "backend-id",
+        "bin": "terraform|opentofu",
+        "version": "iac-engine-version",
+        "backend": {
+            "id": "backend-id",
+            "name": "backend-name",
+            "slug": "backend-slug",
+            "username": "terraform-http-backend-username",
+            "password": "terraform-http-backend-password",
+            "http": {
+                "address": "https://finn.example.com/client/backend-slug/state",
+                "lock_address": "https://finn.example.com/client/backend-slug/lock",
+                "unlock_address": "https://finn.example.com/client/backend-slug/unlock",
+                "lock_method": "POST",
+                "unlock_method": "POST"
+            }
+        },
         "log_level": "log-level"
     },
     "ansible": {
-        "engine_version": "ansible-engine-version",
+        "version": "ansible-engine-version",
         "inventory": {
             "id": "inventory-id",
             "name": "inventory-name",
