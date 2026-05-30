@@ -125,8 +125,6 @@
             }
         },
         "playbook_path": "playbook-path",
-        "vault_path": "vault-path",
-        "vault_password": "vault-password",
         "log_level": "log-level"
     },
     "timeout": 3600

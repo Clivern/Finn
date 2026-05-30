@@ -12,7 +12,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -29,8 +28,11 @@ var (
 
 // AnsibleExec is the parsed Ansible command for a cloned workspace.
 type AnsibleExec struct {
-	EngineVersion string
+	Version       string
 	PlaybookPath  string
+	WorkDir       string
+	WorkRelPath   string
+	RootDir       string
 	InventoryPath string
 	Env           []string
 	Args          []string
@@ -38,25 +40,25 @@ type AnsibleExec struct {
 
 // RunAnsible runs an Ansible template task.
 func RunAnsible(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
-	execCmd, err := BuildAnsibleExec(dir, task.Payload)
+	if IsDockerAvailable() {
+		return RunAnsibleDocker(ctx, deps, task, dir)
+	}
+
+	return RunAnsibleLocal(ctx, deps, task, dir)
+}
+
+func RunAnsibleLocal(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
+	command, err := BuildAnsibleExec(dir, task.Payload)
 	if err != nil {
 		return err
 	}
 
-	if IsDockerAvailable() {
-		return RunAnsibleDocker(ctx, deps, task, dir, execCmd)
-	}
-
-	return RunAnsibleLocal(ctx, deps, task, dir, execCmd)
-}
-
-func RunAnsibleLocal(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string, execCmd *AnsibleExec) error {
-	args := append([]string{}, execCmd.Args...)
-	args = append(args, execCmd.PlaybookPath)
+	args := append([]string{}, command.Args...)
+	args = append(args, command.PlaybookPath)
 
 	cmd := exec.CommandContext(ctx, "ansible-playbook", args...)
-	cmd.Dir = dir
-	cmd.Env = append(os.Environ(), execCmd.Env...)
+	cmd.Dir = command.WorkDir
+	cmd.Env = append(os.Environ(), command.Env...)
 
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
@@ -83,17 +85,24 @@ func RunAnsibleLocal(ctx context.Context, deps *runner.Deps, task *runner.Task, 
 	return nil
 }
 
-func RunAnsibleDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string, execCmd *AnsibleExec) error {
-	image, err := ansibleDockerImage(execCmd.EngineVersion)
+func RunAnsibleDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
+	execCmd, err := BuildAnsibleExec(dir, task.Payload)
 	if err != nil {
 		return err
+	}
+
+	version := strings.TrimSpace(execCmd.Version)
+	image, ok := ansibleImages[version]
+	if !ok {
+		return fmt.Errorf("ansible: unsupported version %q", version)
 	}
 
 	command := append([]string{"ansible-playbook"}, execCmd.Args...)
 	command = append(command, execCmd.PlaybookPath)
 
 	return workspace.Exec(ctx, &workspace.ExecOptions{
-		Dir:     dir,
+		Dir:     execCmd.RootDir,
+		RelPath: execCmd.WorkRelPath,
 		Image:   image,
 		Command: command,
 		Env:     envListToMap(execCmd.Env),
@@ -109,132 +118,43 @@ func RunAnsibleDocker(ctx context.Context, deps *runner.Deps, task *runner.Task,
 }
 
 func BuildAnsibleExec(dir string, payload map[string]interface{}) (*AnsibleExec, error) {
-	playbookPath := StringFromPayload(payload, "ansible.playbookPath")
-	if playbookPath == "" {
-		playbookPath = StringFromPayload(payload, "ansible_config.playbook_path")
-	}
-	if playbookPath == "" {
-		return nil, fmt.Errorf("ansible: playbook path is required")
-	}
-
 	env := append(
-		keyValueArgs(MapFromPayload(payload, "groupVars.environmentVariables")),
-		keyValueArgs(MapFromPayload(payload, "groupVars.secretEnvironmentVariables"))...,
+		keyValueArgs(MapFromPayload(payload, "group_vars.environment_variables")),
+		keyValueArgs(MapFromPayload(payload, "group_vars.secret_environment_variables"))...,
 	)
 	args := append(
 		append(
-			ansibleExtraVarArgs(MapFromPayload(payload, "extraArgs")),
-			ansibleExtraVarArgs(MapFromPayload(payload, "groupVars.extraVariables"))...,
+			ansibleExtraVarArgs(MapFromPayload(payload, "extra_args")),
+			ansibleExtraVarArgs(MapFromPayload(payload, "group_vars.extra_variables"))...,
 		),
-		ansibleExtraVarArgs(MapFromPayload(payload, "groupVars.secretExtraVariables"))...,
+		ansibleExtraVarArgs(MapFromPayload(payload, "group_vars.secret_extra_variables"))...,
 	)
 
-	inventoryPath, err := ansibleInventoryPath(dir, payload)
-	if err != nil {
-		return nil, err
-	}
+	inventoryPath := ansibleInventoryPath(payload)
 	if inventoryPath != "" {
 		args = append(args, "-i", inventoryPath)
 	}
 
-	if vaultPath := ansibleVaultPath(payload); vaultPath != "" {
-		args = append(args, "--extra-vars", "@"+vaultPath)
-	}
-	vaultPasswordPath, err := ansibleVaultPasswordPath(dir, payload)
-	if err != nil {
-		return nil, err
-	}
-	if vaultPasswordPath != "" {
-		args = append(args, "--vault-password-file", vaultPasswordPath)
-	}
-	args = append(args, ansibleVerbosityArgs(payload)...)
+	args = append(args, "-"+strings.Repeat("v", IntFromPayload(payload, "ansible_config.log_level")))
 
 	return &AnsibleExec{
-		EngineVersion: ansibleEngineVersion(payload),
-		PlaybookPath:  workspaceRelPath(playbookPath),
+		Version:       StringFromPayload(payload, "ansible_config.version"),
+		PlaybookPath:  workspaceRelPath(StringFromPayload(payload, "ansible_config.playbook_path")),
+		WorkDir:       filepath.Join(dir, filepath.FromSlash(StringFromPayload(payload, "working_dir"))),
+		WorkRelPath:   strings.TrimPrefix(filepath.ToSlash(StringFromPayload(payload, "working_dir")), "/"),
+		RootDir:       dir,
 		InventoryPath: inventoryPath,
 		Env:           env,
 		Args:          args,
 	}, nil
 }
 
-func ansibleDockerImage(version string) (string, error) {
-	version = strings.TrimSpace(version)
-	image, ok := ansibleImages[version]
-	if !ok {
-		return "", fmt.Errorf("ansible: unsupported version %q", version)
-	}
-	return image, nil
-}
-
-func ansibleEngineVersion(payload map[string]interface{}) string {
-	version := StringFromPayload(payload, "ansible.engineVersion")
-	if version == "" {
-		version = StringFromPayload(payload, "ansible_config.engine_version")
-	}
-	return version
-}
-
-func ansibleInventoryPath(dir string, payload map[string]interface{}) (string, error) {
-	if inventory := StringFromPayload(payload, "ansible_config.inventory.inventory"); inventory != "" {
-		relPath := ".finn/ansible/inventory.ini"
-		if err := writeWorkspaceFile(dir, relPath, inventory); err != nil {
-			return "", err
-		}
-		return relPath, nil
-	}
-
+func ansibleInventoryPath(payload map[string]interface{}) string {
 	inventoryPath := StringFromPayload(payload, "ansible_config.inventory.inventory_path")
 	if inventoryPath == "" {
-		return "", nil
-	}
-	return workspaceRelPath(inventoryPath), nil
-}
-
-func ansibleVaultPath(payload map[string]interface{}) string {
-	vaultPath := StringFromPayload(payload, "ansible.vaultPath")
-	if vaultPath == "" {
-		vaultPath = StringFromPayload(payload, "ansible_config.vault_path")
-	}
-	if vaultPath == "" {
 		return ""
 	}
-	return workspaceRelPath(vaultPath)
-}
-
-func ansibleVaultPasswordPath(dir string, payload map[string]interface{}) (string, error) {
-	password := StringFromPayload(payload, "ansible.vaultPassword")
-	if password == "" {
-		password = StringFromPayload(payload, "ansible_config.vault_password")
-	}
-	if password == "" {
-		return "", nil
-	}
-
-	relPath := ".finn/ansible/vault-password"
-	if err := writeWorkspaceFile(dir, relPath, password+"\n"); err != nil {
-		return "", err
-	}
-	return relPath, nil
-}
-
-func ansibleVerbosityArgs(payload map[string]interface{}) []string {
-	level := StringFromPayload(payload, "ansible.logLevel")
-	if level == "" {
-		level = StringFromPayload(payload, "ansible_config.log_level")
-	}
-	if level == "" || level == "0" {
-		return nil
-	}
-
-	n, err := strconv.Atoi(level)
-	if err != nil || n <= 0 {
-		return nil
-	}
-	if n > 5 {
-		n = 5
-	}
-	return []string{"-" + strings.Repeat("v", n)}
+	return workspaceRelPath(inventoryPath)
 }
 
 func ansibleExtraVarArgs(values map[string]interface{}) []string {
@@ -265,29 +185,6 @@ func appendAnsibleOutput(r io.Reader, stream string, deps *runner.Deps, taskID s
 			"msg":    "template",
 		})
 	}
-}
-
-func writeWorkspaceFile(dir, relPath, contents string) error {
-	relPath = workspaceRelPath(relPath)
-	path := filepath.Join(dir, filepath.FromSlash(relPath))
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return fmt.Errorf("ansible: resolve generated file: %w", err)
-	}
-	absDir, err := filepath.Abs(dir)
-	if err != nil {
-		return fmt.Errorf("ansible: resolve workspace directory: %w", err)
-	}
-	if absPath != absDir && !strings.HasPrefix(absPath, absDir+string(filepath.Separator)) {
-		return fmt.Errorf("ansible: generated file escapes workspace")
-	}
-	if err := os.MkdirAll(filepath.Dir(absPath), 0o700); err != nil {
-		return fmt.Errorf("ansible: create generated file directory: %w", err)
-	}
-	if err := os.WriteFile(absPath, []byte(contents), 0o600); err != nil {
-		return fmt.Errorf("ansible: write generated file: %w", err)
-	}
-	return nil
 }
 
 func workspaceRelPath(path string) string {

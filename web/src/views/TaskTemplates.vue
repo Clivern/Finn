@@ -301,7 +301,7 @@ function defaultFormState() {
     groupVarsId: '',
     script: { engine: 'bash', engineVersion: '', scriptPath: '' },
     iac: { engine: 'terraform', engineVersion: '', autoApprove: false, backendID: '', logLevel: '' },
-    ansible: { engineVersion: '', inventoryID: '', playbookPath: '', vaultPath: '', vaultPassword: '', logLevel: '' },
+    ansible: { engineVersion: '', inventoryID: '', playbookPath: '', logLevel: '' },
   }
 }
 
@@ -400,8 +400,6 @@ function fillFormFromTemplate(tmpl) {
   form.ansible.engineVersion = pickConfigField(a, 'engineVersion', 'engine_version')
   form.ansible.inventoryID = pickConfigField(a, 'inventoryID', 'inventory_id')
   form.ansible.playbookPath = pickConfigField(a, 'playbookPath', 'playbook_path')
-  form.ansible.vaultPath = pickConfigField(a, 'vaultPath', 'vault_path')
-  form.ansible.vaultPassword = pickConfigField(a, 'vaultPassword', 'vault_password')
   form.ansible.logLevel = pickConfigField(a, 'logLevel', 'log_level')
 
   runnerTagEntries.value = entriesFromTags(tmpl.runnerTags)
@@ -438,8 +436,6 @@ function buildPayload() {
       engineVersion: form.ansible.engineVersion || '',
       inventoryID: form.ansible.inventoryID || '',
       playbookPath: form.ansible.playbookPath || '',
-      vaultPath: form.ansible.vaultPath || '',
-      vaultPassword: form.ansible.vaultPassword || '',
       logLevel: form.ansible.logLevel || '',
     },
   }

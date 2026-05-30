@@ -179,14 +179,6 @@
                   <input :id="`${idPrefix}-ans-pb`" v-model="form.ansible.playbookPath" type="text" maxlength="4096" class="input-field" />
                 </div>
                 <div>
-                  <label :for="`${idPrefix}-ans-vault`" class="form-label">{{ $t('taskTemplatesPage.vaultPath') }}</label>
-                  <input :id="`${idPrefix}-ans-vault`" v-model="form.ansible.vaultPath" type="text" maxlength="4096" class="input-field" />
-                </div>
-                <div>
-                  <label :for="`${idPrefix}-ans-vpw`" class="form-label">{{ $t('taskTemplatesPage.vaultPassword') }}</label>
-                  <input :id="`${idPrefix}-ans-vpw`" v-model="form.ansible.vaultPassword" type="password" maxlength="4096" autocomplete="new-password" class="input-field" />
-                </div>
-                <div>
                   <label :for="`${idPrefix}-ans-log`" class="form-label">{{ $t('taskTemplatesPage.logLevel') }}</label>
                   <select :id="`${idPrefix}-ans-log`" v-model="form.ansible.logLevel" class="input-field">
                     <option value="">{{ $t('taskTemplatesPage.ansibleLogLevelNone') }}</option>

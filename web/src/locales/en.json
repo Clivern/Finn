@@ -540,9 +540,7 @@
     "ansibleEngineVersion": "Ansible version",
     "inventory": "Inventory",
     "inventoryNone": "None",
-    "playbookPath": "Playbook path",
-    "vaultPath": "Vault file path",
-    "vaultPassword": "Vault password"
+    "playbookPath": "Playbook path"
   },
   "flowsPage": {
     "title": "Flows",
