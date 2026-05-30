@@ -46,7 +46,7 @@ func main() {
 				"private_key":     string(sshPrivateKey),
 			},
 		},
-		"ansible_config": map[string]interface{}{
+		"ansible": map[string]interface{}{
 			"version":       "latest",
 			"playbook_path": "site.yml",
 			"log_level":     "1",

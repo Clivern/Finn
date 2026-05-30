@@ -45,19 +45,19 @@
         "secret_extra_variables": "{...json string ...}",
         "secret_environment_variables": "{...json string ...}"
     },
-    "script_config": {
+    "script": {
         "engine": "script-engine",
         "engine_version": "script-engine-version",
         "script_path": "script-path"
     },
-    "iac_config": {
+    "iac": {
         "engine": "iac-engine",
         "engine_version": "iac-engine-version",
         "auto_approve": true,
         "backend_id": "backend-id",
         "log_level": "log-level"
     },
-    "ansible_config": {
+    "ansible": {
         "engine_version": "ansible-engine-version",
         "inventory": {
             "id": "inventory-id",

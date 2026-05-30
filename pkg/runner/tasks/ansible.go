@@ -135,11 +135,11 @@ func BuildAnsibleExec(dir string, payload map[string]interface{}) (*AnsibleExec,
 		args = append(args, "-i", inventoryPath)
 	}
 
-	args = append(args, "-"+strings.Repeat("v", IntFromPayload(payload, "ansible_config.log_level")))
+	args = append(args, "-"+strings.Repeat("v", IntFromPayload(payload, "ansible.log_level")))
 
 	return &AnsibleExec{
-		Version:       StringFromPayload(payload, "ansible_config.version"),
-		PlaybookPath:  workspaceRelPath(StringFromPayload(payload, "ansible_config.playbook_path")),
+		Version:       StringFromPayload(payload, "ansible.version"),
+		PlaybookPath:  workspaceRelPath(StringFromPayload(payload, "ansible.playbook_path")),
 		WorkDir:       filepath.Join(dir, filepath.FromSlash(StringFromPayload(payload, "working_dir"))),
 		WorkRelPath:   strings.TrimPrefix(filepath.ToSlash(StringFromPayload(payload, "working_dir")), "/"),
 		RootDir:       dir,
@@ -150,7 +150,7 @@ func BuildAnsibleExec(dir string, payload map[string]interface{}) (*AnsibleExec,
 }
 
 func ansibleInventoryPath(payload map[string]interface{}) string {
-	inventoryPath := StringFromPayload(payload, "ansible_config.inventory.inventory_path")
+	inventoryPath := StringFromPayload(payload, "ansible.inventory.inventory_path")
 	if inventoryPath == "" {
 		return ""
 	}

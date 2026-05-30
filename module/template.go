@@ -169,8 +169,8 @@ func (r Template) PayloadByID(templateID db.ID) (map[string]interface{}, error) 
 		decryptCredPayload(invRepoCred),
 	)
 
-	// ansible_config.inventory_id is an implementation detail for DB joins; hide it from the display payload.
-	if ac, ok := payload["ansible_config"].(map[string]interface{}); ok {
+	// ansible.inventory_id is an implementation detail for DB joins; hide it from the display payload.
+	if ac, ok := payload["ansible"].(map[string]interface{}); ok {
 		delete(ac, "inventory_id")
 		delete(ac, "inventoryId")
 		delete(ac, "inventoryID")
@@ -225,7 +225,7 @@ func (Template) templateToPayloadFull(
 	var ansibleCfg map[string]interface{}
 	if m := decodeJSONStringToMap(t.AnsibleConfig); m != nil {
 		ansibleCfg = m
-		payload["ansible_config"] = ansibleCfg
+		payload["ansible"] = ansibleCfg
 	}
 
 	if repo != nil {
