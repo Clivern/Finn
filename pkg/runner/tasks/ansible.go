@@ -21,8 +21,11 @@ import (
 
 var (
 	ansibleImages = map[string]string{
-		"":       "quay.io/ansible/creator-ee:latest",
-		"latest": "quay.io/ansible/creator-ee:latest",
+		"":        "quay.io/ansible/creator-ee:latest",
+		"latest":  "quay.io/ansible/creator-ee:latest",
+		"24.2":    "quay.io/ansible/creator-ee:v24.2.0",
+		"24.2.0":  "quay.io/ansible/creator-ee:v24.2.0",
+		"v24.2.0": "quay.io/ansible/creator-ee:v24.2.0",
 	}
 )
 
@@ -130,11 +133,7 @@ func BuildAnsibleExec(dir string, payload map[string]interface{}) (*AnsibleExec,
 		ansibleExtraVarArgs(MapFromPayload(payload, "group_vars.secret_extra_variables"))...,
 	)
 
-	inventoryPath := ansibleInventoryPath(payload)
-	if inventoryPath != "" {
-		args = append(args, "-i", inventoryPath)
-	}
-
+	args = append(args, "-i", workspaceRelPath(StringFromPayload(payload, "ansible.inventory.inventory_path")))
 	args = append(args, "-"+strings.Repeat("v", IntFromPayload(payload, "ansible.log_level")))
 
 	return &AnsibleExec{
@@ -143,18 +142,10 @@ func BuildAnsibleExec(dir string, payload map[string]interface{}) (*AnsibleExec,
 		WorkDir:       filepath.Join(dir, filepath.FromSlash(StringFromPayload(payload, "working_dir"))),
 		WorkRelPath:   strings.TrimPrefix(filepath.ToSlash(StringFromPayload(payload, "working_dir")), "/"),
 		RootDir:       dir,
-		InventoryPath: inventoryPath,
+		InventoryPath: workspaceRelPath(StringFromPayload(payload, "ansible.inventory.inventory_path")),
 		Env:           env,
 		Args:          args,
 	}, nil
-}
-
-func ansibleInventoryPath(payload map[string]interface{}) string {
-	inventoryPath := StringFromPayload(payload, "ansible.inventory.inventory_path")
-	if inventoryPath == "" {
-		return ""
-	}
-	return workspaceRelPath(inventoryPath)
 }
 
 func ansibleExtraVarArgs(values map[string]interface{}) []string {
