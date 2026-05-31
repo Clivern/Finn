@@ -1,7 +1,6 @@
 go           ?= go
 gofmt        ?= $(go)fmt
 
-# Keep package discovery inside Finn source roots. ./... also walks local caches.
 go_dirs      = . ./api/... ./cli/... ./cmd/... ./core/... ./db/... ./locale/... ./middleware/... ./migration/... ./module/... ./pkg/... ./proto/... ./sdk/...
 pkgs         = $(shell $(go) list $(go_dirs))
 
