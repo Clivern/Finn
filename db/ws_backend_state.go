@@ -158,7 +158,7 @@ func (r *workspaceBackendStateRepoSQLite) GetLatestByBackendID(backendID ID) (*W
 			id, backend_id, name, value, checksum, created_at, updated_at
 		FROM workspace_backend_state
 		WHERE backend_id = ?
-		ORDER BY created_at DESC
+		ORDER BY created_at DESC, id DESC
 		LIMIT 1`,
 		backendID.String(),
 	).Scan(
@@ -317,7 +317,7 @@ func (r *workspaceBackendStateRepoPostgres) GetLatestByBackendID(backendID ID) (
 			id, backend_id, name, value, checksum, created_at, updated_at
 		FROM workspace_backend_state
 		WHERE backend_id = $1
-		ORDER BY created_at DESC
+		ORDER BY created_at DESC, id DESC
 		LIMIT 1`,
 		backendID.String(),
 	).Scan(

@@ -50,6 +50,20 @@ func main() {
 			"version":   "1.11",
 			"log_level": "INFO",
 			"steps":     []string{"init", "plan", "apply"},
+			"backend": map[string]interface{}{
+				"id":       "backend-id",
+				"name":     "dh",
+				"slug":     "ail49cjb2g",
+				"username": "tf-cq7lbxnb5c3qwr",
+				"password": "&65zDv2lwmWqXZMiG4z5wDFx",
+				"http": map[string]interface{}{
+					"address":        "http://localhost:8000/client/ail49cjb2g/state",
+					"lock_address":   "http://localhost:8000/client/ail49cjb2g/lock",
+					"unlock_address": "http://localhost:8000/client/ail49cjb2g/unlock",
+					"lock_method":    "POST",
+					"unlock_method":  "POST",
+				},
+			},
 		},
 		"extra_args": map[string]interface{}{
 			"example": "finn",

@@ -921,7 +921,7 @@ func CreateBackendStateAction(w http.ResponseWriter, r *http.Request) {
 	repo := db.NewWorkspaceBackendStateRepository(db.GetDB())
 	state := &db.WorkspaceBackendState{
 		BackendID: backend.ID,
-		Name:      "_tf_state_",
+		Name:      "tf_state_" + strconv.FormatInt(time.Now().UTC().UnixNano(), 10),
 		Value:     string(body),
 		Checksum:  checksum,
 	}
