@@ -47,22 +47,6 @@ func IntFromPayload(p map[string]interface{}, key string) int {
 	return 0
 }
 
-// BoolFromPayload parses a boolean from the payload map. Dot paths read nested maps.
-func BoolFromPayload(p map[string]interface{}, key string) bool {
-	v, ok := valueFromPayload(p, key)
-	if !ok || v == nil {
-		return false
-	}
-	switch b := v.(type) {
-	case bool:
-		return b
-	case string:
-		return strings.EqualFold(strings.TrimSpace(b), "true") || strings.TrimSpace(b) == "1"
-	default:
-		return false
-	}
-}
-
 // ArrayStringFromPayload returns a string slice from the payload map. Dot paths read nested maps.
 func ArrayStringFromPayload(p map[string]interface{}, key string) []string {
 	v, ok := valueFromPayload(p, key)
@@ -88,70 +72,6 @@ func MapFromPayload(p map[string]interface{}, key string) map[string]interface{}
 		return nil
 	}
 	return m
-}
-
-// StringFromMap returns a trimmed string from a nested map (template script/iac/ansible JSON).
-func StringFromMap(m map[string]interface{}, key string) string {
-	if m == nil {
-		return ""
-	}
-	v, ok := m[key]
-	if !ok || v == nil {
-		return ""
-	}
-	switch s := v.(type) {
-	case string:
-		return strings.TrimSpace(s)
-	default:
-		return strings.TrimSpace(fmt.Sprint(s))
-	}
-}
-
-// BoolFromMap parses a bool from a nested map.
-func BoolFromMap(m map[string]interface{}, key string) bool {
-	if m == nil {
-		return false
-	}
-	v, ok := m[key]
-	if !ok || v == nil {
-		return false
-	}
-	switch b := v.(type) {
-	case bool:
-		return b
-	case string:
-		return strings.EqualFold(strings.TrimSpace(b), "true") || strings.TrimSpace(b) == "1"
-	default:
-		return false
-	}
-}
-
-// EnvFromPayload returns string env vars from payload["env"] (map[string]interface{} or map[string]string).
-func EnvFromPayload(p map[string]interface{}) map[string]string {
-	v, ok := p["env"]
-	if !ok || v == nil {
-		return nil
-	}
-	out := make(map[string]string)
-	switch m := v.(type) {
-	case map[string]interface{}:
-		for k, val := range m {
-			if val == nil {
-				continue
-			}
-			out[k] = strings.TrimSpace(fmt.Sprint(val))
-		}
-	case map[string]string:
-		for k, val := range m {
-			out[k] = strings.TrimSpace(val)
-		}
-	default:
-		return nil
-	}
-	if len(out) == 0 {
-		return nil
-	}
-	return out
 }
 
 // IsDockerAvailable checks if Docker is available on the system.
