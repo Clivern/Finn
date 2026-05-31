@@ -22,6 +22,6 @@ variable "evkey" {
 }
 
 resource "local_file" "hello" {
-  filename = "${path.module}/terraform-output.txt"
+  filename = pathexpand("~/Desktop/terraform-output.txt")
   content  = "Hello from Terraform! example=${var.example}, evkey=${var.evkey}\n"
 }
