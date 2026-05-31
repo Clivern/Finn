@@ -90,43 +90,6 @@ func MapFromPayload(p map[string]interface{}, key string) map[string]interface{}
 	return m
 }
 
-func valueFromPayload(p map[string]interface{}, key string) (interface{}, bool) {
-	if p == nil || strings.TrimSpace(key) == "" {
-		return nil, false
-	}
-
-	parts := strings.Split(key, ".")
-	var current interface{} = p
-	for _, part := range parts {
-		part = strings.TrimSpace(part)
-		if part == "" {
-			return nil, false
-		}
-
-		switch m := current.(type) {
-		case map[string]interface{}:
-			v, ok := m[part]
-			if !ok {
-				return nil, false
-			}
-			current = v
-		case map[string]string:
-			v, ok := m[part]
-			if !ok {
-				return nil, false
-			}
-			current = v
-		default:
-			return nil, false
-		}
-	}
-
-	if current == nil {
-		return nil, false
-	}
-	return current, true
-}
-
 // StringFromMap returns a trimmed string from a nested map (template script/iac/ansible JSON).
 func StringFromMap(m map[string]interface{}, key string) string {
 	if m == nil {
@@ -191,6 +154,7 @@ func EnvFromPayload(p map[string]interface{}) map[string]string {
 	return out
 }
 
+// IsDockerAvailable checks if Docker is available on the system.
 func IsDockerAvailable() bool {
 	if _, err := exec.LookPath("docker"); err != nil {
 		return false
@@ -202,6 +166,7 @@ func IsDockerAvailable() bool {
 	return exec.CommandContext(ctx, "docker", "info").Run() == nil
 }
 
+// IacStepArgs returns a string slice of step arguments for the IAC engine.
 func IacStepArgs(steps []string) ([][]string, error) {
 	out := make([][]string, 0, len(steps))
 	for _, step := range steps {
@@ -217,4 +182,41 @@ func IacStepArgs(steps []string) ([][]string, error) {
 		}
 	}
 	return out, nil
+}
+
+func valueFromPayload(p map[string]interface{}, key string) (interface{}, bool) {
+	if p == nil || strings.TrimSpace(key) == "" {
+		return nil, false
+	}
+
+	parts := strings.Split(key, ".")
+	var current interface{} = p
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			return nil, false
+		}
+
+		switch m := current.(type) {
+		case map[string]interface{}:
+			v, ok := m[part]
+			if !ok {
+				return nil, false
+			}
+			current = v
+		case map[string]string:
+			v, ok := m[part]
+			if !ok {
+				return nil, false
+			}
+			current = v
+		default:
+			return nil, false
+		}
+	}
+
+	if current == nil {
+		return nil, false
+	}
+	return current, true
 }
