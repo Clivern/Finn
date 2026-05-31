@@ -25,12 +25,6 @@ var (
 		"1.10": "docker.io/hashicorp/terraform:1.10",
 		"1.11": "docker.io/hashicorp/terraform:1.11",
 	}
-
-	terraformSteps = [][]string{
-		{"init", "-input=false"},
-		{"plan", "-input=false"},
-		{"apply", "-input=false", "-auto-approve"},
-	}
 )
 
 type TerraformExec struct {
@@ -42,12 +36,17 @@ type TerraformExec struct {
 	Args        []string
 }
 
-func RunTerraform(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
-	if IsDockerAvailable() {
-		return RunTerraformDocker(ctx, deps, task, dir)
+func RunTerraform(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string, steps []string) error {
+	stepArgs, err := IacStepArgs(steps)
+	if err != nil {
+		return err
 	}
 
-	return RunTerraformLocal(ctx, deps, task, dir)
+	if IsDockerAvailable() {
+		return RunTerraformDocker(ctx, deps, task, dir, stepArgs)
+	}
+
+	return RunTerraformLocal(ctx, deps, task, dir, stepArgs)
 }
 
 func BuildTerraformExec(dir string, payload map[string]interface{}) (*TerraformExec, error) {
@@ -103,8 +102,8 @@ func terraformVarFlags(values map[string]interface{}) []string {
 	return flags
 }
 
-func RunTerraformLocal(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
-	for _, step := range terraformSteps {
+func RunTerraformLocal(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string, steps [][]string) error {
+	for _, step := range steps {
 		if err := RunTerraformLocalStep(ctx, deps, task, dir, step); err != nil {
 			return err
 		}
@@ -112,8 +111,8 @@ func RunTerraformLocal(ctx context.Context, deps *runner.Deps, task *runner.Task
 	return nil
 }
 
-func RunTerraformDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
-	for _, step := range terraformSteps {
+func RunTerraformDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string, steps [][]string) error {
+	for _, step := range steps {
 		if err := RunTerraformDockerStep(ctx, deps, task, dir, step); err != nil {
 			return err
 		}

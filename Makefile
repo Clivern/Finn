@@ -1,6 +1,9 @@
 go           ?= go
 gofmt        ?= $(go)fmt
-pkgs          = ./...
+
+# Keep package discovery inside Finn source roots. ./... also walks local caches.
+go_dirs      = . ./api/... ./cli/... ./cmd/... ./core/... ./db/... ./locale/... ./middleware/... ./migration/... ./module/... ./pkg/... ./proto/... ./sdk/...
+pkgs         = $(shell $(go) list $(go_dirs))
 
 
 help: Makefile
@@ -22,7 +25,7 @@ revive:
 .PHONY: style
 style:
 	@echo ">> ============= Checking Code Style ============= <<"
-	@fmtRes=$$($(gofmt) -d $$(find . -path ./vendor -prune -o -name '*.go' -print)); \
+	@fmtRes=$$($(gofmt) -d $$(find . -path ./vendor -prune -o -path ./cache -prune -o -name '*.go' -print)); \
 	if [ -n "$${fmtRes}" ]; then \
 		echo "gofmt checking failed!"; echo "$${fmtRes}"; echo; \
 		echo "Please ensure you are using $$($(go) version) for formatting code."; \
@@ -34,7 +37,7 @@ style:
 .PHONY: check_license
 check_license:
 	@echo ">> ============= Checking License Header ============= <<"
-	@licRes=$$(for file in $$(find . -type f -iname '*.go' ! -path './vendor/*') ; do \
+	@licRes=$$(for file in $$(find . -type f -iname '*.go' ! -path './vendor/*' ! -path './cache/*') ; do \
 			   awk 'NR<=3' $$file | grep -Eq "(Copyright|generated|GENERATED)" || echo $$file; \
 	   done); \
 	   if [ -n "$${licRes}" ]; then \
@@ -71,7 +74,7 @@ integration:
 .PHONY: lint
 lint:
 	@echo ">> ============= Lint All Files ============= <<"
-	revive -config config.toml -exclude vendor/... -formatter friendly ./...
+	revive -config config.toml -exclude vendor/... -formatter friendly $(pkgs)
 
 
 ## proto: Generate Go code from .proto files

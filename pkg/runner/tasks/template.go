@@ -72,9 +72,9 @@ func WorkspaceTemplate(ctx context.Context, deps *runner.Deps, task *runner.Task
 	case "iac":
 		switch StringFromPayload(p, "iac.bin") {
 		case "terraform":
-			return RunTerraform(ctx, deps, task, dir)
+			return RunTerraform(ctx, deps, task, dir, ArrayStringFromPayload(p, "iac.steps"))
 		case "opentofu":
-			return RunOpentofu(ctx, deps, task, dir)
+			return RunOpentofu(ctx, deps, task, dir, ArrayStringFromPayload(p, "iac.steps"))
 		default:
 			return fmt.Errorf("iac: unsupported bin %q", StringFromPayload(p, "iac.bin"))
 		}

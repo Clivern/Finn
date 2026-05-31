@@ -25,12 +25,6 @@ var (
 		"1.9":  "ghcr.io/opentofu/opentofu:1.9",
 		"1.10": "ghcr.io/opentofu/opentofu:1.10",
 	}
-
-	opentofuSteps = [][]string{
-		{"init", "-input=false"},
-		{"plan", "-input=false"},
-		{"apply", "-input=false", "-auto-approve"},
-	}
 )
 
 type OpentofuExec struct {
@@ -42,12 +36,17 @@ type OpentofuExec struct {
 	Args        []string
 }
 
-func RunOpentofu(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
-	if IsDockerAvailable() {
-		return RunOpentofuDocker(ctx, deps, task, dir)
+func RunOpentofu(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string, steps []string) error {
+	stepArgs, err := IacStepArgs(steps)
+	if err != nil {
+		return err
 	}
 
-	return RunOpentofuLocal(ctx, deps, task, dir)
+	if IsDockerAvailable() {
+		return RunOpentofuDocker(ctx, deps, task, dir, stepArgs)
+	}
+
+	return RunOpentofuLocal(ctx, deps, task, dir, stepArgs)
 }
 
 func BuildOpentofuExec(dir string, payload map[string]interface{}) (*OpentofuExec, error) {
@@ -103,8 +102,8 @@ func opentofuVarFlags(values map[string]interface{}) []string {
 	return flags
 }
 
-func RunOpentofuLocal(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
-	for _, step := range opentofuSteps {
+func RunOpentofuLocal(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string, steps [][]string) error {
+	for _, step := range steps {
 		if err := RunOpentofuLocalStep(ctx, deps, task, dir, step); err != nil {
 			return err
 		}
@@ -112,8 +111,8 @@ func RunOpentofuLocal(ctx context.Context, deps *runner.Deps, task *runner.Task,
 	return nil
 }
 
-func RunOpentofuDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string) error {
-	for _, step := range opentofuSteps {
+func RunOpentofuDocker(ctx context.Context, deps *runner.Deps, task *runner.Task, dir string, steps [][]string) error {
+	for _, step := range steps {
 		if err := RunOpentofuDockerStep(ctx, deps, task, dir, step); err != nil {
 			return err
 		}

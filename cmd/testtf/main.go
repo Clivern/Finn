@@ -50,6 +50,7 @@ func main() {
 			"bin":       "terraform",
 			"version":   "1.11",
 			"log_level": "INFO",
+			"steps":     []string{"init", "plan", "apply"},
 		},
 		"extra_args": map[string]interface{}{
 			"example": "finn",

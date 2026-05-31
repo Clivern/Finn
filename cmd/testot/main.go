@@ -50,6 +50,7 @@ func main() {
 			"bin":       "opentofu",
 			"version":   "1.9",
 			"log_level": "INFO",
+			"steps":     []string{"init", "plan", "apply"},
 		},
 		"extra_args": map[string]interface{}{
 			"example": "finn",

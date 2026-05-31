@@ -63,6 +63,20 @@ func BoolFromPayload(p map[string]interface{}, key string) bool {
 	}
 }
 
+// ArrayStringFromPayload returns a string slice from the payload map. Dot paths read nested maps.
+func ArrayStringFromPayload(p map[string]interface{}, key string) []string {
+	v, ok := valueFromPayload(p, key)
+	if !ok || v == nil {
+		return nil
+	}
+
+	items, ok := v.([]string)
+	if !ok {
+		return nil
+	}
+	return items
+}
+
 // MapFromPayload returns a nested JSON object as a map. Dot paths read nested maps.
 func MapFromPayload(p map[string]interface{}, key string) map[string]interface{} {
 	v, ok := valueFromPayload(p, key)
@@ -186,4 +200,21 @@ func IsDockerAvailable() bool {
 	defer cancel()
 
 	return exec.CommandContext(ctx, "docker", "info").Run() == nil
+}
+
+func IacStepArgs(steps []string) ([][]string, error) {
+	out := make([][]string, 0, len(steps))
+	for _, step := range steps {
+		switch strings.TrimSpace(step) {
+		case "init":
+			out = append(out, []string{"init", "-input=false"})
+		case "plan":
+			out = append(out, []string{"plan", "-input=false"})
+		case "apply":
+			out = append(out, []string{"apply", "-input=false", "-auto-approve"})
+		default:
+			return nil, fmt.Errorf("iac: unsupported step %q", step)
+		}
+	}
+	return out, nil
 }
