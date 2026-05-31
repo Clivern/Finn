@@ -2,7 +2,7 @@
     "id": "template-id",
     "name": "template-name",
     "description": "template-description",
-    "engine": "script|iac|ansible",
+    "engine": "script|terraform|opentofu|ansible",
     "repository": {
         "id": "repo-id",
         "name": "repository-name",
@@ -51,7 +51,6 @@
         "path": "script-path"
     },
     "iac": {
-        "bin": "terraform|opentofu",
         "version": "iac-engine-version",
         "backend": {
             "id": "backend-id",

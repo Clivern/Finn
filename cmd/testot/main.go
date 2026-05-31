@@ -27,7 +27,7 @@ func main() {
 	payload := map[string]interface{}{
 		"name":            "testot",
 		"description":     "testot",
-		"engine":          "iac",
+		"engine":          "opentofu",
 		"working_dir":     "etc/opentofu",
 		"branch_override": "dev",
 		"timeout":         600,
@@ -47,7 +47,6 @@ func main() {
 			},
 		},
 		"iac": map[string]interface{}{
-			"bin":       "opentofu",
 			"version":   "1.9",
 			"log_level": "INFO",
 			"steps":     []string{"init", "plan", "apply"},

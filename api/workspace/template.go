@@ -48,7 +48,7 @@ type Ansible struct {
 type CreateWorkspaceTemplateRequest struct {
 	Name                string            `json:"name" validate:"required,max=100" label:"Name"`
 	Description         string            `json:"description" validate:"required,max=10000" label:"Description"`
-	Engine              string            `json:"engine" validate:"required,oneof=script iac ansible" label:"Engine"`
+	Engine              string            `json:"engine" validate:"required,oneof=script terraform opentofu ansible" label:"Engine"`
 	RepositoryID        string            `json:"repositoryId" validate:"required,max=64" label:"Repository"`
 	WorkingDirectory    string            `json:"workingDirectory" validate:"omitempty,max=500" label:"Working directory"`
 	BranchOverride      string            `json:"branchOverride" validate:"omitempty,max=100" label:"Branch override"`
@@ -68,7 +68,7 @@ type CreateWorkspaceTemplateRequest struct {
 type UpdateWorkspaceTemplateRequest struct {
 	Name                string            `json:"name" validate:"required,max=100" label:"Name"`
 	Description         string            `json:"description" validate:"required,max=10000" label:"Description"`
-	Engine              string            `json:"engine" validate:"required,oneof=script iac ansible" label:"Engine"`
+	Engine              string            `json:"engine" validate:"required,oneof=script terraform opentofu ansible" label:"Engine"`
 	RepositoryID        string            `json:"repositoryId" validate:"required,max=64" label:"Repository"`
 	WorkingDirectory    string            `json:"workingDirectory" validate:"omitempty,max=500" label:"Working directory"`
 	BranchOverride      string            `json:"branchOverride" validate:"omitempty,max=100" label:"Branch override"`

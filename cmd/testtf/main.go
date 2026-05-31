@@ -27,7 +27,7 @@ func main() {
 	payload := map[string]interface{}{
 		"name":            "testtf",
 		"description":     "testtf",
-		"engine":          "iac",
+		"engine":          "terraform",
 		"working_dir":     "etc/terraform",
 		"branch_override": "dev",
 		"timeout":         600,
@@ -47,7 +47,6 @@ func main() {
 			},
 		},
 		"iac": map[string]interface{}{
-			"bin":       "terraform",
 			"version":   "1.11",
 			"log_level": "INFO",
 			"steps":     []string{"init", "plan", "apply"},

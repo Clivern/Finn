@@ -219,7 +219,7 @@ func (Template) templateToPayloadFull(
 		payload["script_config"] = m
 	}
 	if m := decodeJSONStringToMap(t.IaCConfig); m != nil {
-		payload["iac_config"] = m
+		payload["iac"] = m
 	}
 
 	var ansibleCfg map[string]interface{}

@@ -406,10 +406,12 @@ function fillFormFromTemplate(tmpl) {
 }
 
 function buildPayload() {
+  const engine = form.engine === 'iac' ? form.iac.engine : form.engine
+
   return {
     name: form.name.trim(),
     description: form.description.trim(),
-    engine: form.engine.trim(),
+    engine: engine.trim(),
     repositoryId: form.repositoryId,
     workingDirectory: form.workingDirectory.trim(),
     branchOverride: form.branchOverride.trim(),
